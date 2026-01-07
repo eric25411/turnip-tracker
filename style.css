@@ -232,3 +232,60 @@ body{
   .daysGrid{ gap: 12px; }
   .dayTitle{ font-size: 30px; }
 }
+/* --- QUICK FIX PATCH (paste at very bottom) --- */
+
+/* Keep the bottom nav from covering content */
+body {
+  padding-bottom: 140px; /* gives space so cards do not hide behind nav */
+}
+
+/* Make sure the 2 column grid stays clean */
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+/* Prevent any child from overflowing its grid cell */
+.dayCard {
+  overflow: hidden;
+}
+
+/* Rows inside each day card */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Force the input to stay inside the card */
+.priceInput {
+  width: 110px;         /* adjust later if needed */
+  max-width: 110px;
+  flex: 0 0 auto;
+}
+
+/* Bottom nav always above, centered, side by side */
+.bottomNav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  width: calc(100% - 28px);
+  max-width: 520px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: rgba(255, 247, 230, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+}
+
+/* Make each nav button take half */
+.navBtn {
+  flex: 1;
+  text-align: center;
+}

@@ -8,85 +8,78 @@
 </head>
 <body>
 
-  <!-- BANNER HEADER -->
-  <header class="bannerWrap">
-    <div class="banner">
+  <!-- BANNER HEADER (aligned with cards) -->
+  <div class="container">
+    <header class="bannerWrap">
+      <div class="banner">
+        <img class="bannerImg" src="banner.png.jpg" alt="Turnip Tracker Banner">
 
-      <!-- Banner image -->
-      <img
-        class="bannerImg"
-        src="banner.png.jpg"
-        alt="Turnip Tracker Banner"
-      >
-
-      <!-- Title badge -->
-      <div class="bannerTitle">
-        <span class="bannerText">Turnip Tracker</span>
-        <span class="turnipIcon" aria-hidden="true"></span>
+        <div class="bannerTitle">
+          <span class="bannerText">Turnip Tracker</span>
+          <span class="turnipIcon" aria-hidden="true"></span>
+        </div>
       </div>
+    </header>
 
-    </div>
-  </header>
+    <main class="app">
 
-  <main class="app">
-
-    <!-- HOME VIEW -->
-    <section id="homeView" class="view">
-      <div id="days" class="grid"></div>
-    </section>
-
-    <!-- PREDICTOR VIEW -->
-    <section id="predictorView" class="view" hidden>
-      <header class="subbar">
-        <button id="predictHomeBtn" class="homeBtn" aria-label="Home">
-          <span class="homeIcon">🏠</span>
-          <span class="homeText">Home</span>
-        </button>
-        <h2 class="pageTitle">Predictor</h2>
-      </header>
-
-      <section class="panel">
-        <h3>Prediction</h3>
-
-        <div class="predRow">
-          <div>Likely Peak Window</div>
-          <strong id="peakWindow">—</strong>
-        </div>
-
-        <div class="predRow">
-          <div>Pattern Leaning</div>
-          <strong id="patternLeaning">—</strong>
-        </div>
-
-        <div class="predRow">
-          <div>Recommendation</div>
-          <strong id="recommendation">—</strong>
-        </div>
-
-        <p class="smallNote">
-          Predictor logic will be added next. This is a placeholder view.
-        </p>
+      <!-- HOME VIEW -->
+      <section id="homeView" class="view">
+        <div id="days" class="grid"></div>
       </section>
-    </section>
 
-    <!-- HISTORY VIEW -->
-    <section id="historyView" class="view" hidden>
-      <header class="subbar">
-        <button id="historyHomeBtn" class="homeBtn" aria-label="Home">
-          <span class="homeIcon">🏠</span>
-          <span class="homeText">Home</span>
-        </button>
-        <h2 class="pageTitle">Past Weeks</h2>
-      </header>
+      <!-- PREDICTOR VIEW -->
+      <section id="predictorView" class="view" hidden>
+        <header class="subbar">
+          <button id="predictHomeBtn" class="homeBtn" aria-label="Home">
+            <span class="homeIcon">🏠</span>
+            <span class="homeText">Home</span>
+          </button>
+          <h2 class="pageTitle">Predictor</h2>
+        </header>
 
-      <div id="weeksList" class="list"></div>
-    </section>
+        <section class="panel">
+          <h3>Prediction</h3>
 
-  </main>
+          <div class="predRow">
+            <div>Likely Peak Window</div>
+            <strong id="peakWindow">—</strong>
+          </div>
+
+          <div class="predRow">
+            <div>Pattern Leaning</div>
+            <strong id="patternLeaning">—</strong>
+          </div>
+
+          <div class="predRow">
+            <div>Recommendation</div>
+            <strong id="recommendation">—</strong>
+          </div>
+
+          <p class="smallNote">
+            Placeholder logic for now. Next we will add real turnip prediction.
+          </p>
+        </section>
+      </section>
+
+      <!-- HISTORY VIEW -->
+      <section id="historyView" class="view" hidden>
+        <header class="subbar">
+          <button id="historyHomeBtn" class="homeBtn" aria-label="Home">
+            <span class="homeIcon">🏠</span>
+            <span class="homeText">Home</span>
+          </button>
+          <h2 class="pageTitle">Past Weeks</h2>
+        </header>
+
+        <div id="weeksList" class="list"></div>
+      </section>
+
+    </main>
+  </div>
 
   <!-- BOTTOM NAV BAR -->
   <nav class="bottomBar" aria-label="App navigation">
-
     <button id="navPredict" class="navBtn" aria-label="Predictor">
       <span class="navIcon">🔮</span>
       <span class="navText">Predict</span>
@@ -96,7 +89,6 @@
       <span class="navIcon">🕰️</span>
       <span class="navText">History</span>
     </button>
-
   </nav>
 
   <script src="app.js"></script>

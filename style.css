@@ -1,244 +1,244 @@
-/* ===== Turnip Tracker - style.css ===== */
-
 :root{
-  --bg1: #e9f1ff;
-  --bg2: #f7f0e6;
+  --bg1:#dbe9ff;
+  --bg2:#f3efe7;
 
-  --card: #e3b18f;
-  --cardInner: rgba(255,255,255,0.22);
+  --card:#e9b28f;
+  --cardShadow: 0 10px 30px rgba(0,0,0,.12);
 
-  --ink: #1f1f1f;
+  --inner:#eddcd6;
+  --innerShadow: inset 0 2px 0 rgba(255,255,255,.7);
 
-  --pill: rgba(255,255,255,0.35);
-  --input: rgba(255,255,255,0.55);
+  --pill:#f5efe7;
+  --pillBorder: rgba(0,0,0,.06);
 
-  --radiusXL: 34px;
-  --radiusL: 28px;
-
-  --shadow: 0 16px 30px rgba(0,0,0,0.12);
-  --shadowSoft: 0 10px 18px rgba(0,0,0,0.10);
+  --text:#1f1f1f;
 }
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
-
 body{
   margin:0;
-  color: var(--ink);
-  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  background:
-    radial-gradient(1200px 600px at 50% 0%, var(--bg1), transparent 60%),
-    linear-gradient(180deg, var(--bg2), var(--bg1));
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background: radial-gradient(900px 600px at 50% 35%, var(--bg1), var(--bg2));
 }
 
-/* Keep space for the fixed bottom nav */
 .app{
-  max-width: 980px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 8px 14px 104px;
+  padding: 14px 14px 120px;
 }
 
-/* ===== Header / Banner ===== */
+/* Header */
 .headerCard{
-  padding: 0;
-  margin: 0 0 14px;
+  background: rgba(245,239,231,.55);
+  border-radius: 28px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
 }
 
 .bannerWrap{
   width: 100%;
-  height: 172px;
-  border-radius: var(--radiusXL);
+  border-radius: 26px;
   overflow: hidden;
-  box-shadow: var(--shadowSoft);
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,.35);
 }
 
-/* Fix: show more of the lower part so the banner text isn't cut */
-.bannerImg{
-  width: 100%;
-  height: 100%;
+.bannerWrap img{
   display:block;
+  width:100%;
+  height: 185px;
   object-fit: cover;
-  object-position: center 58%;
+  object-position: center 35%;
 }
 
-/* ===== 2-column grid ===== */
+/* Save button area */
+.headerActions{
+  display:flex;
+  justify-content:center;
+  padding-top: 10px;
+}
+
+.saveWeekBtn{
+  appearance:none;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.65);
+  color: #1f1f1f;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(0,0,0,.08);
+}
+
+.saveWeekBtn:active{
+  transform: translateY(1px);
+}
+
+/* Grid */
 .daysGrid{
-  display:grid;
+  margin-top: 14px;
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-/* ===== Day Cards ===== */
 .dayCard{
   background: var(--card);
-  border-radius: var(--radiusXL);
-  padding: 16px 16px 14px;
-  box-shadow: var(--shadow);
-
-  /* Fix: prevent anything inside from bleeding into neighbor card */
-  overflow: hidden;
+  border-radius: 30px;
+  padding: 18px 18px 16px;
+  box-shadow: var(--cardShadow);
 }
 
 .dayTitle{
-  margin: 0 0 12px;
+  margin: 0 0 10px;
+  font-size: 40px;
+  letter-spacing: .2px;
   font-weight: 900;
-  letter-spacing: -0.02em;
-  font-size: clamp(20px, 5.2vw, 30px);
-  line-height: 1.05;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .row{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 12px;
 
-  background: var(--cardInner);
-  border-radius: var(--radiusL);
-  padding: 12px 14px;
-  margin-bottom: 12px;
-
-  /* Fix: clip any Safari weird overflow from inputs */
-  overflow: hidden;
+  background: rgba(237,220,214,.75);
+  border-radius: 26px;
+  padding: 14px 14px;
+  box-shadow: var(--innerShadow);
+  border: 1px solid rgba(0,0,0,.04);
 }
 
-.row:last-child{ margin-bottom: 0; }
+.row + .row{ margin-top: 12px; }
 
 .label{
   display:flex;
   align-items:center;
   gap: 10px;
-  font-weight: 900;
-  font-size: 18px;
-
-  /* Let label shrink so input never gets pushed outside */
-  min-width: 0;
-  flex: 1 1 auto;
+  font-weight: 800;
+  font-size: 22px;
 }
 
 .emoji{
-  font-size: 22px;
-  line-height: 1;
+  font-size: 24px;
+  width: 28px;
   display:inline-flex;
+  justify-content:center;
 }
 
-/* Fix: use a fixed input width that always fits inside small cards */
 .priceInput{
-  appearance: none;
-  -webkit-appearance: none;
-
-  flex: 0 0 108px;
-  width: 108px;
-  max-width: 108px;
-
-  border: none;
-  outline: none;
+  width: 44%;
+  min-width: 120px;
+  height: 48px;
   border-radius: 18px;
-  background: var(--input);
-
-  padding: 10px 10px;
+  border: 1px solid var(--pillBorder);
+  background: rgba(245,239,231,.85);
+  font-size: 22px;
+  font-weight: 800;
   text-align: center;
-
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--ink);
-
-  box-shadow: inset 0 3px 0 rgba(0,0,0,0.08);
+  outline: none;
+  box-shadow: inset 0 2px 0 rgba(0,0,0,.04);
 }
 
 .priceInput::placeholder{
-  color: rgba(31,31,31,0.45);
+  color: rgba(0,0,0,.35);
+  font-weight: 800;
 }
 
-.priceInput:focus{
-  box-shadow:
-    inset 0 3px 0 rgba(0,0,0,0.10),
-    0 0 0 3px rgba(255,255,255,0.35);
-}
-
-/* ===== Bottom Nav (smaller, side by side) ===== */
+/* Bottom Nav */
 .bottomNav{
   position: fixed;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
-
-  width: min(720px, calc(100% - 24px));
-  background: rgba(248, 241, 230, 0.92);
-  backdrop-filter: blur(10px);
-
-  border-radius: 22px;
-  padding: 8px 10px;
-
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 14px 18px;
   display:flex;
-  flex-direction: row;
-  align-items:center;
-  justify-content: space-around;
-  gap: 8px;
+  justify-content:center;
+  z-index: 50;
+}
 
-  box-shadow: 0 16px 30px rgba(0,0,0,0.18);
+.bottomNav::before{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height: 110px;
+  background: linear-gradient(to top, rgba(255,255,255,.65), rgba(255,255,255,0));
+  pointer-events:none;
+}
+
+.bottomNav{
+  gap: 12px;
+}
+
+.bottomNav a{
+  text-decoration:none;
+  color: inherit;
+}
+
+.bottomNav{
+  align-items:flex-end;
+}
+
+.bottomNav{
+  pointer-events:auto;
+}
+
+.bottomNav{
+  flex-wrap:nowrap;
+}
+
+.bottomNav .navBtn{
+  width: min(620px, calc(100vw - 28px));
+  max-width: 620px;
+  display:flex;
+  justify-content: space-around;
+  align-items:center;
+
+  background: rgba(245,239,231,.90);
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 22px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+
+/* When there are 2 navBtns, make them share the bar nicely */
+.bottomNav{
+  justify-content:center;
+}
+.bottomNav .navBtn{
+  width: calc((min(620px, calc(100vw - 28px)) - 12px) / 2);
+}
+
+.navIcon{
+  font-size: 26px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.navText{
+  font-size: 20px;
+  font-weight: 900;
 }
 
 .navBtn{
-  flex: 1;
-  text-decoration:none;
-  color: var(--ink);
-
   display:flex;
   flex-direction: column;
   align-items:center;
   justify-content:center;
-  gap: 6px;
-
-  padding: 8px 6px;
-  border-radius: 18px;
+  height: 78px;
 }
 
-.navBtn:active{
-  background: rgba(0,0,0,0.06);
+/* Mobile tweaks */
+@media (max-width: 420px){
+  .dayTitle{ font-size: 34px; }
+  .label{ font-size: 20px; }
+  .priceInput{ height: 46px; font-size: 20px; }
+  .bannerWrap img{ height: 175px; }
 }
 
-.navIcon{
-  font-size: 20px;
-  line-height: 1;
-}
-
-.navText{
-  font-size: 15px;
-  font-weight: 900;
-}
-
-/* ===== Mobile tuning ===== */
-@media (max-width: 520px){
-  .app{
-    padding: 8px 12px 100px;
-  }
-
-  .bannerWrap{
-    height: 170px;
-  }
-
-  .daysGrid{
-    gap: 14px;
-  }
-
-  .dayCard{
-    padding: 14px 14px 12px;
-  }
-
-  .label{
-    font-size: 17px;
-  }
-
-  .priceInput{
-    flex: 0 0 102px;
-    width: 102px;
-    max-width: 102px;
-    font-size: 19px;
-  }
+@media (max-width: 360px){
+  .daysGrid{ gap: 12px; }
+  .dayTitle{ font-size: 30px; }
+  .label{ font-size: 18px; }
+  .priceInput{ min-width: 108px; }
 }

@@ -1,139 +1,226 @@
-/* =========================
-   Base Reset
-========================= */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+/* style.css
+   Replace your entire style.css with this.
+
+   Notes:
+   1) This assumes your main wrapper is .app
+   2) Your banner image element should match ONE of these selectors:
+      .banner img  OR  #banner  OR  #bannerImg  OR  .banner-img
+   3) The “banner too low” fix is mostly:
+      - object-position (shows more of the top of the image)
+      - a small negative margin on the image to lift it visually
+*/
+
+:root{
+  --bg: #EAF3FF;
+  --panel: #F6EFE7;
+
+  --card: #E7B191;
+  --cardShadow: rgba(0,0,0,0.12);
+
+  --field: #F3E3D7;
+  --fieldInner: #FBF5EC;
+
+  --text: #1E1E1E;
+  --muted: rgba(0,0,0,0.55);
+
+  --radiusXL: 28px;
+  --radiusLG: 22px;
+  --radiusMD: 18px;
 }
 
-body {
-  background: #f4efe6;
-  padding-bottom: 110px; /* space for bottom nav */
+*{ box-sizing:border-box; }
+
+html, body{
+  height:100%;
 }
 
-/* =========================
-   App Container
-========================= */
-.app {
-  max-width: 430px;
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* App wrapper */
+.app{
+  max-width: 520px;
   margin: 0 auto;
-  padding: 12px;
+  padding: 14px 16px calc(120px + env(safe-area-inset-bottom));
 }
 
-/* =========================
-   Header / Banner
-========================= */
-.header {
-  margin-bottom: 6px; /* tighter spacing under banner */
+/* ===== Header / Banner ===== */
+.header{
+  background: var(--panel);
+  border-radius: var(--radiusXL);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+  padding: 12px 12px 14px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  position: relative;
 }
 
-.bannerImg {
+/* Banner image container */
+.banner{
+  border-radius: calc(var(--radiusXL) - 6px);
+  overflow: hidden;
+  background: rgba(255,255,255,0.35);
+}
+
+/* Banner image itself (multiple selectors so you do not have to rename if yours differs) */
+.banner img,
+#banner,
+#bannerImg,
+.banner-img{
   width: 100%;
-  height: 135px; /* moved up slightly */
-  object-fit: cover;
+  height: 150px;
   display: block;
+  object-fit: cover;
 
-  border-radius: 22px;
-  box-shadow: 0 10px 18px rgba(0,0,0,0.10);
+  /* THIS is the key: show more of the TOP of your image */
+  object-position: center 10%;
+
+  /* Lift the image so it sits “higher” in the header card */
+  margin-top: -18px;
 }
 
-/* =========================
-   Grid Layout
-========================= */
-.grid {
+/* If your banner is still too low, increase the negative number:
+   margin-top: -26px;
+   and/or change object-position to center 0%;
+*/
+
+/* Remove any extra “Turnip Tracker” text above the banner if it exists */
+.header h1,
+.header .title,
+.header .appTitle{
+  display: none;
+}
+
+/* ===== Grid of day cards ===== */
+.daysGrid{
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 16px;
+
+  /* more edge room like you asked */
+  padding: 2px 2px 0;
 }
 
-/* =========================
-   Day Card
-========================= */
-.day {
-  background: #e8b892;
-  border-radius: 22px;
-  padding: 14px;
-  box-shadow: 0 6px 0 rgba(0,0,0,0.08);
+.dayCard{
+  background: var(--card);
+  border-radius: var(--radiusXL);
+  box-shadow: 0 10px 18px var(--cardShadow);
+  padding: 16px 16px 14px;
 }
 
-.day h3 {
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 10px;
-  color: #2b2b2b;
+/* Day name */
+.dayCard .dayName{
+  font-size: 34px;
+  line-height: 1.05;
+  margin: 0 0 12px 0;
+  font-weight: 900;
+  letter-spacing: 0.2px;
 }
 
-/* =========================
-   AM / PM Row
-========================= */
-.row {
-  display: flex;
-  align-items: center;
-  background: #f7e7d8;
-  border-radius: 16px;
-  padding: 10px;
-  margin-bottom: 10px;
+/* AM/PM rows */
+.row{
+  background: var(--field);
+  border-radius: var(--radiusLG);
+  padding: 12px 12px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  margin-top: 12px;
 }
 
-.icon {
+.row:first-of-type{
+  margin-top: 0;
+}
+
+.row .left{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.row .icon{
   font-size: 22px;
-  margin-right: 8px;
+  width: 28px;
+  text-align:center;
 }
 
-.label {
-  font-weight: 800;
-  margin-right: 8px;
+.row .label{
+  font-size: 28px;
+  font-weight: 900;
 }
 
-input {
-  margin-left: auto;
-  width: 70px;
-  padding: 6px 8px;
-  border-radius: 10px;
+.row input{
+  width: 58%;
   border: none;
-  font-size: 16px;
-  text-align: center;
-  background: #fff7eb;
+  outline: none;
+  background: var(--fieldInner);
+  border-radius: 18px;
+  padding: 12px 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.08);
 }
 
-/* =========================
-   Bottom Navigation
-========================= */
-.bottom-nav {
+.row input::placeholder{
+  color: rgba(0,0,0,0.35);
+}
+
+/* ===== Bottom nav bar ===== */
+.bottomNav{
   position: fixed;
-  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 24px);
-  max-width: 430px;
-
-  background: #fbf3e6;
-  border-radius: 28px;
-  padding: 14px 20px;
-
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  width: min(520px, calc(100% - 32px));
+  background: var(--panel);
+  border-radius: 26px;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  gap: 14px;
+  z-index: 50;
 }
 
-.nav-item {
-  text-align: center;
+.navBtn{
   flex: 1;
-  cursor: pointer;
+  border: none;
+  background: transparent;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  gap: 8px;
+  padding: 6px 6px;
+  font-weight: 900;
+  color: var(--text);
 }
 
-.nav-item span {
-  display: block;
-  font-size: 22px;
-  margin-bottom: 4px;
+.navBtn .navIcon{
+  font-size: 26px;
 }
 
-.nav-item div {
-  font-weight: 700;
-  font-size: 15px;
+.navBtn .navText{
+  font-size: 18px;
+}
+
+/* ===== Small screens ===== */
+@media (max-width: 380px){
+  .dayCard .dayName{ font-size: 30px; }
+  .row .label{ font-size: 24px; }
+  .row input{ width: 60%; }
+  .banner img,
+  #banner,
+  #bannerImg,
+  .banner-img{ height: 140px; }
+}
+
+/* ===== Optional: make the cards slightly smaller for more edge room ===== */
+@media (min-width: 420px){
+  .daysGrid{ gap: 18px; }
 }

@@ -4,14 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- Cache-bust so Safari stops using the old CSS -->
+  <link rel="stylesheet" href="style.css?v=8" />
 </head>
 
 <body>
   <main class="app">
     <section class="headerCard">
       <div class="bannerWrap">
-        <img src="banner.png.jpg" alt="Turnip Tracker banner" />
+        <!-- CHANGE THIS filename if yours is different -->
+        <img class="bannerImg" src="banner.png.jpg" alt="Turnip Tracker banner" />
       </div>
     </section>
 
@@ -91,19 +94,18 @@
   </main>
 
   <nav class="bottomNav">
-    <div class="navShell">
-      <a class="navBtn" href="#" id="predictBtn">
-        <div class="navIcon">🔮</div>
-        <div class="navText">Predict</div>
-      </a>
+    <a class="navBtn" href="#" id="predictBtn">
+      <div class="navIcon">🔮</div>
+      <div class="navText">Predict</div>
+    </a>
 
-      <a class="navBtn" href="#" id="historyBtn">
-        <div class="navIcon">🕰️</div>
-        <div class="navText">History</div>
-      </a>
-    </div>
+    <a class="navBtn" href="#" id="historyBtn">
+      <div class="navIcon">🕰️</div>
+      <div class="navText">History</div>
+    </a>
   </nav>
 
-  <script src="app.js"></script>
+  <!-- Cache-bust JS too -->
+  <script src="app.js?v=8"></script>
 </body>
 </html>

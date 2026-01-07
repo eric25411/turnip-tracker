@@ -34,7 +34,7 @@ body {
 */
 :root {
   --bannerHeight: 150px;
-  --bannerLift: -18px; /* try -6px, -12px, -16px if you want it higher */
+  --bannerLift: -26px; /* try -6px, -12px, -16px if you want it higher */
 }
 
 .bannerWrap {

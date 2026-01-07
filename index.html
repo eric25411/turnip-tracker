@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Turnip Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">
+      <h1>Turnip Tracker</h1>
+      <span class="turnip">🥬</span>
+    </div>
+
+    <!-- Clock button, goes to Past Weeks -->
+    <button id="historyBtn" class="iconBtn" aria-label="Past Weeks">🕰️</button>
+  </header>
+
+  <main>
+    <!-- HOME VIEW -->
+    <section id="homeView">
+      <div id="days" class="grid"></div>
+
+      <section id="prediction" class="panel">
+        <h2>Prediction</h2>
+        <div class="predRow">
+          <div>Likely Peak Window:</div>
+          <strong id="peakWindow">—</strong>
+        </div>
+        <div class="predRow">
+          <div>Pattern Leaning:</div>
+          <strong id="patternLeaning">—</strong>
+        </div>
+      </section>
+    </section>
+
+    <!-- PAST WEEKS VIEW -->
+    <section id="historyView" hidden>
+      <header class="subbar">
+        <button id="homeBtn" class="iconBtn" aria-label="Home">🏠</button>
+        <h2>Past Weeks</h2>
+      </header>
+
+      <div id="weeksList" class="list"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

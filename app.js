@@ -5,11 +5,9 @@ const historyView = document.getElementById("historyView")
 const daysEl = document.getElementById("days")
 const weeksList = document.getElementById("weeksList")
 
-// Bottom nav
 document.getElementById("navPredict").onclick = () => showView("predictor")
 document.getElementById("navHistory").onclick = () => showView("history")
 
-// Home buttons
 document.getElementById("predictHomeBtn").onclick = () => showView("home")
 document.getElementById("historyHomeBtn").onclick = () => showView("home")
 
@@ -79,7 +77,9 @@ function renderHome() {
       const el = e.target
       const idx = Number(el.dataset.idx)
       const slot = el.dataset.slot
-      const val = el.value.trim() === "" ? null : Number(el.value)
+      const raw = el.value.trim()
+
+      const val = raw === "" ? null : Number(raw)
 
       const w = ensureWeek()
       w.prices[idx][slot] = Number.isFinite(val) ? val : null
@@ -91,7 +91,6 @@ function renderHome() {
 function renderPredictor(){
   const week = ensureWeek()
 
-  // Placeholder so the Predictor page is not empty.
   const all = []
   week.prices.forEach(d => {
     if (Number.isFinite(d.am)) all.push(d.am)

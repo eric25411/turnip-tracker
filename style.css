@@ -2,7 +2,6 @@
   --bg: #eaf2ff;
   --panel: #efe9dd;
   --card: #e4b08c;
-  --inner: #efe0d6;
   --text: #1f1f1f;
   --shadow: 0 10px 22px rgba(0,0,0,.10);
   --radius: 26px;
@@ -25,6 +24,7 @@ body{
   padding: 10px 12px calc(120px + env(safe-area-inset-bottom));
 }
 
+/* Header */
 .headerCard{
   background: var(--panel);
   border-radius: var(--radius);
@@ -48,22 +48,22 @@ body{
   object-position: center top;
 }
 
-/* This pushes the banner visually higher inside its crop */
-@media (max-width: 430px){
-  .bannerWrap img{ height: 165px; }
-}
-
+/* Days grid */
 .daysGrid{
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+  align-items: stretch;
 }
 
+/* Force cards to stay in their own grid cells */
 .dayCard{
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 16px;
+  min-width: 0;
+  grid-column: auto;
 }
 
 .dayTitle{
@@ -73,6 +73,7 @@ body{
   letter-spacing: .2px;
 }
 
+/* Rows inside cards */
 .row{
   background: rgba(255,255,255,.22);
   border-radius: var(--radiusSmall);
@@ -115,7 +116,7 @@ body{
 
 .priceInput::placeholder{ color: rgba(0,0,0,.35); }
 
-/* Bottom nav bar */
+/* Bottom nav */
 .bottomNav{
   position: fixed;
   left: 50%;
@@ -160,7 +161,27 @@ body{
   font-size: 18px;
 }
 
-/* Small screens */
+/* If the screen is REALLY small, then 1 column */
+@media (max-width: 360px){
+  .daysGrid{ grid-template-columns: 1fr; }
+}
+
+/* Emergency fallback for weird browsers: if grid fails, use flex 2 columns */
+@supports not (display: grid){
+  .daysGrid{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .dayCard{
+    width: calc(50% - 7px);
+  }
+  @media (max-width: 360px){
+    .dayCard{ width: 100%; }
+  }
+}
+
+/* Slightly smaller text on small phones */
 @media (max-width: 390px){
   .dayTitle{ font-size: 30px; }
   .label{ font-size: 20px; }

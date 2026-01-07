@@ -1,215 +1,139 @@
-:root{
-  --bg:#f4efe6;
-  --ink:#2b2b2b;
-
-  --card:#e8b38f;
-  --paper:#fff7ea;
-
-  --panel:#7a9993;
-  --shadow: rgba(0,0,0,0.12);
+/* =========================
+   Base Reset
+========================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-*{ box-sizing:border-box; }
-
-body{
-  margin:0;
-  font-family: system-ui, -apple-system, Arial, sans-serif;
-  background: var(--bg);
-  color: var(--ink);
-
-  /* More edge room overall */
-  padding: 14px 12px 96px;
+body {
+  background: #f4efe6;
+  padding-bottom: 110px; /* space for bottom nav */
 }
 
-/* One shared container so header and cards align perfectly */
-.container{
-  max-width: 820px;
+/* =========================
+   App Container
+========================= */
+.app {
+  max-width: 430px;
   margin: 0 auto;
-
-  /* Gives the grid more breathing room from edges */
-  padding: 0 4px;
+  padding: 12px;
 }
 
-/* Header, ONLY image */
-.header{
-  margin: 0 0 12px;
+/* =========================
+   Header / Banner
+========================= */
+.header {
+  margin-bottom: 6px; /* tighter spacing under banner */
 }
 
-.bannerImg{
+.bannerImg {
   width: 100%;
-  height: 160px;
+  height: 135px; /* moved up slightly */
   object-fit: cover;
-  display:block;
+  display: block;
 
   border-radius: 22px;
   box-shadow: 0 10px 18px rgba(0,0,0,0.10);
 }
 
-/* Views */
-.view{
-  width: 100%;
-}
-
-/* Day cards, a bit smaller and more edge room */
-.grid{
-  display:grid;
+/* =========================
+   Grid Layout
+========================= */
+.grid {
+  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-}
-
-.dayCard{
-  background: var(--card);
-  border-radius: 18px;
-
-  /* slightly smaller */
-  padding: 12px;
-
-  box-shadow: 0 4px 0 var(--shadow);
-}
-
-.dayName{
-  font-weight: 900;
-  font-size: 20px;
-  margin: 0 0 10px;
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background: rgba(255,255,255,0.58);
-  border-radius: 16px;
-
-  /* slightly smaller */
-  padding: 10px;
-
   margin-top: 10px;
 }
 
-.rowLabel{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight: 900;
-  font-size: 18px;
-}
-
-.row input{
-  width: 120px;
-  border: none;
-  border-radius: 14px;
-  padding: 10px 12px;
-  font-weight: 900;
-  background: var(--paper);
-  font-size: 18px;
-}
-
-.row input:focus{
-  outline: 2px solid rgba(0,0,0,0.15);
-}
-
-/* Sub headers */
-.subbar{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin: 6px 0 14px;
-}
-
-.pageTitle{
-  margin:0;
-  font-size: 22px;
-  font-weight: 900;
-}
-
-.homeBtn{
-  border:none;
-  background: var(--paper);
-  border-radius: 16px;
-  padding: 10px 12px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  box-shadow: 0 2px 0 var(--shadow);
-  cursor:pointer;
-}
-
-.homeIcon{ font-size: 18px; }
-.homeText{ font-weight: 900; }
-
-/* Panels */
-.panel{
-  background: var(--panel);
-  border-radius: 18px;
-  padding: 16px;
-  color: #fff7ea;
-  box-shadow: 0 4px 0 var(--shadow);
-}
-
-.panel h3{
-  margin: 0 0 12px 0;
-  font-size: 20px;
-  font-weight: 900;
-}
-
-.predRow{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  margin: 10px 0;
-  font-size: 16px;
-}
-
-.smallNote{
-  margin: 14px 0 0;
-  opacity: 0.9;
-  font-size: 14px;
-}
-
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-/* Bottom bar */
-.bottomBar{
-  position: fixed;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  height: 74px;
-
-  background: rgba(255,247,234,0.94);
+/* =========================
+   Day Card
+========================= */
+.day {
+  background: #e8b892;
   border-radius: 22px;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.14);
-
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-
-  backdrop-filter: blur(6px);
+  padding: 14px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.08);
 }
 
-.navBtn{
-  border:none;
-  background: transparent;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:6px;
-  font-weight: 900;
-  cursor:pointer;
-  color: var(--ink);
+.day h3 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: #2b2b2b;
 }
 
-.navIcon{ font-size: 22px; }
-.navText{ font-size: 13px; }
+/* =========================
+   AM / PM Row
+========================= */
+.row {
+  display: flex;
+  align-items: center;
+  background: #f7e7d8;
+  border-radius: 16px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
 
-/* Mobile tweaks */
-@media (max-width: 460px){
-  .bannerImg{ height: 150px; }
-  .row input{ width: 112px; }
-  .dayName{ font-size: 19px; }
-  .grid{ gap: 10px; }
+.icon {
+  font-size: 22px;
+  margin-right: 8px;
+}
+
+.label {
+  font-weight: 800;
+  margin-right: 8px;
+}
+
+input {
+  margin-left: auto;
+  width: 70px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  text-align: center;
+  background: #fff7eb;
+}
+
+/* =========================
+   Bottom Navigation
+========================= */
+.bottom-nav {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 430px;
+
+  background: #fbf3e6;
+  border-radius: 28px;
+  padding: 14px 20px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.nav-item {
+  text-align: center;
+  flex: 1;
+  cursor: pointer;
+}
+
+.nav-item span {
+  display: block;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.nav-item div {
+  font-weight: 700;
+  font-size: 15px;
 }

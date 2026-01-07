@@ -5,11 +5,11 @@ const historyView = document.getElementById("historyView")
 const daysEl = document.getElementById("days")
 const weeksList = document.getElementById("weeksList")
 
-// Bottom bar buttons
+// Bottom nav
 document.getElementById("navPredict").onclick = () => showView("predictor")
 document.getElementById("navHistory").onclick = () => showView("history")
 
-// Home buttons inside pages
+// Home buttons
 document.getElementById("predictHomeBtn").onclick = () => showView("home")
 document.getElementById("historyHomeBtn").onclick = () => showView("home")
 
@@ -89,10 +89,9 @@ function renderHome() {
 }
 
 function renderPredictor(){
-  // Placeholder for now. Later we’ll plug real turnip prediction logic in here.
   const week = ensureWeek()
 
-  // Simple “best so far” placeholder just to prove the page works
+  // Placeholder so the Predictor page is not empty.
   const all = []
   week.prices.forEach(d => {
     if (Number.isFinite(d.am)) all.push(d.am)
@@ -100,9 +99,10 @@ function renderPredictor(){
   })
 
   const best = all.length ? Math.max(...all) : null
-  document.getElementById("peakWindow").textContent = best ? "Check midweek" : "—"
+
+  document.getElementById("peakWindow").textContent = best ? "Midweek watch" : "—"
   document.getElementById("patternLeaning").textContent = all.length ? "Unknown" : "—"
-  document.getElementById("recommendation").textContent = best ? "Watch" : "—"
+  document.getElementById("recommendation").textContent = best ? "Hold, then check again" : "—"
 }
 
 function renderHistory() {
@@ -114,12 +114,11 @@ function renderHistory() {
       <div class="row"><div>Buy</div><strong>${week.buyPrice ?? "—"}</strong></div>
       <div class="row"><div>Sold</div><strong>${week.sold ?? "Not sold"}</strong></div>
       <div style="margin-top:10px; font-size:14px;">
-        Next: we will save multiple weeks and show Mon–Sat AM/PM for each.
+        Next: we will save multiple weeks and show daily AM and PM prices here.
       </div>
     </div>
   `
 }
 
-// Boot
 renderHome()
 showView("home")

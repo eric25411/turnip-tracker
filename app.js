@@ -1,20 +1,28 @@
 const homeView = document.getElementById("homeView")
+const predictorView = document.getElementById("predictorView")
 const historyView = document.getElementById("historyView")
+
 const daysEl = document.getElementById("days")
 const weeksList = document.getElementById("weeksList")
 
-document.getElementById("historyBtn").onclick = () => {
-  homeView.hidden = true
-  historyView.hidden = false
-  renderHistory()
-}
+// Bottom bar buttons
+document.getElementById("navPredict").onclick = () => showView("predictor")
+document.getElementById("navHistory").onclick = () => showView("history")
 
-document.getElementById("homeBtn").onclick = () => {
-  historyView.hidden = true
-  homeView.hidden = false
-}
+// Home buttons inside pages
+document.getElementById("predictHomeBtn").onclick = () => showView("home")
+document.getElementById("historyHomeBtn").onclick = () => showView("home")
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+
+function showView(which){
+  homeView.hidden = which !== "home"
+  predictorView.hidden = which !== "predictor"
+  historyView.hidden = which !== "history"
+
+  if (which === "history") renderHistory()
+  if (which === "predictor") renderPredictor()
+}
 
 function getWeek() {
   return JSON.parse(localStorage.getItem("tt_current_week") || "null")
@@ -54,12 +62,12 @@ function renderHome() {
       <div class="dayName">${p.day}</div>
 
       <div class="row">
-        <div>☀️ AM</div>
+        <div class="rowLabel">☀️ AM</div>
         <input inputmode="numeric" placeholder="—" value="${p.am ?? ""}" data-idx="${idx}" data-slot="am" />
       </div>
 
       <div class="row">
-        <div>🌙 PM</div>
+        <div class="rowLabel">🌙 PM</div>
         <input inputmode="numeric" placeholder="—" value="${p.pm ?? ""}" data-idx="${idx}" data-slot="pm" />
       </div>
     `
@@ -76,23 +84,42 @@ function renderHome() {
       const w = ensureWeek()
       w.prices[idx][slot] = Number.isFinite(val) ? val : null
       setWeek(w)
-
-      document.getElementById("peakWindow").textContent = "—"
-      document.getElementById("patternLeaning").textContent = "—"
     })
   })
 }
 
+function renderPredictor(){
+  // Placeholder for now. Later we’ll plug real turnip prediction logic in here.
+  const week = ensureWeek()
+
+  // Simple “best so far” placeholder just to prove the page works
+  const all = []
+  week.prices.forEach(d => {
+    if (Number.isFinite(d.am)) all.push(d.am)
+    if (Number.isFinite(d.pm)) all.push(d.pm)
+  })
+
+  const best = all.length ? Math.max(...all) : null
+  document.getElementById("peakWindow").textContent = best ? "Check midweek" : "—"
+  document.getElementById("patternLeaning").textContent = all.length ? "Unknown" : "—"
+  document.getElementById("recommendation").textContent = best ? "Watch" : "—"
+}
+
 function renderHistory() {
   const week = ensureWeek()
+
   weeksList.innerHTML = `
     <div class="dayCard">
       <div class="dayName">Week starting ${week.startDate}</div>
       <div class="row"><div>Buy</div><strong>${week.buyPrice ?? "—"}</strong></div>
       <div class="row"><div>Sold</div><strong>${week.sold ?? "Not sold"}</strong></div>
-      <div style="margin-top:10px; font-size:14px;">Next: we will list Mon–Sat AM/PM here per week.</div>
+      <div style="margin-top:10px; font-size:14px;">
+        Next: we will save multiple weeks and show Mon–Sat AM/PM for each.
+      </div>
     </div>
   `
 }
 
+// Boot
 renderHome()
+showView("home")

@@ -8,10 +8,16 @@
 </head>
 <body>
 
-  <header class="topbar">
-    <div class="title">
-      <h1>Turnip Tracker</h1>
-      <span class="turnipIcon" aria-hidden="true"></span>
+  <!-- BANNER HEADER -->
+  <header class="bannerWrap">
+    <div class="banner">
+      <!-- Optional banner image. If you upload banner.png it will display. -->
+      <img class="bannerImg" src="banner.png" alt="" onerror="this.style.display='none'">
+
+      <div class="bannerTitle">
+        <span class="bannerText">Turnip Tracker</span>
+        <span class="turnipIcon" aria-hidden="true"></span>
+      </div>
     </div>
   </header>
 
@@ -25,32 +31,45 @@
     <!-- PREDICTOR VIEW -->
     <section id="predictorView" class="view" hidden>
       <header class="subbar">
-        <button id="predictHomeBtn" class="iconBtn" aria-label="Home">🏠</button>
-        <h2>Predictor</h2>
+        <button id="predictHomeBtn" class="homeBtn" aria-label="Home">
+          <span class="homeIcon">🏠</span>
+          <span class="homeText">Home</span>
+        </button>
+        <h2 class="pageTitle">Predictor</h2>
       </header>
 
       <section class="panel">
         <h3>Prediction</h3>
+
         <div class="predRow">
-          <div>Likely Peak Window:</div>
+          <div>Likely Peak Window</div>
           <strong id="peakWindow">—</strong>
         </div>
+
         <div class="predRow">
-          <div>Pattern Leaning:</div>
+          <div>Pattern Leaning</div>
           <strong id="patternLeaning">—</strong>
         </div>
+
         <div class="predRow">
-          <div>Recommendation:</div>
+          <div>Recommendation</div>
           <strong id="recommendation">—</strong>
         </div>
+
+        <p class="smallNote">
+          This is placeholder logic for now. Next we will add real turnip pattern prediction.
+        </p>
       </section>
     </section>
 
-    <!-- PAST WEEKS VIEW -->
+    <!-- HISTORY VIEW -->
     <section id="historyView" class="view" hidden>
       <header class="subbar">
-        <button id="historyHomeBtn" class="iconBtn" aria-label="Home">🏠</button>
-        <h2>Past Weeks</h2>
+        <button id="historyHomeBtn" class="homeBtn" aria-label="Home">
+          <span class="homeIcon">🏠</span>
+          <span class="homeText">Home</span>
+        </button>
+        <h2 class="pageTitle">Past Weeks</h2>
       </header>
 
       <div id="weeksList" class="list"></div>
@@ -58,7 +77,7 @@
 
   </main>
 
-  <!-- BOTTOM BAR -->
+  <!-- BOTTOM NAV BAR -->
   <nav class="bottomBar" aria-label="App navigation">
     <button id="navPredict" class="navBtn" aria-label="Predictor">
       <span class="navIcon">🔮</span>

@@ -1,123 +1,71 @@
-const homeView = document.getElementById("homeView")
-const predictorView = document.getElementById("predictorView")
-const historyView = document.getElementById("historyView")
+const ids = [
+  "mon-am","mon-pm",
+  "tue-am","tue-pm",
+  "wed-am","wed-pm",
+  "thu-am","thu-pm",
+  "fri-am","fri-pm",
+  "sat-am","sat-pm",
+];
 
-const daysEl = document.getElementById("days")
-const weeksList = document.getElementById("weeksList")
+const STORAGE_KEY = "turnipTrackerPricesV1";
 
-document.getElementById("navPredict").onclick = () => showView("predictor")
-document.getElementById("navHistory").onclick = () => showView("history")
-
-document.getElementById("predictHomeBtn").onclick = () => showView("home")
-document.getElementById("historyHomeBtn").onclick = () => showView("home")
-
-const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-
-function showView(which){
-  homeView.hidden = which !== "home"
-  predictorView.hidden = which !== "predictor"
-  historyView.hidden = which !== "history"
-
-  if (which === "history") renderHistory()
-  if (which === "predictor") renderPredictor()
-}
-
-function getWeek() {
-  return JSON.parse(localStorage.getItem("tt_current_week") || "null")
-}
-
-function setWeek(week) {
-  localStorage.setItem("tt_current_week", JSON.stringify(week))
-}
-
-function defaultWeek() {
-  return {
-    startDate: new Date().toISOString().slice(0,10),
-    buyPrice: null,
-    prices: DAYS.map(d => ({ day: d, am: null, pm: null })),
-    sold: null
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.value = (data[id] ?? "");
+    });
+  } catch(e){
+    // ignore
   }
 }
 
-function ensureWeek() {
-  let w = getWeek()
-  if (!w) {
-    w = defaultWeek()
-    setWeek(w)
+function save(){
+  const data = {};
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    data[id] = el.value.trim();
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function wireInputs(){
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+
+    el.addEventListener("input", () => {
+      // keep numbers only, optional
+      el.value = el.value.replace(/[^\d]/g, "");
+      save();
+    });
+  });
+}
+
+function wireButtons(){
+  const predictBtn = document.getElementById("predictBtn");
+  const historyBtn = document.getElementById("historyBtn");
+
+  if(predictBtn){
+    predictBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      alert("Predict page is coming next. Your prices are saved though.");
+    });
   }
-  return w
+
+  if(historyBtn){
+    historyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      alert("History page is coming next. Your prices are saved though.");
+    });
+  }
 }
 
-function renderHome() {
-  const week = ensureWeek()
-  daysEl.innerHTML = ""
-
-  week.prices.forEach((p, idx) => {
-    const card = document.createElement("div")
-    card.className = "dayCard"
-
-    card.innerHTML = `
-      <div class="dayName">${p.day}</div>
-
-      <div class="row">
-        <div class="rowLabel">☀️ AM</div>
-        <input inputmode="numeric" placeholder="—" value="${p.am ?? ""}" data-idx="${idx}" data-slot="am" />
-      </div>
-
-      <div class="row">
-        <div class="rowLabel">🌙 PM</div>
-        <input inputmode="numeric" placeholder="—" value="${p.pm ?? ""}" data-idx="${idx}" data-slot="pm" />
-      </div>
-    `
-    daysEl.appendChild(card)
-  })
-
-  daysEl.querySelectorAll("input").forEach(inp => {
-    inp.addEventListener("change", (e) => {
-      const el = e.target
-      const idx = Number(el.dataset.idx)
-      const slot = el.dataset.slot
-      const raw = el.value.trim()
-
-      const val = raw === "" ? null : Number(raw)
-
-      const w = ensureWeek()
-      w.prices[idx][slot] = Number.isFinite(val) ? val : null
-      setWeek(w)
-    })
-  })
-}
-
-function renderPredictor(){
-  const week = ensureWeek()
-
-  const all = []
-  week.prices.forEach(d => {
-    if (Number.isFinite(d.am)) all.push(d.am)
-    if (Number.isFinite(d.pm)) all.push(d.pm)
-  })
-
-  const best = all.length ? Math.max(...all) : null
-
-  document.getElementById("peakWindow").textContent = best ? "Midweek watch" : "—"
-  document.getElementById("patternLeaning").textContent = all.length ? "Unknown" : "—"
-  document.getElementById("recommendation").textContent = best ? "Hold, then check again" : "—"
-}
-
-function renderHistory() {
-  const week = ensureWeek()
-
-  weeksList.innerHTML = `
-    <div class="dayCard">
-      <div class="dayName">Week starting ${week.startDate}</div>
-      <div class="row"><div>Buy</div><strong>${week.buyPrice ?? "—"}</strong></div>
-      <div class="row"><div>Sold</div><strong>${week.sold ?? "Not sold"}</strong></div>
-      <div style="margin-top:10px; font-size:14px;">
-        Next: we will save multiple weeks and show daily AM and PM prices here.
-      </div>
-    </div>
-  `
-}
-
-renderHome()
-showView("home")
+load();
+wireInputs();
+wireButtons();

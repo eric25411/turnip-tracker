@@ -1,83 +1,106 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
+  <main class="app">
+    <section class="headerCard">
+      <div class="bannerWrap">
+        <!-- CHANGE THIS filename if yours is different -->
+        <img src="banner.png.jpg" alt="Turnip Tracker banner" />
+      </div>
+    </section>
 
-  <div class="container">
-
-    <!-- HEADER, ONLY the banner image -->
-    <header class="header">
-      <img class="bannerImg" src="banner.png.jpg" alt="Turnip Tracker Banner">
-    </header>
-
-    <!-- HOME -->
-    <main id="homeView" class="view">
-      <div id="days" class="grid"></div>
-    </main>
-
-    <!-- PREDICTOR -->
-    <main id="predictorView" class="view" hidden>
-      <div class="subbar">
-        <button id="predictHomeBtn" class="homeBtn" aria-label="Home">
-          <span class="homeIcon">🏠</span>
-          <span class="homeText">Home</span>
-        </button>
-        <h2 class="pageTitle">Predictor</h2>
+    <section class="daysGrid">
+      <div class="dayCard">
+        <h2 class="dayTitle">Monday</h2>
+        <div class="row">
+          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-am" />
+        </div>
+        <div class="row">
+          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-pm" />
+        </div>
       </div>
 
-      <section class="panel">
-        <h3>Prediction</h3>
-
-        <div class="predRow">
-          <div>Likely Peak Window</div>
-          <strong id="peakWindow">—</strong>
+      <div class="dayCard">
+        <h2 class="dayTitle">Tuesday</h2>
+        <div class="row">
+          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-am" />
         </div>
-
-        <div class="predRow">
-          <div>Pattern Leaning</div>
-          <strong id="patternLeaning">—</strong>
+        <div class="row">
+          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-pm" />
         </div>
-
-        <div class="predRow">
-          <div>Recommendation</div>
-          <strong id="recommendation">—</strong>
-        </div>
-
-        <p class="smallNote">Placeholder logic for now. Next we will add real turnip prediction.</p>
-      </section>
-    </main>
-
-    <!-- HISTORY -->
-    <main id="historyView" class="view" hidden>
-      <div class="subbar">
-        <button id="historyHomeBtn" class="homeBtn" aria-label="Home">
-          <span class="homeIcon">🏠</span>
-          <span class="homeText">Home</span>
-        </button>
-        <h2 class="pageTitle">Past Weeks</h2>
       </div>
 
-      <div id="weeksList" class="list"></div>
-    </main>
+      <div class="dayCard">
+        <h2 class="dayTitle">Wednesday</h2>
+        <div class="row">
+          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-am" />
+        </div>
+        <div class="row">
+          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-pm" />
+        </div>
+      </div>
 
-  </div>
+      <div class="dayCard">
+        <h2 class="dayTitle">Thursday</h2>
+        <div class="row">
+          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-am" />
+        </div>
+        <div class="row">
+          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-pm" />
+        </div>
+      </div>
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottomBar" aria-label="App navigation">
-    <button id="navPredict" class="navBtn" aria-label="Predictor">
-      <span class="navIcon">🔮</span>
-      <span class="navText">Predict</span>
-    </button>
+      <div class="dayCard">
+        <h2 class="dayTitle">Friday</h2>
+        <div class="row">
+          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-am" />
+        </div>
+        <div class="row">
+          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-pm" />
+        </div>
+      </div>
 
-    <button id="navHistory" class="navBtn" aria-label="Past Weeks">
-      <span class="navIcon">🕰️</span>
-      <span class="navText">History</span>
-    </button>
+      <div class="dayCard">
+        <h2 class="dayTitle">Saturday</h2>
+        <div class="row">
+          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-am" />
+        </div>
+        <div class="row">
+          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-pm" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomNav">
+    <a class="navBtn" href="#" id="predictBtn">
+      <div class="navIcon">🔮</div>
+      <div class="navText">Predict</div>
+    </a>
+
+    <a class="navBtn" href="#" id="historyBtn">
+      <div class="navIcon">🕰️</div>
+      <div class="navText">History</div>
+    </a>
   </nav>
 
   <script src="app.js"></script>

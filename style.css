@@ -8,14 +8,12 @@
   --cardInner: rgba(255,255,255,0.22);
 
   --ink: #1f1f1f;
-  --muted: rgba(31,31,31,0.65);
 
   --pill: rgba(255,255,255,0.35);
   --input: rgba(255,255,255,0.55);
 
   --radiusXL: 34px;
   --radiusL: 28px;
-  --radiusM: 22px;
 
   --shadow: 0 16px 30px rgba(0,0,0,0.12);
   --shadowSoft: 0 10px 18px rgba(0,0,0,0.10);
@@ -37,7 +35,7 @@ body{
 .app{
   max-width: 980px;
   margin: 0 auto;
-  padding: 8px 14px 112px;
+  padding: 8px 14px 104px;
 }
 
 /* ===== Header / Banner ===== */
@@ -55,17 +53,16 @@ body{
   background: rgba(255,255,255,0.25);
 }
 
-/* This is the key to “banner higher” WITHOUT weird negative margins:
-   it changes which part of the image is shown inside the fixed-height crop. */
+/* Fix: show more of the lower part so the banner text isn't cut */
 .bannerImg{
   width: 100%;
   height: 100%;
   display:block;
   object-fit: cover;
-  object-position: center 30%;
+  object-position: center 58%;
 }
 
-/* ===== 2-column grid (the look you liked) ===== */
+/* ===== 2-column grid ===== */
 .daysGrid{
   display:grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -78,16 +75,18 @@ body{
   border-radius: var(--radiusXL);
   padding: 16px 16px 14px;
   box-shadow: var(--shadow);
+
+  /* Fix: prevent anything inside from bleeding into neighbor card */
+  overflow: hidden;
 }
 
 .dayTitle{
   margin: 0 0 12px;
   font-weight: 900;
   letter-spacing: -0.02em;
-  font-size: clamp(22px, 5.6vw, 34px);
+  font-size: clamp(20px, 5.2vw, 30px);
   line-height: 1.05;
 
-  /* Prevent “Wednesday” from blasting outside the card */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -97,12 +96,15 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap: 12px;
+  gap: 10px;
 
   background: var(--cardInner);
   border-radius: var(--radiusL);
   padding: 12px 14px;
   margin-bottom: 12px;
+
+  /* Fix: clip any Safari weird overflow from inputs */
+  overflow: hidden;
 }
 
 .row:last-child{ margin-bottom: 0; }
@@ -112,7 +114,11 @@ body{
   align-items:center;
   gap: 10px;
   font-weight: 900;
-  font-size: 20px;
+  font-size: 18px;
+
+  /* Let label shrink so input never gets pushed outside */
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .emoji{
@@ -121,24 +127,24 @@ body{
   display:inline-flex;
 }
 
-/* Input pill */
+/* Fix: use a fixed input width that always fits inside small cards */
 .priceInput{
   appearance: none;
   -webkit-appearance: none;
 
-  width: 44%;
-  min-width: 96px;
-  max-width: 150px;
+  flex: 0 0 108px;
+  width: 108px;
+  max-width: 108px;
 
   border: none;
   outline: none;
   border-radius: 18px;
   background: var(--input);
 
-  padding: 10px 12px;
+  padding: 10px 10px;
   text-align: center;
 
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
   color: var(--ink);
 
@@ -155,25 +161,25 @@ body{
     0 0 0 3px rgba(255,255,255,0.35);
 }
 
-/* ===== Bottom Nav (side by side, smaller) ===== */
+/* ===== Bottom Nav (smaller, side by side) ===== */
 .bottomNav{
   position: fixed;
   left: 50%;
-  bottom: 12px;
+  bottom: 10px;
   transform: translateX(-50%);
 
   width: min(720px, calc(100% - 24px));
   background: rgba(248, 241, 230, 0.92);
   backdrop-filter: blur(10px);
 
-  border-radius: 26px;
-  padding: 10px 12px;
+  border-radius: 22px;
+  padding: 8px 10px;
 
   display:flex;
   flex-direction: row;
   align-items:center;
   justify-content: space-around;
-  gap: 10px;
+  gap: 8px;
 
   box-shadow: 0 16px 30px rgba(0,0,0,0.18);
 }
@@ -198,23 +204,23 @@ body{
 }
 
 .navIcon{
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .navText{
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
 }
 
 /* ===== Mobile tuning ===== */
 @media (max-width: 520px){
   .app{
-    padding: 8px 12px 108px;
+    padding: 8px 12px 100px;
   }
 
   .bannerWrap{
-    height: 165px;
+    height: 170px;
   }
 
   .daysGrid{
@@ -226,20 +232,13 @@ body{
   }
 
   .label{
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .priceInput{
-    font-size: 20px;
-    min-width: 90px;
-  }
-
-  .bottomNav{
-    bottom: 10px;
-    padding: 9px 10px;
-  }
-
-  .navText{
-    font-size: 15px;
+    flex: 0 0 102px;
+    width: 102px;
+    max-width: 102px;
+    font-size: 19px;
   }
 }

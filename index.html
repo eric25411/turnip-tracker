@@ -4,17 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-
-  <!-- Use a NEW filename to force-cache-bust -->
-  <link rel="stylesheet" href="style-v10.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <main class="app">
     <section class="headerCard">
       <div class="bannerWrap">
-        <!-- CHANGE THIS filename if yours is different -->
-        <img class="bannerImg" src="banner.png.jpg" alt="Turnip Tracker banner" />
+        <img src="banner.png.jpg" alt="Turnip Tracker banner" />
+      </div>
+
+      <!-- NEW: save to history -->
+      <div class="headerActions">
+        <button class="saveWeekBtn" id="saveWeekBtn" type="button">Save week to History</button>
       </div>
     </section>
 

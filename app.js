@@ -142,6 +142,7 @@
 
     showToast(auto ? "Week auto saved" : "Saved to History");
     renderHistory(true);
+    updatePrediction();
   }
 
   function bestSellInWeek(week) {
@@ -177,24 +178,79 @@
     const maxV = Math.max(...nz);
     const ratio = maxV / buy;
 
-    // Simple, readable rules
     if (ratio <= 1.02 && dec >= inc) return "decreasing";
     if (ratio >= 1.8) return "big spike";
     if (ratio >= 1.4) return "small spike";
 
-    // If it goes up a little but not much, treat as random
     if (inc >= 3 && dec >= 3) return "random";
     if (inc <= 2 && dec >= 3) return "decreasing";
 
     return "random";
   }
 
-  function buildHistoryStats() {
+  // Recency weighting: newest weeks count more
+  // Half-life is how many weeks it takes for weight to cut in half.
+  function recencyWeight(index, halfLifeWeeks) {
+    const hl = Math.max(1, Number(halfLifeWeeks) || 8);
+    // weight = 0.5^(index/hl)
+    return Math.pow(0.5, index / hl);
+  }
+
+  function weightedTopSlotAndStats(weeksWithIndex) {
+    // weeksWithIndex: [{week, idx}]
+    const peakWeightBySlot = {};
+    const peakPrices = [];
+    const peakProfits = [];
+    const weightsUsed = [];
+
+    for (const item of weeksWithIndex) {
+      const w = item.week;
+      const idx = item.idx;
+
+      const buy = num(w.buy);
+      const best = bestSellInWeek(w);
+      if (!best) continue;
+
+      const wt = recencyWeight(idx, 8);
+      peakWeightBySlot[best.id] = (peakWeightBySlot[best.id] || 0) + wt;
+
+      peakPrices.push(best.value);
+      peakProfits.push(best.value - buy);
+      weightsUsed.push(wt);
+    }
+
+    let topSlot = null;
+    let topW = 0;
+    let totalW = 0;
+
+    for (const slotId of Object.keys(peakWeightBySlot)) {
+      const w = peakWeightBySlot[slotId];
+      totalW += w;
+      if (w > topW) {
+        topW = w;
+        topSlot = slotId;
+      }
+    }
+
+    const pct = totalW > 0 ? Math.round((topW / totalW) * 100) : 0;
+
+    return {
+      n: weeksWithIndex.length,
+      topSlot,
+      topSlotPct: pct,
+      medPeak: Math.round(median(peakPrices)),
+      medProfit: Math.round(median(peakProfits)),
+    };
+  }
+
+  function buildHistoryStatsWeighted() {
     const history = getHistory();
 
+    // newest = index 0, older = higher index
     const usable = history
-      .filter((w) => num(w?.buy) > 0)
-      .filter((w) => countNonZero(weekSeries(w)) >= 8); // need enough data to be meaningful
+      .map((week, idx) => ({ week, idx }))
+      .filter((x) => num(x.week?.buy) > 0)
+      .filter((x) => countNonZero(weekSeries(x.week)) >= 8);
 
     const byPattern = {
       "decreasing": [],
@@ -203,50 +259,17 @@
       "random": [],
     };
 
-    for (const w of usable) {
-      const buy = num(w.buy);
-      const series = weekSeries(w);
+    for (const item of usable) {
+      const buy = num(item.week.buy);
+      const series = weekSeries(item.week);
       const pat = classifyPattern(series, buy);
       if (!byPattern[pat]) continue;
-      byPattern[pat].push(w);
+      byPattern[pat].push(item);
     }
 
-    function summarize(weeks) {
-      if (!weeks.length) return null;
-
-      const peakCounts = {};
-      const peakPrices = [];
-      const peakProfits = [];
-
-      for (const w of weeks) {
-        const buy = num(w.buy);
-        const best = bestSellInWeek(w);
-        if (!best) continue;
-
-        peakCounts[best.id] = (peakCounts[best.id] || 0) + 1;
-        peakPrices.push(best.value);
-        peakProfits.push(best.value - buy);
-      }
-
-      let topSlot = null;
-      let topCount = 0;
-      for (const slotId of Object.keys(peakCounts)) {
-        if (peakCounts[slotId] > topCount) {
-          topCount = peakCounts[slotId];
-          topSlot = slotId;
-        }
-      }
-
-      const total = weeks.length;
-      const pct = total ? Math.round((topCount / total) * 100) : 0;
-
-      return {
-        n: total,
-        topSlot,
-        topSlotPct: pct,
-        medPeak: Math.round(median(peakPrices)),
-        medProfit: Math.round(median(peakProfits)),
-      };
+    function summarize(items) {
+      if (!items.length) return null;
+      return weightedTopSlotAndStats(items);
     }
 
     return {
@@ -268,7 +291,6 @@
     const best = findBestFromInputs();
     const buy = buyInput ? num(buyInput.value) : 0;
 
-    // Base line: current best
     if (!best) {
       predictText.textContent = "Enter prices to get a best sell window.";
       return;
@@ -286,12 +308,10 @@
       line1 = `Best sell time so far is ${slotName}, at ${best.value}. That is ${profit} profit per turnip vs your buy price.`;
     }
 
-    // History learning (Option 1)
-    const currentSeries = getCurrentWeekObject();
-    const pat = classifyPattern(weekSeries(currentSeries), buy);
-    const stats = buildHistoryStats();
+    const currentWeek = getCurrentWeekObject();
+    const pat = classifyPattern(weekSeries(currentWeek), buy);
 
-    // Pick stats: pattern first, fallback to all
+    const stats = buildHistoryStatsWeighted();
     const patStats = stats?.patterns?.[pat] || null;
     const allStats = stats?.all || null;
     const useStats = patStats || allStats;
@@ -307,28 +327,21 @@
 
     let line2 = "";
     if (patStats) {
-      line2 = `Based on your saved weeks with a similar pattern, peaks most often hit ${recSlotName}. That happens about ${conf}% of the time across ${n} weeks.`;
+      line2 = `Weighted toward your recent weeks with a similar pattern, peaks most often hit ${recSlotName}. About ${conf}% across ${n} saved weeks.`;
     } else {
-      line2 = `Based on your saved history, peaks most often hit ${recSlotName}. That happens about ${conf}% of the time across ${n} weeks.`;
+      line2 = `Weighted toward your recent weeks, peaks most often hit ${recSlotName}. About ${conf}% across ${n} saved weeks.`;
     }
 
     let line3 = "";
     if (useStats.medPeak > 0) {
-      if (buy > 0) {
-        line3 = `Your median peak is around ${useStats.medPeak}, and your median profit is around ${useStats.medProfit}.`;
-      } else {
-        line3 = `Your median peak is around ${useStats.medPeak}.`;
-      }
+      if (buy > 0) line3 = `Your median peak is around ${useStats.medPeak}, and median profit is around ${useStats.medProfit}.`;
+      else line3 = `Your median peak is around ${useStats.medPeak}.`;
     }
 
     let line4 = "";
-    if (pat !== "unknown") {
-      line4 = `Current week pattern guess is ${pat}.`;
-    }
+    if (pat !== "unknown") line4 = `Current week pattern guess is ${pat}.`;
 
-    // Keep it readable on mobile
-    const msgParts = [line1, line4, line2, line3].filter(Boolean);
-    predictText.textContent = msgParts.join(" ");
+    predictText.textContent = [line1, line4, line2, line3].filter(Boolean).join(" ");
   }
 
   function formatDate(iso) {
@@ -416,9 +429,7 @@
       const load = card.querySelector(".loadBtn");
       const del = card.querySelector(".deleteBtn");
 
-      expand.addEventListener("click", () => {
-        card.classList.toggle("isOpen");
-      });
+      expand.addEventListener("click", () => card.classList.toggle("isOpen"));
 
       load.addEventListener("click", () => {
         const idx = Number(card.getAttribute("data-idx"));
@@ -457,7 +468,6 @@
       });
     });
 
-    // Auto save when Saturday PM is entered (only once per week)
     if (satPmInput) {
       satPmInput.addEventListener("input", () => {
         const v = num(satPmInput.value);
@@ -537,8 +547,6 @@
 
     showToast("Week deleted");
     renderHistory(false);
-
-    // Option 1 benefit: predictor automatically forgets because stats come from history every time
     updatePrediction();
   }
 

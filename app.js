@@ -22,7 +22,7 @@
     if (!toast) return;
     toast.textContent = msg;
     toast.classList.add("show");
-    window.setTimeout(() => toast.classList.remove("show"), 1100);
+    window.setTimeout(() => toast.classList.remove("show"), 1200);
   }
 
   function keyFor(id) {
@@ -108,9 +108,7 @@
       localStorage.removeItem(keyFor(el.id));
     });
 
-    // also clear autosave marker
     localStorage.removeItem("tt_autosaved_this_week");
-
     updatePrediction();
   }
 
@@ -129,8 +127,11 @@
     history.unshift(week);
     localStorage.setItem("tt_history", JSON.stringify(history));
 
+    // store marker so history view can highlight the newest item
+    localStorage.setItem("tt_last_saved_at", week.savedAt);
+
     showToast(auto ? "Week auto saved" : "Saved to History");
-    renderHistory();
+    renderHistory(true);
   }
 
   function bestSellInWeek(week) {
@@ -151,10 +152,11 @@
     }
   }
 
-  function renderHistory() {
+  function renderHistory(tryHighlight) {
     if (!historyList) return;
 
     const history = JSON.parse(localStorage.getItem("tt_history") || "[]");
+    const lastSavedAt = localStorage.getItem("tt_last_saved_at") || "";
 
     if (history.length === 0) {
       historyList.innerHTML = `
@@ -180,8 +182,10 @@
       const bestText = best ? `${prettySlot(best.id)} at ${best.value}` : "No prices saved";
       const buy = Number(week.buy || 0);
 
+      const isNew = lastSavedAt && week.savedAt === lastSavedAt;
+
       return `
-        <div class="weekCard" data-idx="${idx}">
+        <div class="weekCard ${isNew ? "isNew" : ""}" data-idx="${idx}">
           <div class="weekTop">
             <div class="weekTitle">${formatDate(week.savedAt)}</div>
             <div class="weekMeta">
@@ -222,6 +226,18 @@
         card.classList.toggle("isOpen");
       });
     });
+
+    if (tryHighlight) {
+      const newCard = historyList.querySelector(".weekCard.isNew");
+      if (newCard) {
+        newCard.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // remove highlight after a bit so it feels subtle
+        window.setTimeout(() => {
+          newCard.classList.remove("isNew");
+        }, 4500);
+      }
+    }
   }
 
   function wireInputs() {
@@ -281,17 +297,15 @@
     if (hash === "#history") {
       showView("history");
       setActiveNav("history");
-      renderHistory();
+      renderHistory(false);
     } else {
       showView("predict");
       setActiveNav("predict");
     }
   }
 
-  // Manual save
   if (saveWeekBtn) saveWeekBtn.addEventListener("click", () => saveWeekToHistory(false));
 
-  // Manual new week
   if (newWeekBtn) {
     newWeekBtn.addEventListener("click", () => {
       clearCurrentWeek();
@@ -299,7 +313,6 @@
     });
   }
 
-  // Home button in history
   if (historyHomeBtn) {
     historyHomeBtn.addEventListener("click", () => {
       window.location.hash = "#predict";

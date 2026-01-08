@@ -14,22 +14,19 @@
 
     <!-- HEADER -->
     <div class="header">
-  <img
-    src="banner.png.jpg"
-    alt="Turnip Tracker"
-    class="headerImage"
-    onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
-  />
+      <img
+        src="banner.png.jpg"
+        alt="Turnip Tracker"
+        class="headerImage"
+        onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
+      />
 
-  <div id="headerFallback" style="display:none; font-size:22px; font-weight:700;">
-    Turnip Tracker
-  </div>
+      <div id="headerFallback" style="display:none; font-size:22px; font-weight:700; text-align:center;">
+        Turnip Tracker
+      </div>
 
-  <button id="saveWeekBtn">Save week to History</button>
-</div>
-
-      <button id="saveWeekBtn" class="primaryBtn">Save week to History</button>
-    </header>
+      <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
+    </div>
 
     <!-- MAIN -->
     <main id="mainView">
@@ -125,12 +122,12 @@
           <div class="historyCard">
             <h3 class="historySubtitle">Import, Export</h3>
             <div class="historyActions">
-              <button id="exportBtn" class="chipBtn">Export</button>
+              <button id="exportBtn" class="chipBtn" type="button">Export</button>
               <label class="chipBtn fileBtn">
                 Import
                 <input id="importFile" type="file" accept="application/json" />
               </label>
-              <button id="goHomeBtn" class="chipBtn">Home</button>
+              <button id="goHomeBtn" class="chipBtn" type="button">Home</button>
             </div>
 
             <p class="historySmall" id="historyEmptyNote">

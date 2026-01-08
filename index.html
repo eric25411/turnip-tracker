@@ -1,84 +1,124 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
 
-  <!-- Cache buster is OK. File name stays style.css -->
-  <link rel="stylesheet" href="style.css?v=15" />
+  <!-- Cache bust -->
+  <link rel="stylesheet" href="style.css?v=16" />
 </head>
 
 <body>
-  <main class="app">
+  <div class="app">
 
-    <!-- HOME SCREEN -->
-    <section id="screen-home" class="screen screenActive">
-      <section class="headerCard">
-        <div class="bannerWrap">
-          <!-- Update this filename to match your repo -->
-          <img class="bannerImg" src="banner.png.jpg" alt="Turnip Tracker" />
+    <!-- HEADER -->
+    <header class="header">
+      <img
+        src="header.png"
+        alt="Turnip Tracker"
+        class="headerImage"
+      />
+      <button id="saveWeekBtn">Save week to History</button>
+    </header>
+
+    <!-- MAIN -->
+    <main id="mainView">
+
+      <!-- DAYS -->
+      <section class="days">
+
+        <!-- DAY TEMPLATE (repeat) -->
+        <div class="dayCard">
+          <h2 class="dayTitle">Monday</h2>
+
+          <div class="row">
+            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+
+          <div class="row">
+            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
         </div>
 
-        <div class="headerActions">
-          <button class="saveWeekBtn" id="saveWeekBtn" type="button">Save week to History</button>
-        </div>
-      </section>
-
-      <section class="daysGrid" id="daysGrid"></section>
-    </section>
-
-    <!-- HISTORY SCREEN -->
-    <section id="screen-history" class="screen">
-      <section class="dayCard historyCard">
-        <h2 class="dayTitle">Past weeks</h2>
-
-        <div class="historyToolbar">
-          <button class="smallBtn" id="exportBtn" type="button">Export</button>
-          <label class="smallBtn fileBtn">
-            Import
-            <input id="importFile" type="file" accept="application/json" />
-          </label>
-          <button class="smallBtn" id="goHomeBtn" type="button">Home</button>
+        <div class="dayCard">
+          <h2 class="dayTitle">Tuesday</h2>
+          <div class="row">
+            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+          <div class="row">
+            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
         </div>
 
-        <p class="muted">
-          Tap a week to expand. Use Load to edit an old week, or Delete to remove it.
-        </p>
+        <div class="dayCard">
+          <h2 class="dayTitle">Wednesday</h2>
+          <div class="row">
+            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+          <div class="row">
+            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+        </div>
+
+        <div class="dayCard">
+          <h2 class="dayTitle">Thursday</h2>
+          <div class="row">
+            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+          <div class="row">
+            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+        </div>
+
+        <div class="dayCard">
+          <h2 class="dayTitle">Friday</h2>
+          <div class="row">
+            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+          <div class="row">
+            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+        </div>
+
+        <div class="dayCard">
+          <h2 class="dayTitle">Saturday</h2>
+          <div class="row">
+            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+          <div class="row">
+            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+            <input class="priceInput" inputmode="numeric" placeholder="-" />
+          </div>
+        </div>
+
       </section>
+    </main>
+  </div>
 
-      <section id="historyList" class="historyList"></section>
-    </section>
-
-    <!-- PREDICT SCREEN (placeholder for now) -->
-    <section id="screen-predict" class="screen">
-      <section class="dayCard historyCard">
-        <h2 class="dayTitle">Predict</h2>
-        <p class="muted">
-          This is where we will learn patterns from your saved weeks and suggest the best time to sell.
-          Next step is to start collecting weeks, then we can calculate best sell windows.
-        </p>
-      </section>
-    </section>
-
-  </main>
-
-  <!-- Bottom Nav -->
-  <nav class="bottomNav" aria-label="Bottom Navigation">
-    <div class="bottomNavInner">
-      <button class="navBtn" type="button" data-target="predict">
-        <div class="navIcon">🔮</div>
-        <div class="navText">Predict</div>
-      </button>
-
-      <button class="navBtn" type="button" data-target="history">
-        <div class="navIcon">🕰️</div>
-        <div class="navText">History</div>
-      </button>
-    </div>
+  <!-- BOTTOM NAV -->
+  <nav class="bottomNav">
+    <button class="navBtn active">
+      <span class="navIcon">🔮</span>
+      <span>Predict</span>
+    </button>
+    <button class="navBtn">
+      <span class="navIcon">🕰️</span>
+      <span>History</span>
+    </button>
   </nav>
 
-  <script src="app.js?v=15"></script>
+  <script src="app.js"></script>
 </body>
 </html>

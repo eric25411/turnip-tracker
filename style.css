@@ -222,3 +222,4 @@ body{
   .dayTitle{ font-size: 34px; }
   .row{ grid-template-columns: 1fr 96px; }
 }
+body{ outline: 8px solid red !important; }

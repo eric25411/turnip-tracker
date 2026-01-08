@@ -142,13 +142,22 @@ body{
   margin: 0 auto;
 }
 
-/* Sticky day header */
+/* 🔧 FIXED STICKY HEADER */
 .dayHeader{
   position: sticky;
   top: 10px;
-  z-index: 5;
+
+  /* THIS is the key fix */
+  bottom: calc(var(--bottomNavH) + 12px);
+
+  z-index: 2;
+
   padding: 6px 0 12px;
-  background: linear-gradient(180deg, rgba(234,192,156,0.98), rgba(234,192,156,0.6));
+  background: linear-gradient(
+    180deg,
+    rgba(234,192,156,0.98),
+    rgba(234,192,156,0.6)
+  );
   backdrop-filter: blur(6px);
   border-radius: 18px;
 }
@@ -217,7 +226,7 @@ body{
   box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
 }
 
-/* BOTTOM NAV */
+/* BOTTOM NAV (ALWAYS ON TOP) */
 .bottomNav{
   position: fixed;
   left: 0;
@@ -228,6 +237,9 @@ body{
   backdrop-filter: blur(10px);
   padding-bottom: env(safe-area-inset-bottom);
   box-shadow: 0 -8px 20px rgba(0,0,0,0.15);
+
+  /* ensures nothing floats above it */
+  z-index: 50;
 }
 
 .bottomNavInner{
@@ -251,11 +263,6 @@ body{
   padding: 12px 16px;
   border-radius: 999px;
   background: rgba(255,255,255,0.0);
-  transition: background 120ms ease, transform 120ms ease;
-}
-
-.navBtn:active{
-  transform: scale(0.99);
 }
 
 .navBtn.isActive{
@@ -284,7 +291,6 @@ body{
   font-weight: 700;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 160ms ease, transform 160ms ease;
 }
 
 .toast.show{

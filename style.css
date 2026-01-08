@@ -1,35 +1,25 @@
-/* =========================
-   ROOT + RESET
-========================= */
-
 :root{
   --bg: #eaf0ff;
-  --card: #e6b893;
-  --cardInner: rgba(255,255,255,0.25);
-  --pill: rgba(255,255,255,0.7);
   --text: #1b1b1b;
 
   --radius: 28px;
   --shadow: 0 10px 25px rgba(0,0,0,0.12);
 
+  --cardInner: rgba(255,255,255,0.22);
+  --pill: rgba(255,255,255,0.72);
+
   --bottomNavH: 92px;
 }
 
-*{
-  box-sizing: border-box;
-}
+*{ box-sizing: border-box; }
 
 body{
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", sans-serif;
   background: var(--bg);
   color: var(--text);
   padding-bottom: calc(var(--bottomNavH) + env(safe-area-inset-bottom));
 }
-
-/* =========================
-   APP WRAPPER
-========================= */
 
 .app{
   max-width: 720px;
@@ -37,10 +27,7 @@ body{
   padding: 18px;
 }
 
-/* =========================
-   HEADER
-========================= */
-
+/* HEADER */
 .headerCard{
   background: rgba(255,255,255,0.65);
   border-radius: var(--radius);
@@ -58,10 +45,13 @@ body{
   width: 100%;
   max-width: 520px;
   border-radius: 22px;
+  display: block;
 }
 
 .headerActions{
   margin-top: 14px;
+  display: flex;
+  justify-content: center;
 }
 
 .saveWeekBtn{
@@ -69,49 +59,108 @@ body{
   background: white;
   padding: 10px 18px;
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: 700;
   color: #2b6fff;
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-/* =========================
-   DAYS GRID
-========================= */
+.saveWeekBtn:active{
+  transform: scale(0.98);
+}
 
+/* BUY ROW */
+.buyRow{
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.65);
+  border-radius: 22px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
+}
+
+.buyLabel{
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.buyInput{
+  width: 120px;
+  height: 46px;
+  border-radius: 999px;
+  border: none;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.72);
+}
+
+.buyInput:focus{
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
+}
+
+/* PREDICT PANEL */
+.predictPanel{
+  margin-top: 14px;
+  background: rgba(255,255,255,0.65);
+  border-radius: 22px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
+  text-align: left;
+}
+
+.predictTitle{
+  font-weight: 900;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.predictText{
+  font-weight: 700;
+  opacity: 0.85;
+  line-height: 1.3;
+}
+
+/* DAYS GRID */
 .daysGrid{
   display: grid;
   gap: 18px;
   margin-top: 22px;
+  grid-template-columns: 1fr;
 }
 
-/* single column lock on mobile */
-@media (max-width: 820px){
-  .daysGrid{
-    grid-template-columns: 1fr;
-  }
-}
-
-/* =========================
-   DAY CARD
-========================= */
-
+/* DAY CARD */
 .dayCard{
   background: linear-gradient(180deg, #eac09c, #e1b189);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 18px;
   box-shadow: var(--shadow);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Sticky day header */
+.dayHeader{
+  position: sticky;
+  top: 10px;
+  z-index: 5;
+  padding: 6px 0 12px;
+  background: linear-gradient(180deg, rgba(234,192,156,0.98), rgba(234,192,156,0.6));
+  backdrop-filter: blur(6px);
+  border-radius: 18px;
 }
 
 .dayTitle{
-  margin: 0 0 14px 0;
-  font-size: 32px;
-  font-weight: 800;
+  margin: 0;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
 }
 
-/* =========================
-   ROW (AM / PM)
-========================= */
-
+/* ROWS */
 .row{
   display: flex;
   align-items: center;
@@ -120,32 +169,38 @@ body{
   border-radius: 22px;
   padding: 14px 16px;
   margin-bottom: 12px;
+  min-height: 64px;
 }
 
 .label{
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 18px;
+  width: 110px;
+  flex: 0 0 110px;
 }
 
 .emoji{
   font-size: 22px;
+  width: 26px;
+  text-align: center;
 }
 
-/* =========================
-   INPUT PILL
-========================= */
+.ampm{
+  width: 40px;
+}
 
+/* INPUT PILL */
 .priceInput{
-  width: 86px;
-  height: 44px;
+  width: 96px;
+  height: 46px;
   border-radius: 999px;
   border: none;
   text-align: center;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 800;
   background: var(--pill);
   color: var(--text);
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
@@ -158,21 +213,18 @@ body{
 .priceInput:focus{
   outline: none;
   transform: scale(1.02);
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
   background: white;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
 }
 
-/* =========================
-   BOTTOM NAV
-========================= */
-
+/* BOTTOM NAV */
 .bottomNav{
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   height: var(--bottomNavH);
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.86);
   backdrop-filter: blur(10px);
   padding-bottom: env(safe-area-inset-bottom);
   box-shadow: 0 -8px 20px rgba(0,0,0,0.15);
@@ -185,16 +237,30 @@ body{
   display: flex;
   justify-content: space-around;
   align-items: center;
+  padding: 0 12px;
 }
 
 .navBtn{
   text-decoration: none;
   color: var(--text);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  font-weight: 700;
+  gap: 10px;
+  font-weight: 800;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.0);
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.navBtn:active{
+  transform: scale(0.99);
+}
+
+.navBtn.isActive{
+  background: rgba(255,255,255,0.65);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
 }
 
 .navIcon{
@@ -202,5 +268,26 @@ body{
 }
 
 .navText{
-  font-size: 14px;
+  font-size: 16px;
+}
+
+/* TOAST */
+.toast{
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--bottomNavH) + 14px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: rgba(20,20,20,0.82);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.toast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
 }

@@ -1,16 +1,17 @@
+/* Turnip Tracker - style.css (full file) */
+
 :root{
-  --bg1:#dbe9ff;
-  --bg2:#f3efe7;
-
-  --card:#e9b28f;
-  --cardShadow: 0 10px 26px rgba(0,0,0,.12);
-
-  --inner:#eddcd6;
-
-  --pill:#f5efe7;
-  --pillBorder: rgba(0,0,0,.06);
-
-  --text:#1f1f1f;
+  --bg1:#e8f1ff;
+  --bg2:#dfe9ff;
+  --card:#e3b28f;
+  --inner:#eed5c7;
+  --pill:#fff7ef;
+  --ink:#1f1f1f;
+  --muted:#7b7b7b;
+  --shadow: 0 14px 26px rgba(0,0,0,.10);
+  --radius-lg: 34px;
+  --radius-md: 22px;
+  --radius-sm: 18px;
 }
 
 *{ box-sizing:border-box; }
@@ -18,274 +19,206 @@ html,body{ height:100%; }
 
 body{
   margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color:var(--text);
-  background: radial-gradient(900px 600px at 50% 35%, var(--bg1), var(--bg2));
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 50% 10%, rgba(255,255,255,.85), rgba(255,255,255,0)),
+    linear-gradient(180deg, var(--bg1), var(--bg2));
+  padding-bottom: 120px; /* space for bottom nav */
 }
 
 .app{
-  max-width: 900px;
+  width:min(760px, 100%);
   margin: 0 auto;
-  padding: 14px 14px 120px; /* room for bottom nav */
+  padding: 18px 16px 22px;
 }
 
-/* =========================
-   HEADER / BANNER
-========================= */
+/* Header */
 .headerCard{
-  border-radius: 28px;
-  padding: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: rgba(255,255,255,.35);
+  box-shadow: var(--shadow);
 }
 
 .bannerWrap{
-  width: 100%;
-  border-radius: 26px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: rgba(255,255,255,.35);
-  box-shadow: 0 10px 24px rgba(0,0,0,.10);
 }
 
 .bannerWrap img{
-  display:block;
   width:100%;
-  height: 185px;
+  height: 180px;
+  display:block;
   object-fit: cover;
-  object-position: center 40%;
+  /* raise the banner content slightly */
+  object-position: center 32%;
 }
 
-/* Save week button (small, centered, does not wreck layout) */
+/* Save week button area */
 .headerActions{
   display:flex;
   justify-content:center;
-  margin-top: 10px;
+  padding: 14px 14px 18px;
 }
 
 .saveWeekBtn{
-  appearance:none;
-  border: 1px solid rgba(0,0,0,.10);
-  background: rgba(245,239,231,.92);
-  color: #1f1f1f;
-  padding: 10px 16px;
-  border-radius: 16px;
-  font-weight: 800;
-  font-size: 14px;
-  box-shadow: 0 8px 18px rgba(0,0,0,.08);
+  border: 0;
+  background: rgba(255,255,255,.72);
+  color: var(--ink);
+  font-weight: 700;
+  padding: 12px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
 }
 
-.saveWeekBtn:active{
-  transform: translateY(1px);
-}
-
-/* =========================
-   DAYS GRID
-========================= */
+/* Days grid */
 .daysGrid{
-  margin-top: 14px;
+  margin-top: 16px;
   display:grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
+/* Day card */
 .dayCard{
   background: var(--card);
-  border-radius: 30px;
-  padding: 16px 16px 14px;
-  box-shadow: var(--cardShadow);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px 18px;
+  box-shadow: var(--shadow);
+  position: relative;
 }
 
-/* This prevents long titles from overlapping the next card */
+/* Day title */
 .dayTitle{
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-weight: 900;
-  font-size: 34px;
+  font-size: 44px;
+  letter-spacing: -0.02em;
   line-height: 1.05;
-  letter-spacing: .2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  /* IMPORTANT: never truncate day names */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
-/* Row with label on left, input on right */
+/* AM/PM row pill */
 .row{
-  display:flex;
+  background: rgba(255,255,255,.20);
+  border-radius: 999px;
+  padding: 12px 12px;
+  margin-top: 12px;
+
+  /* use grid so input can never overflow */
+  display:grid;
+  grid-template-columns: 1fr 120px;
   align-items:center;
   gap: 12px;
 
-  background: rgba(237,220,214,.72);
-  border-radius: 26px;
-  padding: 12px 12px;
-  border: 1px solid rgba(0,0,0,.04);
-  box-shadow: inset 0 2px 0 rgba(255,255,255,.65);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.22);
 }
 
-.row + .row{ margin-top: 12px; }
-
-/* Fixed label width so input never spills */
+/* Left label (emoji + AM/PM) */
 .label{
   display:flex;
   align-items:center;
   gap: 10px;
-  font-weight: 800;
-  font-size: 18px;
-  flex: 0 0 92px;   /* key: holds space for emoji + AM/PM */
-  min-width: 92px;
+  min-width: 0;
 }
 
 .emoji{
-  font-size: 22px;
-  width: 26px;
-  display:inline-flex;
-  justify-content:center;
+  font-size: 26px;
+  width: 34px;
+  text-align:center;
 }
 
-/* Input takes remaining space, but stays inside card */
+.label span:last-child{
+  font-weight: 900;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+}
+
+/* Input on the right */
 .priceInput{
-  flex: 1 1 auto;
   width: 100%;
-  min-width: 0;     /* key: prevents overflow in flex */
-  height: 44px;
-
-  border-radius: 18px;
-  border: 1px solid var(--pillBorder);
-  background: rgba(245,239,231,.88);
-  box-shadow: inset 0 2px 0 rgba(0,0,0,.04);
-
-  font-size: 18px;
-  font-weight: 800;
-  text-align: center;
+  max-width: 100%;
+  height: 46px;
+  border-radius: 16px;
+  border: 0;
   outline: none;
-}
-
-.priceInput::placeholder{
-  color: rgba(0,0,0,.35);
+  background: rgba(255,255,255,.55);
+  color: var(--ink);
   font-weight: 800;
+  font-size: 22px;
+  text-align: center;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
 }
 
-/* =========================
-   BOTTOM NAV (single bar)
-========================= */
+/* Bottom nav */
 .bottomNav{
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   bottom: 14px;
 
-  width: min(620px, calc(100vw - 28px));
-  height: 74px;
+  width: calc(100% - 28px);
+  max-width: 720px;
 
   display:flex;
-  gap: 10px;
-  align-items:center;
+  gap: 14px;
   justify-content: space-between;
+  align-items: center;
 
-  padding: 10px 12px;
-  border-radius: 22px;
+  background: rgba(255,247,230,.92);
+  border-radius: 26px;
+  padding: 14px 16px;
 
-  background: rgba(245,239,231,.92);
-  border: 1px solid rgba(0,0,0,.08);
-  box-shadow: 0 10px 30px rgba(0,0,0,.12);
-
-  z-index: 50;
+  box-shadow: 0 14px 30px rgba(0,0,0,.14);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
 }
 
-.bottomNav a{
-  text-decoration:none;
-  color: inherit;
-}
-
-/* Each button is half the bar */
 .navBtn{
-  flex: 1 1 0;
-  height: 100%;
-  border-radius: 18px;
-
+  flex: 1;
+  text-decoration:none;
+  color: var(--ink);
   display:flex;
   flex-direction: column;
   align-items:center;
   justify-content:center;
-
-  background: transparent;
+  gap: 6px;
+  padding: 10px 8px;
+  border-radius: 18px;
 }
 
 .navIcon{
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1;
-  margin-bottom: 6px;
 }
 
 .navText{
-  font-size: 18px;
   font-weight: 900;
+  font-size: 22px;
 }
 
-/* =========================
-   MOBILE TWEAKS
-========================= */
-@media (max-width: 420px){
-  .bannerWrap img{ height: 175px; }
-  .dayTitle{ font-size: 32px; }
-  .label{ font-size: 17px; flex-basis: 88px; min-width: 88px; }
-  .priceInput{ height: 42px; font-size: 17px; }
+/* Mobile tightening */
+@media (max-width: 430px){
+  .bannerWrap img{ height: 165px; object-position: center 30%; }
+
+  .daysGrid{ gap: 14px; }
+
+  .dayTitle{ font-size: 38px; }
+
+  .row{ grid-template-columns: 1fr 108px; }
+
+  .priceInput{ height: 44px; font-size: 20px; }
+
+  .navText{ font-size: 20px; }
 }
 
+/* Super small phones */
 @media (max-width: 360px){
-  .daysGrid{ gap: 12px; }
-  .dayTitle{ font-size: 30px; }
-}
-/* --- QUICK FIX PATCH (paste at very bottom) --- */
-
-/* Keep the bottom nav from covering content */
-body {
-  padding-bottom: 140px; /* gives space so cards do not hide behind nav */
-}
-
-/* Make sure the 2 column grid stays clean */
-.daysGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-/* Prevent any child from overflowing its grid cell */
-.dayCard {
-  overflow: hidden;
-}
-
-/* Rows inside each day card */
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-/* Force the input to stay inside the card */
-.priceInput {
-  width: 110px;         /* adjust later if needed */
-  max-width: 110px;
-  flex: 0 0 auto;
-}
-
-/* Bottom nav always above, centered, side by side */
-.bottomNav {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 14px;
-  width: calc(100% - 28px);
-  max-width: 520px;
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 22px;
-  background: rgba(255, 247, 230, 0.95);
-  backdrop-filter: blur(8px);
-  z-index: 9999;
-}
-
-/* Make each nav button take half */
-.navBtn {
-  flex: 1;
-  text-align: center;
+  .dayTitle{ font-size: 34px; }
+  .row{ grid-template-columns: 1fr 96px; }
 }

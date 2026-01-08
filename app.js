@@ -1,281 +1,231 @@
-// app.js
-const DAYS = [
-  { key: "mon", name: "Monday" },
-  { key: "tue", name: "Tuesday" },
-  { key: "wed", name: "Wednesday" },
-  { key: "thu", name: "Thursday" },
-  { key: "fri", name: "Friday" },
-  { key: "sat", name: "Saturday" },
-];
+const KEYS = {
+  weeks: "turnipTracker_weeks_v1",
+  current: "turnipTracker_current_v1"
+};
 
-const TIMES = [
-  { key: "am", label: "AM", emoji: "🌞" },
-  { key: "pm", label: "PM", emoji: "🌙" },
-];
+const predictView = document.getElementById("predictView");
+const historyView = document.getElementById("historyView");
+const navPredict = document.getElementById("navPredict");
+const navHistory = document.getElementById("navHistory");
+const saveWeekBtn = document.getElementById("saveWeekBtn");
 
-const LS_WEEKS = "turnip_weeks_v1";
-const LS_CURRENT = "turnip_current_week_v1";
+const historyList = document.getElementById("historyList");
+const historyEmptyNote = document.getElementById("historyEmptyNote");
+const exportBtn = document.getElementById("exportBtn");
+const importFile = document.getElementById("importFile");
+const goHomeBtn = document.getElementById("goHomeBtn");
 
-const elDaysGrid = document.getElementById("daysGrid");
-const elSaveWeek = document.getElementById("saveWeekBtn");
+function setActiveTab(tab){
+  const isPredict = tab === "predict";
+  predictView.classList.toggle("hidden", !isPredict);
+  historyView.classList.toggle("hidden", isPredict);
 
-const elHistoryList = document.getElementById("historyList");
-const elExportBtn = document.getElementById("exportBtn");
-const elImportFile = document.getElementById("importFile");
-const elGoHomeBtn = document.getElementById("goHomeBtn");
+  navPredict.classList.toggle("active", isPredict);
+  navHistory.classList.toggle("active", !isPredict);
+
+  if (!isPredict) renderHistory();
+}
+
+navPredict.addEventListener("click", () => setActiveTab("predict"));
+navHistory.addEventListener("click", () => setActiveTab("history"));
+goHomeBtn.addEventListener("click", () => setActiveTab("predict"));
 
 function getWeeks(){
-  try { return JSON.parse(localStorage.getItem(LS_WEEKS) || "[]"); }
+  try { return JSON.parse(localStorage.getItem(KEYS.weeks) || "[]"); }
   catch { return []; }
 }
+
 function setWeeks(weeks){
-  localStorage.setItem(LS_WEEKS, JSON.stringify(weeks));
+  localStorage.setItem(KEYS.weeks, JSON.stringify(weeks));
 }
 
-function getCurrentWeek(){
+function getCurrentWeekData(){
+  const ids = ["mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm","thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"];
+  const data = {};
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    data[id] = (el && el.value || "").trim();
+  });
+  return data;
+}
+
+function loadWeekData(data){
+  Object.keys(data || {}).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = data[id] ?? "";
+  });
+}
+
+function clearWeek(){
+  document.querySelectorAll(".priceInput").forEach(i => i.value = "");
+  localStorage.removeItem(KEYS.current);
+}
+
+function saveCurrentDraft(){
+  localStorage.setItem(KEYS.current, JSON.stringify(getCurrentWeekData()));
+}
+
+function loadCurrentDraft(){
   try {
-    const obj = JSON.parse(localStorage.getItem(LS_CURRENT) || "{}");
-    return obj && typeof obj === "object" ? obj : {};
-  } catch { return {}; }
-}
-function setCurrentWeek(obj){
-  localStorage.setItem(LS_CURRENT, JSON.stringify(obj));
+    const raw = localStorage.getItem(KEYS.current);
+    if (!raw) return;
+    loadWeekData(JSON.parse(raw));
+  } catch {}
 }
 
-function fmtDate(d){
-  const yy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  return `${yy}-${mm}-${dd}`;
-}
+document.querySelectorAll(".priceInput").forEach(inp => {
+  inp.addEventListener("input", saveCurrentDraft);
+});
 
-function buildHome(){
-  elDaysGrid.innerHTML = "";
-  const current = getCurrentWeek();
-
-  for (const day of DAYS){
-    const card = document.createElement("div");
-    card.className = "dayCard";
-
-    const title = document.createElement("h2");
-    title.className = "dayTitle";
-    title.textContent = day.name;
-    card.appendChild(title);
-
-    for (const t of TIMES){
-      const row = document.createElement("div");
-      row.className = "row";
-
-      const label = document.createElement("div");
-      label.className = "label";
-
-      const emoji = document.createElement("span");
-      emoji.className = "emoji";
-      emoji.textContent = t.emoji;
-
-      const span = document.createElement("span");
-      span.textContent = t.label;
-
-      label.appendChild(emoji);
-      label.appendChild(span);
-
-      const input = document.createElement("input");
-      input.className = "priceInput";
-      input.inputMode = "numeric";
-      input.placeholder = "-";
-      input.id = `${day.key}-${t.key}`;
-      input.type = "text";
-
-      const v = current?.[day.key]?.[t.key];
-      if (typeof v === "number" && Number.isFinite(v)) input.value = String(v);
-
-      input.addEventListener("input", () => {
-        const cleaned = input.value.replace(/[^\d]/g, "").slice(0, 3);
-        input.value = cleaned;
-        const next = getCurrentWeek();
-        next[day.key] = next[day.key] || {};
-        next[day.key][t.key] = cleaned === "" ? null : Number(cleaned);
-        setCurrentWeek(next);
-      });
-
-      row.appendChild(label);
-      row.appendChild(input);
-      card.appendChild(row);
-    }
-
-    elDaysGrid.appendChild(card);
-  }
-}
-
-function saveWeekToHistory(){
-  const current = getCurrentWeek();
-  const stamp = fmtDate(new Date());
-  const id = `${stamp}-${Math.random().toString(16).slice(2)}`;
+saveWeekBtn.addEventListener("click", () => {
+  const week = {
+    id: cryptoRandomId(),
+    savedAt: new Date().toISOString(),
+    data: getCurrentWeekData()
+  };
 
   const weeks = getWeeks();
-  weeks.unshift({
-    id,
-    createdAt: new Date().toISOString(),
-    label: `Week saved ${stamp}`,
-    data: current
-  });
+  weeks.unshift(week);
   setWeeks(weeks);
-  renderHistory();
-}
 
-function clearForNewWeek(){
-  setCurrentWeek({});
-  buildHome();
-}
+  clearWeek();
+  setActiveTab("history");
+});
 
 function renderHistory(){
   const weeks = getWeeks();
-  elHistoryList.innerHTML = "";
+  historyList.innerHTML = "";
 
-  if (!weeks.length){
-    const empty = document.createElement("div");
-    empty.className = "weekItem";
-    empty.innerHTML = `
-      <div class="weekHeader">
-        <div class="weekTitle">No saved weeks yet</div>
-      </div>
-      <div class="muted">Fill the week, then hit Save week, or we will auto save on Saturday PM later.</div>
-    `;
-    elHistoryList.appendChild(empty);
-    return;
-  }
+  historyEmptyNote.style.display = weeks.length ? "none" : "block";
 
-  for (const w of weeks){
-    const item = document.createElement("div");
-    item.className = "weekItem";
+  weeks.forEach(w => {
+    const row = document.createElement("div");
+    row.className = "weekRow";
 
-    const header = document.createElement("div");
-    header.className = "weekHeader";
+    const top = document.createElement("div");
+    top.className = "weekRowTop";
 
-    const title = document.createElement("div");
-    title.className = "weekTitle";
-    title.textContent = w.label || "Saved week";
+    const label = document.createElement("div");
+    label.className = "weekLabel";
+    label.textContent = formatWeekLabel(w.savedAt);
 
-    const actions = document.createElement("div");
-    actions.className = "weekActions";
+    const btnWrap = document.createElement("div");
+    btnWrap.className = "weekBtns";
 
-    const btnToggle = document.createElement("button");
-    btnToggle.type = "button";
-    btnToggle.textContent = "View";
-
-    const btnLoad = document.createElement("button");
-    btnLoad.type = "button";
-    btnLoad.textContent = "Load";
-
-    const btnDelete = document.createElement("button");
-    btnDelete.type = "button";
-    btnDelete.textContent = "Delete";
-
-    actions.appendChild(btnToggle);
-    actions.appendChild(btnLoad);
-    actions.appendChild(btnDelete);
-
-    header.appendChild(title);
-    header.appendChild(actions);
-
-    const body = document.createElement("div");
-    body.className = "weekBody";
-
-    const grid = document.createElement("div");
-    grid.className = "weekGrid";
-
-    for (const d of DAYS){
-      const am = w.data?.[d.key]?.am ?? "-";
-      const pm = w.data?.[d.key]?.pm ?? "-";
-      const cell = document.createElement("div");
-      cell.textContent = `${d.name}: AM ${am} , PM ${pm}`;
-      grid.appendChild(cell);
-    }
-
-    body.appendChild(grid);
-
-    btnToggle.addEventListener("click", () => {
-      body.classList.toggle("open");
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "smallBtn";
+    toggleBtn.textContent = "Expand";
+    toggleBtn.addEventListener("click", () => {
+      const expanded = row.classList.toggle("expanded");
+      toggleBtn.textContent = expanded ? "Collapse" : "Expand";
     });
 
-    btnLoad.addEventListener("click", () => {
-      setCurrentWeek(w.data || {});
-      switchScreen("home");
-      buildHome();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    const loadBtn = document.createElement("button");
+    loadBtn.className = "smallBtn";
+    loadBtn.textContent = "Load";
+    loadBtn.addEventListener("click", () => {
+      loadWeekData(w.data);
+      saveCurrentDraft();
+      setActiveTab("predict");
     });
 
-    btnDelete.addEventListener("click", () => {
+    const delBtn = document.createElement("button");
+    delBtn.className = "smallBtn";
+    delBtn.textContent = "Delete";
+    delBtn.addEventListener("click", () => {
       const next = getWeeks().filter(x => x.id !== w.id);
       setWeeks(next);
       renderHistory();
     });
 
-    item.appendChild(header);
-    item.appendChild(body);
-    elHistoryList.appendChild(item);
-  }
+    btnWrap.appendChild(toggleBtn);
+    btnWrap.appendChild(loadBtn);
+    btnWrap.appendChild(delBtn);
+
+    top.appendChild(label);
+    top.appendChild(btnWrap);
+
+    const details = document.createElement("div");
+    details.className = "weekDetails";
+    details.textContent = summarizeWeek(w.data);
+
+    row.appendChild(top);
+    row.appendChild(details);
+    historyList.appendChild(row);
+  });
 }
 
-function exportWeeks(){
-  const data = getWeeks();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+exportBtn.addEventListener("click", () => {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    weeks: getWeeks()
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
+
   const a = document.createElement("a");
   a.href = url;
-  a.download = "turnip-history.json";
+  a.download = "turnip-tracker-history.json";
   document.body.appendChild(a);
   a.click();
   a.remove();
+
   URL.revokeObjectURL(url);
+});
+
+importFile.addEventListener("change", async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const weeks = Array.isArray(parsed.weeks) ? parsed.weeks : [];
+
+    // basic merge by id
+    const existing = getWeeks();
+    const map = new Map(existing.map(w => [w.id, w]));
+    weeks.forEach(w => {
+      if (w && w.id && w.data) map.set(w.id, w);
+    });
+
+    setWeeks(Array.from(map.values()).sort((a,b) => (b.savedAt || "").localeCompare(a.savedAt || "")));
+    renderHistory();
+  } catch {
+    alert("Import failed. Make sure it is a valid exported JSON file.");
+  } finally {
+    e.target.value = "";
+  }
+});
+
+function summarizeWeek(data){
+  const get = (k) => (data && data[k] ? data[k] : "-");
+  return [
+    `Mon AM ${get("mon-am")}, Mon PM ${get("mon-pm")}`,
+    `Tue AM ${get("tue-am")}, Tue PM ${get("tue-pm")}`,
+    `Wed AM ${get("wed-am")}, Wed PM ${get("wed-pm")}`,
+    `Thu AM ${get("thu-am")}, Thu PM ${get("thu-pm")}`,
+    `Fri AM ${get("fri-am")}, Fri PM ${get("fri-pm")}`,
+    `Sat AM ${get("sat-am")}, Sat PM ${get("sat-pm")}`
+  ].join(" | ");
 }
 
-function importWeeks(file){
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const incoming = JSON.parse(String(reader.result || "[]"));
-      if (!Array.isArray(incoming)) return;
-      setWeeks(incoming);
-      renderHistory();
-    } catch {}
-  };
-  reader.readAsText(file);
+function formatWeekLabel(iso){
+  try{
+    const d = new Date(iso);
+    return `Saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`;
+  } catch {
+    return "Saved week";
+  }
 }
 
-function switchScreen(name){
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("screenActive"));
-  const target = document.getElementById(`screen-${name}`);
-  if (target) target.classList.add("screenActive");
+function cryptoRandomId(){
+  // works even if crypto is missing
+  const rnd = Math.random().toString(16).slice(2);
+  return `w_${Date.now()}_${rnd}`;
 }
 
-/* Wire up nav */
-document.querySelectorAll(".navBtn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const target = btn.getAttribute("data-target");
-    if (!target) return;
-    switchScreen(target);
-    if (target === "history") renderHistory();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-});
-
-elSaveWeek.addEventListener("click", () => {
-  saveWeekToHistory();
-});
-
-elExportBtn.addEventListener("click", exportWeeks);
-elImportFile.addEventListener("change", (e) => {
-  const f = e.target.files?.[0];
-  if (f) importWeeks(f);
-  e.target.value = "";
-});
-
-elGoHomeBtn.addEventListener("click", () => {
-  switchScreen("home");
-  window.scrollTo({ top: 0, behavior: "smooth" });
-});
-
-/* Initial render */
-buildHome();
-renderHistory();
+/* boot */
+loadCurrentDraft();
+setActiveTab("predict");

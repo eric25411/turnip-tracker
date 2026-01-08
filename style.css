@@ -213,12 +213,33 @@ body{
   letter-spacing: -0.8px;
 }
 
-.chartCard{
+/* Postcard chart card */
+.postcardCard{
   background: rgba(255,255,255,0.42);
   border-radius: 26px;
   padding: 12px;
   box-shadow: inset 0 0 0 2px rgba(255,255,255,0.40);
   overflow: hidden;
+}
+
+.postcardTop{
+  display:flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 2px 4px 10px;
+}
+
+.postcardTitle{
+  font-size: 18px;
+  font-weight: 950;
+  opacity: 0.90;
+}
+
+.postcardKey{
+  font-size: 14px;
+  font-weight: 900;
+  opacity: 0.75;
 }
 
 #chartCanvas{
@@ -229,18 +250,12 @@ body{
   background: rgba(255,255,255,0.55);
 }
 
-.chartLegend{
+.postcardCaption{
   margin-top: 10px;
-  font-size: 14px;
-  font-weight: 850;
-  opacity: 0.78;
-}
-
-.chartCaption{
-  margin-top: 8px;
   font-size: 16px;
-  font-weight: 800;
-  opacity: 0.80;
+  font-weight: 850;
+  opacity: 0.82;
+  padding: 0 4px 2px;
 }
 
 .statsCard{

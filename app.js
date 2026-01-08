@@ -255,20 +255,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const profit = (buy > 0 && bestVal > 0) ? (bestVal - buy) : 0;
 
-    const pattern = detectPattern(points);
+    const pattern = detectPattern(points, buy);
     const forecast = forecastWindow(pattern);
+    const watchNext = whatToWatchNext(pattern, points, buy);
 
     drawChart(points);
 
     const rows = [
-      { k: "Buy price", v: buy > 0 ? String(buy) : "-" },
-      { k: "Best so far this week", v: bestVal > 0 ? String(bestVal) : "-" },
-      { k: "Best day time", v: bestVal > 0 ? bestLabel : "-" },
+      { k: "Daisy Mae buy price", v: buy > 0 ? String(buy) : "-" },
+      { k: "Best price seen", v: bestVal > 0 ? String(bestVal) : "-" },
+      { k: "Best time so far", v: bestVal > 0 ? bestLabel : "-" },
       { k: "Profit vs buy", v: (buy > 0 && bestVal > 0) ? (profit >= 0 ? `+${profit}` : `${profit}`) : "-" },
-      { k: "Likely pattern", v: pattern.name },
-      { k: "Pattern note", v: pattern.note },
-      { k: "Forecast peak window", v: forecast.window },
-      { k: "Forecast confidence", v: forecast.confidence }
+      { k: "Likely vibe", v: pattern.name },
+      { k: "Island note", v: pattern.note },
+      { k: "Peak window", v: forecast.window },
+      { k: "Confidence", v: forecast.confidence },
+      { k: "What to watch next", v: watchNext }
     ];
 
     predictStats.innerHTML = rows.map(r => {
@@ -282,14 +284,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const w = chartCanvas.width;
     const h = chartCanvas.height;
 
-    // clear
     ctx.clearRect(0,0,w,h);
 
     // background
     ctx.fillStyle = "rgba(255,255,255,0.25)";
     ctx.fillRect(0,0,w,h);
 
-    // subtle grid
+    // grid
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
     ctx.lineWidth = 1;
     for (let i=1;i<=4;i++){
@@ -300,18 +301,17 @@ document.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
 
-    // AC themed turnip background (bigger again)
-    // IMPORTANT: this file name matches what GitHub might keep: "ac-chart.png.PNG"
+    // AC themed image (bigger, like your preferred older build)
     const img = new Image();
     img.onload = () => {
-      const scaleW = w * 0.60;   // bigger like before
-      const scaleH = scaleW * (img.height / img.width);
-      const x = (w - scaleW) / 2;
-      const y = (h - scaleH) / 2 + 6;
+      const targetW = w * 0.60;
+      const targetH = targetW * (img.height / img.width);
+      const x = (w - targetW) / 2;
+      const y = (h - targetH) / 2 + 6;
 
       ctx.save();
       ctx.globalAlpha = 0.25;
-      ctx.drawImage(img, x, y, scaleW, scaleH);
+      ctx.drawImage(img, x, y, targetW, targetH);
       ctx.restore();
 
       drawLineAndDots(points);
@@ -319,6 +319,8 @@ document.addEventListener("DOMContentLoaded", () => {
     img.onerror = () => {
       drawLineAndDots(points);
     };
+
+    // IMPORTANT: match your repo filename exactly
     img.src = "ac-chart.png.PNG";
   }
 
@@ -370,14 +372,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function detectPattern(points){
+  function detectPattern(points, buy){
     const vals = points.map(n => (n > 0 ? n : 0));
     const filled = vals.filter(v => v > 0);
+
     if (filled.length < 3){
-      return { name: " - ", note: "Add more prices this week and save weeks so the predictor can learn." };
+      return {
+        name: "Too early",
+        note: "Not enough prices yet. Keep checking AM and PM, then we can call the vibe."
+      };
     }
 
-    // simple slope behavior
     let ups = 0, downs = 0;
     for (let i=1;i<vals.length;i++){
       if (vals[i] === 0 || vals[i-1] === 0) continue;
@@ -385,15 +390,70 @@ document.addEventListener("DOMContentLoaded", () => {
       if (vals[i] < vals[i-1]) downs++;
     }
 
-    if (downs > ups + 2) return { name: "Decreasing", note: "Looks like it is trending down. Sell as soon as you see profit." };
-    if (ups > downs + 2) return { name: "Increasing", note: "Looks like it is building. Watch mid to late week for a spike." };
-    return { name: "Mixed", note: "This week is bouncing around. More entries will make the call cleaner." };
+    // slightly more fun labels
+    if (downs > ups + 2) {
+      return {
+        name: "Dropping",
+        note: buy > 0
+          ? "Feels like it is sliding. If you see a price above your buy, consider selling quick."
+          : "Feels like it is sliding. Add your buy price for better advice."
+      };
+    }
+
+    if (ups > downs + 2) {
+      return {
+        name: "Building",
+        note: "Looks like it is warming up. Keep an eye mid to late week for a spicy price."
+      };
+    }
+
+    return {
+      name: "Bouncy",
+      note: "This week is bouncing around. A few more entries usually makes the call way clearer."
+    };
   }
 
   function forecastWindow(pattern){
-    if (pattern.name === "Increasing") return { window: "Wed PM to Sat PM", confidence: "65%" };
-    if (pattern.name === "Decreasing") return { window: "Mon AM to Tue PM", confidence: "60%" };
+    if (pattern.name === "Building") return { window: "Wed PM to Sat PM", confidence: "65%" };
+    if (pattern.name === "Dropping") return { window: "Mon AM to Tue PM", confidence: "60%" };
+    if (pattern.name === "Too early") return { window: "Mon AM to Sat PM", confidence: "40%" };
     return { window: "Tue PM to Fri PM", confidence: "55%" };
+  }
+
+  function whatToWatchNext(pattern, points, buy){
+    const vals = points.map(n => (n > 0 ? n : 0));
+    const lastIdx = lastFilledIndex(vals);
+    const lastVal = lastIdx >= 0 ? vals[lastIdx] : 0;
+
+    if (pattern.name === "Too early"){
+      return "Enter a few more prices first, then the forecast gets much smarter.";
+    }
+
+    if (buy > 0 && lastVal > 0){
+      if (lastVal > buy){
+        return "You are already above buy. If you are nervous, selling now is totally valid.";
+      }
+      if (pattern.name === "Dropping"){
+        return "If the next check is still lower, sell the first time you see profit over buy.";
+      }
+      if (pattern.name === "Building"){
+        return "If the next check jumps, hold. If it dips twice in a row, consider cashing out.";
+      }
+      return "Watch the next two checks. A sudden jump usually means the peak window is opening.";
+    }
+
+    if (buy === 0){
+      return "Add your buy price for real profit tracking and better sell timing.";
+    }
+
+    return "Keep logging AM and PM. The next 1 to 2 checks usually reveal the direction.";
+  }
+
+  function lastFilledIndex(vals){
+    for (let i = vals.length - 1; i >= 0; i--){
+      if (vals[i] > 0) return i;
+    }
+    return -1;
   }
 
   function summarizeWeek(data){

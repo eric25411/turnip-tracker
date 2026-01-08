@@ -353,3 +353,33 @@ body{
   .buyTitle{ font-size: 20px; }
   .buyInput{ width: 110px; }
 }
+.chartMeta{
+  margin-top: 10px;
+}
+
+.chartMarkers{
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 6px;
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+
+.chartMarkers span{
+  text-align: center;
+  white-space: nowrap;
+}
+
+.chartCaptionMain{
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.chartCaptionSub{
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 0.75;
+}

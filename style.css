@@ -1,367 +1,457 @@
+/* style.css */
 :root{
-  --bg1: #dfe8f6;
-  --bg2: #cfd9ea;
+  --bg1:#d9e6f5;
+  --bg2:#eef4ff;
 
-  --card: rgba(245, 248, 255, 0.75);
-  --card2: rgba(245, 248, 255, 0.60);
+  --tan:#d8b08c;
+  --tan2:#c79b72;
 
-  --tan: #d7b08d;
-  --tan2: #c79a72;
+  --ink:#1b1b1b;
+  --muted:#4a4a4a;
 
-  --ink: #161616;
-  --muted: rgba(0,0,0,0.65);
+  --card:#ffffffcc;
+  --card2:#f7f7f7cc;
 
-  --radius: 28px;
-  --radius2: 22px;
+  --radius:28px;
+  --radius2:22px;
 
-  --shadow: 0 14px 34px rgba(0,0,0,0.12);
-  --shadow2: 0 10px 22px rgba(0,0,0,0.10);
+  --shadow: 0 18px 50px rgba(0,0,0,.12);
+  --shadow2: 0 10px 25px rgba(0,0,0,.10);
 
-  --navH: 92px; /* includes safe-area padding */
+  --navH: 104px; /* fixed bottom nav height */
+  --gap: 18px;
 }
 
-*{ box-sizing: border-box; }
-html, body{ height: 100%; }
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
 body{
-  margin: 0;
-  font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
-  color: var(--ink);
-  background: radial-gradient(1200px 600px at 30% 0%, var(--bg1), var(--bg2));
-}
-
-/* Give content room so the fixed nav never covers Saturday */
-body{
-  padding-bottom: calc(var(--navH) + env(safe-area-inset-bottom, 0px));
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--ink);
+  background: radial-gradient(circle at 30% 10%, var(--bg2), var(--bg1));
 }
 
 .app{
-  max-width: 760px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 14px 14px 0;
+  padding: 18px 18px 0;
 }
 
-/* HEADER */
-.header{
+.contentPad{
+  padding-bottom: calc(var(--navH) + 26px);
+}
+
+.headerCard{
   background: var(--card);
   border-radius: var(--radius);
-  padding: 14px;
   box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  padding: 18px;
+  margin-bottom: 14px;
 }
 
 .headerImage{
-  width: 100%;
-  max-width: 680px;
+  width:100%;
+  height:auto;
+  display:block;
   border-radius: 22px;
-  display: block;
 }
 
 .headerFallback{
+  text-align:center;
   font-size: 26px;
   font-weight: 800;
-  padding: 10px 0 4px;
+  padding: 10px 0;
 }
 
-.primaryBtn{
-  width: 100%;
-  max-width: 520px;
-  padding: 14px 18px;
-  border: none;
-  border-radius: 999px;
-  background: #1f7a5a;
-  color: white;
-  font-weight: 800;
-  font-size: 18px;
-  box-shadow: var(--shadow2);
+.main{
+  display:block;
 }
 
-.primaryBtn:active{ transform: translateY(1px); }
+.view{
+  display:block;
+}
 
-.view{ margin-top: 16px; }
-.hidden{ display: none !important; }
+.hidden{
+  display:none;
+}
 
-/* MINI BUY PRICE CARD */
-.miniCard{
-  background: linear-gradient(180deg, var(--tan), var(--tan2));
-  border-radius: var(--radius2);
-  padding: 14px 16px 12px;
-  box-shadow: var(--shadow2);
+/* Sticky buy section */
+.buySticky{
+  position: sticky;
+  top: 12px;
+  z-index: 5;
   margin-bottom: 14px;
 }
-.miniHint{
-  margin-top: 10px;
-  color: rgba(0,0,0,0.65);
-  font-weight: 600;
-  line-height: 1.2;
+
+.buyMiniCard{
+  background: linear-gradient(180deg, var(--tan), var(--tan2));
+  border-radius: var(--radius2);
+  box-shadow: var(--shadow2);
+  padding: 14px 14px;
+  display:flex;
+  gap: 12px;
+  align-items:center;
 }
 
-/* DAY CARDS */
+.buyMiniLeft{
+  flex:1;
+  min-width:0;
+}
+
+.buyMiniTitle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: .2px;
+}
+
+.buyMiniHint{
+  margin-top: 6px;
+  color: rgba(0,0,0,.65);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.buyMiniInput{
+  width: 150px;
+  max-width: 40%;
+  text-align:center;
+  border: 0;
+  outline: none;
+  border-radius: 18px;
+  padding: 14px 10px;
+  font-size: 18px;
+  font-weight: 900;
+  background: rgba(255,255,255,.85);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
+}
+
+.buyMiniInput:focus{
+  box-shadow: inset 0 0 0 3px rgba(34,139,230,.35), 0 0 0 4px rgba(34,139,230,.15);
+}
+
+/* Day cards */
 .days{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  display:flex;
+  flex-direction:column;
+  gap: var(--gap);
+  margin-bottom: 16px;
 }
 
 .dayCard{
   background: linear-gradient(180deg, var(--tan), var(--tan2));
   border-radius: var(--radius);
-  padding: 20px 20px 18px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow2);
+  padding: 18px 18px 16px;
 }
 
 .dayTitle{
-  margin: 0 0 12px;
-  font-size: 62px;
-  line-height: 0.95;
-  letter-spacing: -0.5px;
+  margin: 0 0 10px 0;
+  font-size: 56px;
+  line-height: 1.02;
+  font-weight: 950;
+  letter-spacing: .2px;
 }
 
 .row{
-  background: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,.22);
   border-radius: 22px;
   padding: 16px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin-top: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
 }
 
 .label{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 900;
-  font-size: 22px;
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  font-weight: 950;
+  font-size: 28px;
 }
 
-.emoji{ width: 28px; text-align: center; }
+.emoji{
+  font-size: 26px;
+}
 
 .priceInput{
-  width: 140px;
-  text-align: center;
-  padding: 12px 12px;
-  border-radius: 999px;
-  border: 2px solid rgba(255,255,255,0.55);
-  background: rgba(255,255,255,0.75);
-  font-size: 22px;
+  width: 170px;
+  max-width: 45%;
+  text-align:center;
+  border: 0;
+  outline:none;
+  border-radius: 22px;
+  padding: 18px 12px;
+  font-size: 20px;
   font-weight: 900;
-  outline: none;
+  background: rgba(255,255,255,.85);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
 }
 
 .priceInput:focus{
-  border-color: rgba(0,0,0,0.25);
-  box-shadow: 0 0 0 5px rgba(255,255,255,0.30);
+  box-shadow: inset 0 0 0 3px rgba(34,139,230,.35), 0 0 0 4px rgba(34,139,230,.12);
 }
 
-.miniInput{
-  width: 160px;
+/* Primary button */
+.primaryBtn{
+  width:100%;
+  border:0;
+  border-radius: 999px;
+  padding: 18px 18px;
+  font-size: 22px;
+  font-weight: 950;
+  color: #fff;
+  background: #1f7a5b;
+  box-shadow: var(--shadow2);
 }
 
-/* PREDICT */
-.predictWrap{
-  display: grid;
-  gap: 16px;
+.primaryBtn:active{
+  transform: translateY(1px);
 }
 
-.predictCard{
+/* Predictor */
+.panelCard{
   background: var(--card);
   border-radius: var(--radius);
-  padding: 18px;
   box-shadow: var(--shadow);
+  padding: 18px;
 }
 
-.predictTitle{
-  margin: 0 0 12px;
-  font-size: 56px;
-  letter-spacing: -0.5px;
+.panelTitle{
+  margin: 4px 0 14px;
+  font-size: 52px;
+  font-weight: 950;
 }
 
 .chartCard{
   position: relative;
-  background: rgba(255,255,255,0.65);
-  border-radius: 22px;
-  padding: 12px;
-  overflow: hidden;
-  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 24px;
+  overflow:hidden;
+  background: rgba(255,255,255,.65);
+  box-shadow: var(--shadow2);
+  padding: 14px;
 }
 
 .chartBg{
-  position: absolute;
+  position:absolute;
   inset: 0;
-  opacity: 0.18;
   background-image: url("ac-chart.png.PNG");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  pointer-events: none;
+  opacity: .28;
+  pointer-events:none;
 }
 
 #priceChart{
   position: relative;
-  width: 100%;
-  height: auto;
-  display: block;
+  z-index: 1;
+  width:100%;
+  height: 220px;
+  display:block;
 }
 
-.chartCaption{
+.chartHint{
   margin-top: 8px;
-  font-weight: 700;
-  color: rgba(0,0,0,0.65);
+  font-weight: 900;
+  color: rgba(0,0,0,.65);
+  position: relative;
+  z-index: 1;
 }
 
-.predictStats{
+.stats{
   margin-top: 14px;
-  display: grid;
-  gap: 10px;
-  font-size: 20px;
+  background: rgba(255,255,255,.6);
+  border-radius: 24px;
+  padding: 14px;
+  box-shadow: var(--shadow2);
+}
+
+.statRow{
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 8px 4px;
+  font-weight: 900;
+}
+
+.statKey{ color: rgba(0,0,0,.75); }
+.statVal{ color: rgba(0,0,0,.95); }
+
+.statNote{
+  margin: 10px 4px 2px;
+  color: rgba(0,0,0,.65);
   font-weight: 800;
 }
 
-.predictStats .muted{
-  font-weight: 700;
-  color: rgba(0,0,0,0.65);
+.divider{
+  height: 1px;
+  background: rgba(0,0,0,.08);
+  margin: 10px 0;
 }
 
-/* HISTORY */
+/* History */
 .historyWrap{
-  display: grid;
+  display:flex;
+  flex-direction:column;
   gap: 16px;
 }
 
 .historyCard{
-  background: var(--card);
+  background: linear-gradient(180deg, var(--tan), var(--tan2));
   border-radius: var(--radius);
-  padding: 18px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow2);
+  padding: 16px;
 }
 
 .historyTitle{
   margin: 0 0 6px;
-  font-size: 44px;
-  letter-spacing: -0.4px;
+  font-size: 34px;
+  font-weight: 950;
 }
 
 .historyHint{
-  margin: 0 0 14px;
-  color: rgba(0,0,0,0.65);
-  font-weight: 700;
+  margin: 0 0 12px;
+  font-weight: 800;
+  color: rgba(0,0,0,.7);
 }
 
 .historySubtitle{
   margin: 0 0 10px;
-  font-size: 26px;
+  font-size: 22px;
+  font-weight: 950;
 }
 
 .historyActions{
-  display: flex;
-  flex-wrap: wrap;
+  display:flex;
+  flex-wrap:wrap;
   gap: 10px;
-  align-items: center;
+  align-items:center;
 }
 
 .chipBtn{
-  padding: 10px 14px;
+  border:0;
   border-radius: 999px;
-  border: 2px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.65);
-  font-weight: 900;
+  padding: 10px 14px;
+  font-weight: 950;
+  background: rgba(255,255,255,.75);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.2);
 }
 
 .fileBtn input{
-  display: none;
+  display:none;
 }
 
 .historySmall{
   margin: 12px 0 0;
-  color: rgba(0,0,0,0.65);
-  font-weight: 700;
+  font-weight: 900;
+  color: rgba(0,0,0,.7);
 }
 
-.historyList{ display: grid; gap: 12px; }
-
 .weekRow{
-  background: rgba(255,255,255,0.60);
+  background: rgba(255,255,255,.55);
   border-radius: 18px;
-  padding: 12px;
-  border: 2px solid rgba(0,0,0,0.06);
+  padding: 10px 12px;
+  margin-top: 10px;
 }
 
 .weekRowTop{
-  display: flex;
-  justify-content: space-between;
+  display:flex;
+  justify-content:space-between;
   gap: 10px;
-  align-items: center;
+  align-items:center;
 }
 
 .weekLabel{
-  font-weight: 900;
+  font-weight: 950;
 }
 
-.weekBtns{ display: flex; gap: 8px; }
+.weekBtns{
+  display:flex;
+  gap: 8px;
+}
 
 .smallBtn{
-  padding: 8px 10px;
+  border:0;
   border-radius: 999px;
-  border: 2px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.70);
-  font-weight: 900;
+  padding: 8px 10px;
+  font-weight: 950;
+  background: rgba(255,255,255,.85);
 }
 
 .weekDetails{
+  display:none;
   margin-top: 10px;
-  color: rgba(0,0,0,0.70);
-  font-weight: 700;
-  display: none;
-  line-height: 1.25;
+  font-weight: 900;
+  color: rgba(0,0,0,.75);
 }
-.weekRow.expanded .weekDetails{ display: block; }
 
-/* BOTTOM NAV */
+.weekRow.expanded .weekDetails{
+  display:block;
+}
+
+/* Bottom nav */
 .bottomNav{
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left:0;
+  right:0;
+  bottom:0;
+  height: var(--navH);
+  padding: 12px 16px 18px;
+  display:flex;
+  justify-content:center;
+  z-index: 50;
+  pointer-events:auto;
+}
 
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
-  background: rgba(245, 240, 230, 0.80);
-  backdrop-filter: blur(14px);
-
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  z-index: 999;
-  border-top: 1px solid rgba(0,0,0,0.06);
+.bottomNav::before{
+  content:"";
+  position:absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  height: calc(var(--navH) - 18px);
+  background: rgba(255,255,255,.72);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
 }
 
 .navBtn{
-  width: min(220px, 30vw);
-  padding: 12px 10px;
-  border-radius: 18px;
-  border: 2px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.70);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
+  z-index: 1;
+  width: 33.333%;
+  max-width: 240px;
+  border:0;
+  background: transparent;
+  padding: 10px 10px 12px;
+  border-radius: 22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
   gap: 6px;
-  font-weight: 900;
+  font-weight: 950;
+  color: rgba(0,0,0,.75);
 }
 
-.navIcon{ font-size: 22px; }
+.navIcon{
+  font-size: 26px;
+}
 
 .navBtn.active{
-  background: rgba(255,255,255,0.92);
-  border-color: rgba(0,0,0,0.18);
-  box-shadow: 0 10px 18px rgba(0,0,0,0.12);
+  background: rgba(255,255,255,.85);
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.06);
+  color: rgba(0,0,0,.95);
 }
 
-/* Mobile sizing tweak */
-@media (max-width: 430px){
-  .dayTitle{ font-size: 58px; }
-  .label{ font-size: 20px; }
-  .priceInput{ width: 132px; font-size: 21px; }
-  .predictTitle{ font-size: 52px; }
+/* Slightly smaller layout option for smaller phones */
+@media (max-width: 420px){
+  .dayTitle{ font-size: 52px; }
+  .label{ font-size: 26px; }
+  .priceInput{ width: 160px; }
 }

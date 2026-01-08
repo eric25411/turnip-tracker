@@ -2,7 +2,11 @@
   const toast = document.getElementById("toast");
 
   const saveWeekBtn = document.getElementById("saveWeekBtn");
+  const saveChangesBtn = document.getElementById("saveChangesBtn");
   const newWeekBtn = document.getElementById("newWeekBtn");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+
+  const editBanner = document.getElementById("editBanner");
 
   const predictBtn = document.getElementById("predictBtn");
   const historyBtn = document.getElementById("historyBtn");
@@ -37,6 +41,9 @@
   ];
 
   const SLOT_NAME = Object.fromEntries(SLOT_ORDER);
+
+  // Edit mode state
+  let editingIndex = null; // number or null
 
   function showToast(msg) {
     if (!toast) return;
@@ -88,6 +95,22 @@
     if (!best) return;
     const el = document.getElementById(best.id);
     if (el) el.classList.add("bestNow");
+  }
+
+  function setEditingUI(on) {
+    if (!editBanner || !saveWeekBtn || !saveChangesBtn || !cancelEditBtn) return;
+
+    if (on) {
+      editBanner.classList.remove("viewHidden");
+      saveWeekBtn.classList.add("viewHidden");
+      saveChangesBtn.classList.remove("viewHidden");
+      cancelEditBtn.classList.remove("viewHidden");
+    } else {
+      editBanner.classList.add("viewHidden");
+      saveWeekBtn.classList.remove("viewHidden");
+      saveChangesBtn.classList.add("viewHidden");
+      cancelEditBtn.classList.add("viewHidden");
+    }
   }
 
   function loadWeek() {
@@ -145,6 +168,33 @@
     updatePrediction();
   }
 
+  function saveChangesToHistory() {
+    if (editingIndex === null) return;
+
+    const history = getHistory();
+    const original = history[editingIndex];
+    if (!original) {
+      showToast("Edit failed");
+      return;
+    }
+
+    const updated = {
+      ...original,
+      buy: buyInput ? num(buyInput.value) : 0,
+      prices: {}
+    };
+    inputs.forEach((el) => {
+      updated.prices[el.id] = num(el.value);
+    });
+
+    history[editingIndex] = updated;
+    setHistory(history);
+
+    showToast("Changes saved");
+    renderHistory(false);
+    updatePrediction();
+  }
+
   function bestSellInWeek(week) {
     let best = { id: null, value: -1 };
     const prices = week?.prices || {};
@@ -188,20 +238,15 @@
     return "random";
   }
 
-  // Recency weighting: newest weeks count more
-  // Half-life is how many weeks it takes for weight to cut in half.
   function recencyWeight(index, halfLifeWeeks) {
     const hl = Math.max(1, Number(halfLifeWeeks) || 8);
-    // weight = 0.5^(index/hl)
     return Math.pow(0.5, index / hl);
   }
 
   function weightedTopSlotAndStats(weeksWithIndex) {
-    // weeksWithIndex: [{week, idx}]
     const peakWeightBySlot = {};
     const peakPrices = [];
     const peakProfits = [];
-    const weightsUsed = [];
 
     for (const item of weeksWithIndex) {
       const w = item.week;
@@ -216,7 +261,6 @@
 
       peakPrices.push(best.value);
       peakProfits.push(best.value - buy);
-      weightsUsed.push(wt);
     }
 
     let topSlot = null;
@@ -246,7 +290,6 @@
   function buildHistoryStatsWeighted() {
     const history = getHistory();
 
-    // newest = index 0, older = higher index
     const usable = history
       .map((week, idx) => ({ week, idx }))
       .filter((x) => num(x.week?.buy) > 0)
@@ -341,7 +384,9 @@
     let line4 = "";
     if (pat !== "unknown") line4 = `Current week pattern guess is ${pat}.`;
 
-    predictText.textContent = [line1, line4, line2, line3].filter(Boolean).join(" ");
+    const editLine = editingIndex !== null ? "You are editing a saved week." : "";
+
+    predictText.textContent = [line1, editLine, line4, line2, line3].filter(Boolean).join(" ");
   }
 
   function formatDate(iso) {
@@ -353,11 +398,10 @@
     }
   }
 
-  function renderHistory(tryHighlight) {
+  function renderHistory() {
     if (!historyList) return;
 
     const history = getHistory();
-    const lastSavedAt = localStorage.getItem("tt_last_saved_at") || "";
 
     if (history.length === 0) {
       historyList.innerHTML = `
@@ -381,10 +425,9 @@
     historyList.innerHTML = history.map((week, idx) => {
       const best = bestSellInWeek(week);
       const buy = num(week.buy);
-      const isNew = lastSavedAt && week.savedAt === lastSavedAt;
 
       return `
-        <div class="weekCard ${isNew ? "isNew" : ""}" data-idx="${idx}">
+        <div class="weekCard" data-idx="${idx}">
           <div class="weekTop">
             <div class="weekTitle">${formatDate(week.savedAt)}</div>
             <div class="weekMeta">
@@ -441,14 +484,6 @@
         deleteWeek(idx);
       });
     });
-
-    if (tryHighlight) {
-      const newCard = historyList.querySelector(".weekCard.isNew");
-      if (newCard) {
-        newCard.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.setTimeout(() => newCard.classList.remove("isNew"), 4500);
-      }
-    }
   }
 
   function wireInputs() {
@@ -468,8 +503,11 @@
       });
     });
 
+    // Auto save Saturday PM only when not editing
     if (satPmInput) {
       satPmInput.addEventListener("input", () => {
+        if (editingIndex !== null) return;
+
         const v = num(satPmInput.value);
         if (v <= 0) return;
 
@@ -505,7 +543,7 @@
     if (hash === "#history") {
       showView("history");
       setActiveNav("history");
-      renderHistory(false);
+      renderHistory();
     } else {
       showView("predict");
       setActiveNav("predict");
@@ -516,6 +554,9 @@
     const history = getHistory();
     const week = history[idx];
     if (!week) return;
+
+    editingIndex = idx;
+    setEditingUI(true);
 
     if (buyInput) {
       buyInput.value = week.buy ? String(num(week.buy)) : "";
@@ -528,10 +569,16 @@
       localStorage.setItem(keyFor(el.id), el.value);
     });
 
-    localStorage.removeItem("tt_autosaved_this_week");
-    showToast("Week loaded");
+    showToast("Editing loaded week");
     updatePrediction();
     window.location.hash = "#predict";
+  }
+
+  function exitEditMode(clearInputs) {
+    editingIndex = null;
+    setEditingUI(false);
+    if (clearInputs) clearCurrentWeek();
+    updatePrediction();
   }
 
   function deleteWeek(idx) {
@@ -545,8 +592,17 @@
     history.splice(idx, 1);
     setHistory(history);
 
+    // If you delete a week before the one you are editing, shift index
+    if (editingIndex !== null) {
+      if (idx === editingIndex) {
+        exitEditMode(false);
+      } else if (idx < editingIndex) {
+        editingIndex = editingIndex - 1;
+      }
+    }
+
     showToast("Week deleted");
-    renderHistory(false);
+    renderHistory();
     updatePrediction();
   }
 
@@ -607,7 +663,7 @@
         setHistory(cleaned);
 
         showToast("Imported");
-        renderHistory(true);
+        renderHistory();
         updatePrediction();
       } catch {
         showToast("Import failed");
@@ -616,21 +672,25 @@
     reader.readAsText(file);
   }
 
+  // Buttons
   if (saveWeekBtn) saveWeekBtn.addEventListener("click", () => saveWeekToHistory(false));
+  if (saveChangesBtn) saveChangesBtn.addEventListener("click", saveChangesToHistory);
 
   if (newWeekBtn) {
     newWeekBtn.addEventListener("click", () => {
-      clearCurrentWeek();
+      exitEditMode(true);
       showToast("New week started");
     });
   }
 
-  if (historyHomeBtn) {
-    historyHomeBtn.addEventListener("click", () => {
-      window.location.hash = "#predict";
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener("click", () => {
+      exitEditMode(false);
+      showToast("Edit cancelled");
     });
   }
 
+  if (historyHomeBtn) historyHomeBtn.addEventListener("click", () => (window.location.hash = "#predict"));
   if (exportBtn) exportBtn.addEventListener("click", exportHistory);
 
   if (importFile) {
@@ -644,6 +704,8 @@
 
   window.addEventListener("hashchange", handleRoute);
 
+  // Init
+  setEditingUI(false);
   wireInputs();
   loadWeek();
   handleRoute();

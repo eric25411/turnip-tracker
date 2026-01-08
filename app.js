@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const bestWhenEl = document.getElementById("bestWhen");
   const weeksCountEl = document.getElementById("weeksCount");
 
+  // We will also write to predictSummary if it exists
+  const predictSummaryEl = document.getElementById("predictSummary");
+
   // History UI
   const historyList = document.getElementById("historyList");
   const historyEmptyNote = document.getElementById("historyEmptyNote");
@@ -79,18 +82,22 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem(KEYS.weeks, JSON.stringify(weeks));
   }
 
-  function getCurrentWeekData() {
-    const ids = [
-      "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
-      "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
-    ];
+  const SLOT_LIST = [
+    ["Mon AM","mon-am"], ["Mon PM","mon-pm"],
+    ["Tue AM","tue-am"], ["Tue PM","tue-pm"],
+    ["Wed AM","wed-am"], ["Wed PM","wed-pm"],
+    ["Thu AM","thu-am"], ["Thu PM","thu-pm"],
+    ["Fri AM","fri-am"], ["Fri PM","fri-pm"],
+    ["Sat AM","sat-am"], ["Sat PM","sat-pm"]
+  ];
 
+  function getCurrentWeekData() {
+    const ids = SLOT_LIST.map(x => x[1]);
     const data = {};
     ids.forEach((id) => {
       const el = document.getElementById(id);
       data[id] = ((el && el.value) || "").trim();
     });
-
     return data;
   }
 
@@ -141,50 +148,125 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveTab("history");
   });
 
-  // Predictor, simple starter logic (best so far this week)
+  // ---- Predictor learning logic ----
+
+  function parseNum(x) {
+    const n = Number(String(x || "").trim());
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function computeBestSlotFromData(dataObj) {
+    let bestVal = null;
+    let bestLabel = null;
+    let bestKey = null;
+
+    SLOT_LIST.forEach(([label, key]) => {
+      const v = parseNum(dataObj ? dataObj[key] : null);
+      if (v === null) return;
+      if (bestVal === null || v > bestVal) {
+        bestVal = v;
+        bestLabel = label;
+        bestKey = key;
+      }
+    });
+
+    return { bestVal, bestLabel, bestKey };
+  }
+
+  function learnFromSavedWeeks(weeks) {
+    // Returns:
+    // - mostCommonBestLabel
+    // - avgPeak
+    // - countedWeeks (weeks with at least 1 numeric price)
+    const freq = new Map(); // label -> count
+    let sumPeak = 0;
+    let countedWeeks = 0;
+
+    weeks.forEach(w => {
+      const res = computeBestSlotFromData(w && w.data ? w.data : null);
+      if (res.bestVal === null) return;
+
+      countedWeeks += 1;
+      sumPeak += res.bestVal;
+
+      const label = res.bestLabel || "Unknown";
+      freq.set(label, (freq.get(label) || 0) + 1);
+    });
+
+    let mostCommonBestLabel = null;
+    let mostCommonCount = 0;
+    for (const [label, c] of freq.entries()) {
+      if (c > mostCommonCount) {
+        mostCommonCount = c;
+        mostCommonBestLabel = label;
+      }
+    }
+
+    const avgPeak = countedWeeks ? (sumPeak / countedWeeks) : null;
+
+    return {
+      mostCommonBestLabel,
+      mostCommonCount,
+      avgPeak,
+      countedWeeks
+    };
+  }
+
   function updatePredictSummary() {
     const weeks = getWeeks();
     if (weeksCountEl) weeksCountEl.textContent = String(weeks.length);
 
-    const data = getCurrentWeekData();
-    const slots = [
-      ["Monday AM","mon-am"], ["Monday PM","mon-pm"],
-      ["Tuesday AM","tue-am"], ["Tuesday PM","tue-pm"],
-      ["Wednesday AM","wed-am"], ["Wednesday PM","wed-pm"],
-      ["Thursday AM","thu-am"], ["Thursday PM","thu-pm"],
-      ["Friday AM","fri-am"], ["Friday PM","fri-pm"],
-      ["Saturday AM","sat-am"], ["Saturday PM","sat-pm"]
-    ];
+    // 1) Best so far this week (current draft)
+    const current = getCurrentWeekData();
+    const curBest = computeBestSlotFromData(current);
 
-    let best = -Infinity;
-    let bestLabel = "-";
-
-    slots.forEach(([label, key]) => {
-      const v = Number(data[key]);
-      if (!Number.isNaN(v) && v > best) {
-        best = v;
-        bestLabel = label;
-      }
-    });
-
-    if (best === -Infinity) {
+    if (curBest.bestVal === null) {
       if (bestSoFarEl) bestSoFarEl.textContent = "-";
       if (bestWhenEl) bestWhenEl.textContent = "-";
     } else {
-      if (bestSoFarEl) bestSoFarEl.textContent = String(best);
-      if (bestWhenEl) bestWhenEl.textContent = bestLabel;
+      if (bestSoFarEl) bestSoFarEl.textContent = String(curBest.bestVal);
+      if (bestWhenEl) bestWhenEl.textContent = curBest.bestLabel;
     }
+
+    // 2) Learning from saved weeks
+    const learn = learnFromSavedWeeks(weeks);
+
+    // Build a friendly summary line
+    if (predictSummaryEl) {
+      if (learn.countedWeeks === 0) {
+        predictSummaryEl.textContent =
+          "No saved weeks with prices yet. Save a week or two and I will start learning your best sell windows.";
+      } else {
+        const avgTxt = learn.avgPeak === null ? "-" : String(Math.round(learn.avgPeak));
+        const commonTxt = learn.mostCommonBestLabel || "-";
+        const confTxt = `${learn.countedWeeks} week${learn.countedWeeks === 1 ? "" : "s"} learned`;
+
+        predictSummaryEl.textContent =
+          `From your saved weeks, your most common peak time is ${commonTxt}. Average peak is about ${avgTxt}. Confidence: ${confTxt}.`;
+      }
+    }
+
+    // Optional: also fill the two existing lines if you want them to reflect learning
+    // We keep your current "Best so far" lines as-is, and put learning in the summary.
   }
 
   if (runPredictBtn) {
     runPredictBtn.addEventListener("click", (e) => {
       e.preventDefault();
       updatePredictSummary();
-      alert("Prediction updated. Next upgrade is learning patterns from saved weeks.");
+
+      const weeks = getWeeks();
+      const learn = learnFromSavedWeeks(weeks);
+
+      if (learn.countedWeeks === 0) {
+        alert("No saved weeks with prices yet. Save a week to start learning patterns.");
+      } else {
+        alert("Updated using your saved weeks. Next upgrade is pattern-based price curve prediction.");
+      }
     });
   }
 
-  // History render
+  // ---- History render ----
   function renderHistory() {
     const weeks = getWeeks();
     historyList.innerHTML = "";

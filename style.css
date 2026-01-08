@@ -6,21 +6,18 @@
   --softRadius: 22px;
 
   --tan: #e0b08b;
-  --tan2: rgba(255, 255, 255, 0.22);
-
-  --pillBg: rgba(255, 255, 255, 0.26);
+  --pillBg: rgba(255, 255, 255, 0.22);
   --inputBg: #f6efe6;
 
   --text: #1f1f1f;
 
-  --navPadBottom: 110px; /* space so nav never covers content */
+  /* MORE space so fixed nav never overlaps content */
+  --navPadBottom: 150px;
 }
 
 *{ box-sizing: border-box; }
 
-html, body{
-  height: 100%;
-}
+html, body{ height: 100%; }
 
 body{
   margin: 0;
@@ -34,7 +31,7 @@ body{
   max-width: var(--maxW);
   margin: 0 auto;
   padding: var(--pagePad);
-  padding-bottom: var(--navPadBottom);
+  padding-bottom: calc(var(--navPadBottom) + env(safe-area-inset-bottom));
 }
 
 /* header */
@@ -85,6 +82,9 @@ body{
   border-radius: var(--cardRadius);
   padding: 16px 14px 14px;
   box-shadow: 0 14px 26px rgba(0,0,0,0.10);
+
+  /* KEY FIX: prevents pill from sticking outside the card */
+  overflow: hidden;
 }
 
 .dayTitle{
@@ -93,7 +93,6 @@ body{
   font-size: clamp(22px, 6vw, 34px);
   line-height: 1.0;
 
-  /* keep it inside the card */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -110,6 +109,9 @@ body{
   border-radius: var(--softRadius);
   padding: 12px;
   margin-top: 10px;
+
+  /* extra safety */
+  overflow: hidden;
 }
 
 .label{
@@ -120,7 +122,6 @@ body{
   font-weight: 900;
   font-size: 18px;
 
-  /* prevent squish that causes overlap */
   flex: 1 1 auto;
   min-width: 86px;
 }
@@ -132,8 +133,10 @@ body{
 
 /* the input pill */
 .priceInput{
-  flex: 0 0 90px;
-  width: 90px;
+  /* KEY FIX: make it smaller so it always fits */
+  flex: 0 0 78px;
+  width: 78px;
+  max-width: 78px;
   height: 42px;
 
   border-radius: 18px;
@@ -160,10 +163,9 @@ body{
   right: 0;
   bottom: 0;
 
-  padding: 10px 16px 16px;
+  padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
   background: transparent;
 
-  /* lets content scroll under but keeps nav clickable */
   pointer-events: none;
 }
 
@@ -176,7 +178,7 @@ body{
 
   background: rgba(255, 250, 240, 0.92);
   border-radius: 26px;
-  padding: 12px;
+  padding: 10px;
 
   box-shadow: 0 16px 30px rgba(0,0,0,0.14);
 
@@ -211,6 +213,6 @@ body{
 /* small phones */
 @media (max-width: 360px){
   .daysGrid{ gap: 14px; }
-  .priceInput{ width: 82px; flex-basis: 82px; }
+  .priceInput{ width: 72px; max-width: 72px; flex-basis: 72px; }
   .label{ min-width: 78px; font-size: 17px; }
 }

@@ -34,7 +34,7 @@
     ["wed-pm", "Wednesday PM"],
     ["thu-am", "Thursday AM"],
     ["thu-pm", "Thursday PM"],
-    ["fri-am", "Friday AM"],
+    ["fri-am", "Friday PM"],
     ["fri-pm", "Friday PM"],
     ["sat-am", "Saturday AM"],
     ["sat-pm", "Saturday PM"],
@@ -43,7 +43,7 @@
   const SLOT_NAME = Object.fromEntries(SLOT_ORDER);
 
   // Edit mode state
-  let editingIndex = null; // number or null
+  let editingIndex = null;
 
   function showToast(msg) {
     if (!toast) return;
@@ -76,6 +76,15 @@
     return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
   }
 
+  function formatDateLong(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    } catch {
+      return iso || "";
+    }
+  }
+
   function findBestFromInputs() {
     let best = { id: null, value: -1 };
     inputs.forEach((el) => {
@@ -97,16 +106,20 @@
     if (el) el.classList.add("bestNow");
   }
 
-  function setEditingUI(on) {
+  function setEditingUI(on, bannerText) {
     if (!editBanner || !saveWeekBtn || !saveChangesBtn || !cancelEditBtn) return;
 
     if (on) {
+      editBanner.textContent = bannerText || "Editing saved week";
       editBanner.classList.remove("viewHidden");
+
       saveWeekBtn.classList.add("viewHidden");
       saveChangesBtn.classList.remove("viewHidden");
       cancelEditBtn.classList.remove("viewHidden");
     } else {
       editBanner.classList.add("viewHidden");
+      editBanner.textContent = "Editing saved week";
+
       saveWeekBtn.classList.remove("viewHidden");
       saveChangesBtn.classList.add("viewHidden");
       cancelEditBtn.classList.add("viewHidden");
@@ -164,7 +177,7 @@
     localStorage.setItem("tt_last_saved_at", week.savedAt);
 
     showToast(auto ? "Week auto saved" : "Saved to History");
-    renderHistory(true);
+    renderHistory();
     updatePrediction();
   }
 
@@ -190,8 +203,11 @@
     history[editingIndex] = updated;
     setHistory(history);
 
+    const label = `Editing: ${formatDateLong(updated.savedAt)}`;
+    setEditingUI(true, label);
+
     showToast("Changes saved");
-    renderHistory(false);
+    renderHistory();
     updatePrediction();
   }
 
@@ -389,15 +405,6 @@
     predictText.textContent = [line1, editLine, line4, line2, line3].filter(Boolean).join(" ");
   }
 
-  function formatDate(iso) {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-    } catch {
-      return iso;
-    }
-  }
-
   function renderHistory() {
     if (!historyList) return;
 
@@ -426,10 +433,17 @@
       const best = bestSellInWeek(week);
       const buy = num(week.buy);
 
+      const editingTag = (editingIndex === idx)
+        ? `<div class="weekMeta" style="text-align:left; font-weight:900; opacity:.85;">Editing</div>`
+        : "";
+
       return `
         <div class="weekCard" data-idx="${idx}">
           <div class="weekTop">
-            <div class="weekTitle">${formatDate(week.savedAt)}</div>
+            <div>
+              <div class="weekTitle">${formatDateLong(week.savedAt)}</div>
+              ${editingTag}
+            </div>
             <div class="weekMeta">
               Buy: ${buy || "-"}<br/>
               Best: ${best ? best.value : "-"}
@@ -503,7 +517,6 @@
       });
     });
 
-    // Auto save Saturday PM only when not editing
     if (satPmInput) {
       satPmInput.addEventListener("input", () => {
         if (editingIndex !== null) return;
@@ -556,7 +569,9 @@
     if (!week) return;
 
     editingIndex = idx;
-    setEditingUI(true);
+
+    const label = `Editing: ${formatDateLong(week.savedAt)}`;
+    setEditingUI(true, label);
 
     if (buyInput) {
       buyInput.value = week.buy ? String(num(week.buy)) : "";
@@ -577,8 +592,10 @@
   function exitEditMode(clearInputs) {
     editingIndex = null;
     setEditingUI(false);
+
     if (clearInputs) clearCurrentWeek();
     updatePrediction();
+    renderHistory();
   }
 
   function deleteWeek(idx) {
@@ -592,12 +609,13 @@
     history.splice(idx, 1);
     setHistory(history);
 
-    // If you delete a week before the one you are editing, shift index
     if (editingIndex !== null) {
       if (idx === editingIndex) {
         exitEditMode(false);
       } else if (idx < editingIndex) {
         editingIndex = editingIndex - 1;
+        const still = getHistory()[editingIndex];
+        if (still) setEditingUI(true, `Editing: ${formatDateLong(still.savedAt)}`);
       }
     }
 

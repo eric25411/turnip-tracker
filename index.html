@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css?v=14" />
+
+  <!-- bump v= number anytime Safari refuses to update CSS -->
+  <link rel="stylesheet" href="style.css?v=15" />
 </head>
 
 <body>
@@ -14,6 +16,7 @@
         <img src="banner.png.jpg" alt="Turnip Tracker banner" />
       </div>
 
+      <!-- SAVE WEEK BUTTON -->
       <div class="headerActions">
         <button class="saveWeekBtn" id="saveWeekBtn">Save week to History</button>
       </div>
@@ -95,15 +98,17 @@
   </main>
 
   <nav class="bottomNav">
-    <a class="navBtn" href="#" id="predictBtn">
-      <div class="navIcon">🔮</div>
-      <div class="navText">Predict</div>
-    </a>
+    <div class="bottomNavInner">
+      <a class="navBtn" href="#" id="predictBtn">
+        <div class="navIcon">🔮</div>
+        <div class="navText">Predict</div>
+      </a>
 
-    <a class="navBtn" href="#" id="historyBtn">
-      <div class="navIcon">🕰️</div>
-      <div class="navText">History</div>
-    </a>
+      <a class="navBtn" href="#" id="historyBtn">
+        <div class="navIcon">🕰️</div>
+        <div class="navText">History</div>
+      </a>
+    </div>
   </nav>
 
   <script src="app.js"></script>

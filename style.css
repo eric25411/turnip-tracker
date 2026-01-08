@@ -258,3 +258,4 @@ body{
 .navIcon{
   font-size: 22px;
 }
+.hidden { display: none !important; }

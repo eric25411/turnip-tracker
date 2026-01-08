@@ -1,7 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const KEYS = {
     weeks: "turnipTracker_weeks_v1",
-    current: "turnipTracker_current_v1"
+    current: "turnipTracker_current_v1",
+    alertSeen: "turnipTracker_alertSeen_v1"
   };
 
   // Views
@@ -39,6 +40,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const forecastWindowEl = document.getElementById("forecastWindow");
   const forecastConfidenceEl = document.getElementById("forecastConfidence");
   const watchNextEl = document.getElementById("watchNext");
+
+  const expectedRangeEl = document.getElementById("expectedRange");
+
+  const sellAlertBadge = document.getElementById("sellAlertBadge");
+
+  // Chart
+  const priceChart = document.getElementById("priceChart");
 
   // History UI
   const historyList = document.getElementById("historyList");
@@ -157,9 +165,13 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch {}
   }
 
-  // Auto save draft on input
+  // Auto save draft on input, also update predictor bits quietly
   document.querySelectorAll(".priceInput").forEach((inp) => {
-    inp.addEventListener("input", saveCurrentDraft);
+    inp.addEventListener("input", () => {
+      saveCurrentDraft();
+      // live update sell alert badge even while in entry view
+      maybeShowSellAlert();
+    });
   });
 
   // Save week
@@ -176,12 +188,14 @@ document.addEventListener("DOMContentLoaded", () => {
     weeks.unshift(week);
     setWeeks(weeks);
 
+    // Reset sell alert seen for next week
+    localStorage.removeItem(KEYS.alertSeen);
+
     clearWeek();
     setActiveTab("history");
   });
 
   // ---------- Pattern detection (saved weeks) ----------
-
   function sellSeriesFromData(dataObj) {
     const series = [];
     SELL_SLOTS.forEach(([label, key]) => {
@@ -263,129 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return { bestType, bestCount, counted };
   }
 
-  // ---------- New, Forecast current week ----------
-
-  function getEnteredSellSlots(currentData) {
-    const entered = [];
-    SELL_SLOTS.forEach(([label, key]) => {
-      const v = parseNum(currentData ? currentData[key] : null);
-      if (v !== null) entered.push({ label, key, v });
-    });
-    return entered;
-  }
-
-  function slotIndexByKey(key) {
-    for (let i = 0; i < SELL_SLOTS.length; i++) {
-      if (SELL_SLOTS[i][1] === key) return i;
-    }
-    return -1;
-  }
-
-  function forecastCurrentWeek(currentData, learnedPatternType) {
-    const buy = parseNum(currentData ? currentData["sun-buy"] : null);
-    const entered = getEnteredSellSlots(currentData);
-
-    if (entered.length === 0) {
-      return {
-        window: "-",
-        confidence: "-",
-        watchNext: "Enter at least one sell price (Mon AM is a good start)."
-      };
-    }
-
-    // If we know user pattern style from history, we use it as a prior
-    // If not, we guess based on early movement
-    const first = entered[0].v;
-    const last = entered[entered.length - 1].v;
-    const change = last - first;
-
-    // Highest so far
-    let best = entered[0];
-    for (let i = 1; i < entered.length; i++) {
-      if (entered[i].v > best.v) best = entered[i];
-    }
-
-    const bestIdx = slotIndexByKey(best.key);
-    const lastIdx = slotIndexByKey(entered[entered.length - 1].key);
-
-    const profit = (buy !== null) ? (best.v - buy) : null;
-
-    // Heuristic scoring
-    // We build a candidate pattern for this week so far
-    let candidate = learnedPatternType || "Unknown";
-
-    if (!learnedPatternType || learnedPatternType === "Unknown") {
-      if (change < -20 && (profit === null || profit < 20)) candidate = "Decreasing";
-      else if (best.v >= (buy !== null ? buy + 80 : best.v + 0) && bestIdx >= 4) candidate = "Big Spike";
-      else if (best.v >= (buy !== null ? buy + 50 : best.v + 0) && bestIdx >= 3) candidate = "Small Spike";
-      else candidate = "Random";
-    }
-
-    // Choose a window based on candidate pattern, and where we are in the week
-    // Windows are expressed in SELL_SLOTS labels
-    let windowStart = "Thu AM";
-    let windowEnd = "Fri PM";
-    let watchNext = "Keep entering prices, next slot helps confirm the pattern.";
-    let confidence = 35;
-
-    if (candidate === "Decreasing") {
-      windowStart = "Mon AM";
-      windowEnd = "Tue PM";
-      confidence = 45;
-      watchNext = "If Wed keeps dropping, sell the first time you see profit over buy.";
-    }
-
-    if (candidate === "Random") {
-      windowStart = "Wed AM";
-      windowEnd = "Sat PM";
-      confidence = 30;
-      watchNext = "Random weeks need more data. Watch for any sudden jump, especially Thu and Fri.";
-    }
-
-    if (candidate === "Small Spike") {
-      windowStart = "Wed AM";
-      windowEnd = "Fri PM";
-      confidence = 55;
-      watchNext = "If you see a jump of 30 or more between two slots, that is your spike forming.";
-    }
-
-    if (candidate === "Big Spike") {
-      windowStart = "Thu AM";
-      windowEnd = "Sat AM";
-      confidence = 65;
-      watchNext = "Big spike usually appears fast. If Thu AM shoots up hard, be ready to sell same day.";
-    }
-
-    // Adjust confidence with how much of the week is entered
-    // More entries means higher confidence
-    confidence += Math.min(entered.length * 4, 20);
-
-    // If best is already late week and high, boost
-    if (bestIdx >= 6) confidence += 5;
-
-    // If we already hit a strong profit, raise confidence and nudge recommendation via updatePredictSummary
-    if (profit !== null && profit >= 80) confidence += 10;
-
-    // If we are already past the window and still rising, shift window later
-    if (lastIdx >= 6 && last >= best.v) {
-      windowStart = "Fri AM";
-      windowEnd = "Sat PM";
-      watchNext = "You are late week and still rising, watch every slot closely.";
-      confidence = Math.min(confidence + 5, 90);
-    }
-
-    // Clip confidence
-    confidence = Math.max(10, Math.min(confidence, 90));
-
-    return {
-      window: `${windowStart} to ${windowEnd}`,
-      confidence: `${confidence}%`,
-      watchNext
-    };
-  }
-
-  // ---------- Predictor learning ----------
-
+  // ---------- Learning ----------
   function computeBestSellSlotFromData(dataObj) {
     let bestVal = null;
     let bestLabel = null;
@@ -403,6 +295,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function computeBestDayAvgFromWeeks(weeks) {
+    IfNoWeeks: {
+      // label block to keep things simple
+    }
     const daySums = new Map();
     const dayCounts = new Map();
 
@@ -445,12 +340,22 @@ document.addEventListener("DOMContentLoaded", () => {
     let sumPeak = 0;
     let countedWeeks = 0;
 
+    const peaks = [];
+    const peakOverBuy = [];
+
     weeks.forEach(w => {
-      const res = computeBestSellSlotFromData(w && w.data ? w.data : null);
+      const d = w && w.data ? w.data : null;
+      if (!d) return;
+
+      const res = computeBestSellSlotFromData(d);
       if (res.bestVal === null) return;
 
       countedWeeks += 1;
       sumPeak += res.bestVal;
+      peaks.push(res.bestVal);
+
+      const buy = parseNum(d["sun-buy"]);
+      if (buy !== null) peakOverBuy.push(res.bestVal - buy);
 
       const label = res.bestLabel || "Unknown";
       freq.set(label, (freq.get(label) || 0) + 1);
@@ -482,12 +387,338 @@ document.addEventListener("DOMContentLoaded", () => {
       top3,
       bestDay: dayAvg.bestDay,
       bestDayAvg: dayAvg.bestAvg,
-      pattern
+      pattern,
+      peaks,
+      peakOverBuy
     };
   }
 
+  // ---------- Expected max range ----------
+  function quantile(arr, q) {
+    if (!arr.length) return null;
+    const a = arr.slice().sort((x,y) => x - y);
+    const pos = (a.length - 1) * q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    if (a[base + 1] === undefined) return a[base];
+    return a[base] + rest * (a[base + 1] - a[base]);
+  }
+
+  function expectedMaxRangeText(buy, learn) {
+    // If we have history with buy prices, estimate peakOverBuy 25th to 75th and convert to absolute
+    if (buy !== null && learn.peakOverBuy && learn.peakOverBuy.length >= 4) {
+      const q25 = quantile(learn.peakOverBuy, 0.25);
+      const q75 = quantile(learn.peakOverBuy, 0.75);
+      if (q25 !== null && q75 !== null) {
+        const lo = Math.max(0, Math.round(buy + q25));
+        const hi = Math.max(0, Math.round(buy + q75));
+        return `${lo} to ${hi}`;
+      }
+    }
+
+    // If we only have peak absolute history, show a range from that
+    if (learn.peaks && learn.peaks.length >= 4) {
+      const q25 = quantile(learn.peaks, 0.25);
+      const q75 = quantile(learn.peaks, 0.75);
+      if (q25 !== null && q75 !== null) {
+        return `${Math.round(q25)} to ${Math.round(q75)}`;
+      }
+    }
+
+    // Fallback if no history
+    if (buy !== null) {
+      // conservative starter range
+      const lo = Math.round(buy * 1.2);
+      const hi = Math.round(buy * 1.8);
+      return `${lo} to ${hi}`;
+    }
+
+    return "-";
+  }
+
+  // ---------- Tiny chart ----------
+  function drawTinyChart(currentData, learn) {
+    if (!priceChart) return;
+    const ctx = priceChart.getContext("2d");
+    if (!ctx) return;
+
+    const W = priceChart.width;
+    const H = priceChart.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const points = [];
+    SELL_SLOTS.forEach(([label, key], i) => {
+      const v = parseNum(currentData ? currentData[key] : null);
+      if (v !== null) points.push({ i, v });
+    });
+
+    // background
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "rgba(0,0,0,0.03)";
+    ctx.fillRect(0, 0, W, H);
+
+    // grid lines
+    ctx.strokeStyle = "rgba(0,0,0,0.10)";
+    ctx.lineWidth = 1;
+    for (let g = 1; g <= 3; g++) {
+      const y = (H * g) / 4;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    if (!points.length) {
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.font = "12px system-ui";
+      ctx.fillText("Enter prices to see chart", 10, 20);
+      return;
+    }
+
+    // figure min max
+    let minV = points[0].v;
+    let maxV = points[0].v;
+    points.forEach(p => {
+      if (p.v < minV) minV = p.v;
+      if (p.v > maxV) maxV = p.v;
+    });
+
+    // Add headroom
+    const pad = Math.max(10, Math.round((maxV - minV) * 0.15));
+    minV -= pad;
+    maxV += pad;
+
+    function xFor(i) {
+      const left = 10;
+      const right = 10;
+      const usable = W - left - right;
+      return left + (i / (SELL_SLOTS.length - 1)) * usable;
+    }
+
+    function yFor(v) {
+      const top = 10;
+      const bottom = 16;
+      const usable = H - top - bottom;
+      if (maxV === minV) return top + usable / 2;
+      const t = (v - minV) / (maxV - minV);
+      return top + (1 - t) * usable;
+    }
+
+    // draw learned target line (avgPeak) if available
+    if (learn && learn.avgPeak !== null && Number.isFinite(learn.avgPeak)) {
+      const y = yFor(learn.avgPeak);
+      ctx.strokeStyle = "rgba(45,125,100,0.55)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // line
+    ctx.strokeStyle = "rgba(0,0,0,0.75)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((p, idx) => {
+      const x = xFor(p.i);
+      const y = yFor(p.v);
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // dots
+    ctx.fillStyle = "rgba(0,0,0,0.85)";
+    points.forEach(p => {
+      const x = xFor(p.i);
+      const y = yFor(p.v);
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // min max labels
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.font = "11px system-ui";
+    ctx.fillText(String(Math.round(maxV)), 10, 10);
+    ctx.fillText(String(Math.round(minV)), 10, H - 4);
+  }
+
+  // ---------- Forecast current week ----------
+  function getEnteredSellSlots(currentData) {
+    const entered = [];
+    SELL_SLOTS.forEach(([label, key]) => {
+      const v = parseNum(currentData ? currentData[key] : null);
+      if (v !== null) entered.push({ label, key, v });
+    });
+    return entered;
+  }
+
+  function slotIndexByKey(key) {
+    for (let i = 0; i < SELL_SLOTS.length; i++) {
+      if (SELL_SLOTS[i][1] === key) return i;
+    }
+    return -1;
+  }
+
+  function forecastCurrentWeek(currentData, learnedPatternType) {
+    const buy = parseNum(currentData ? currentData["sun-buy"] : null);
+    const entered = getEnteredSellSlots(currentData);
+
+    if (entered.length === 0) {
+      return {
+        window: "-",
+        confidence: "-",
+        watchNext: "Enter at least one sell price, Mon AM is a good start."
+      };
+    }
+
+    const first = entered[0].v;
+    const last = entered[entered.length - 1].v;
+    const change = last - first;
+
+    let best = entered[0];
+    for (let i = 1; i < entered.length; i++) {
+      if (entered[i].v > best.v) best = entered[i];
+    }
+
+    const bestIdx = slotIndexByKey(best.key);
+    const lastIdx = slotIndexByKey(entered[entered.length - 1].key);
+
+    const profit = (buy !== null) ? (best.v - buy) : null;
+
+    let candidate = learnedPatternType || "Unknown";
+
+    if (!learnedPatternType || learnedPatternType === "Unknown") {
+      if (change < -20 && (profit === null || profit < 20)) candidate = "Decreasing";
+      else if (buy !== null && best.v >= buy + 80 && bestIdx >= 4) candidate = "Big Spike";
+      else if (buy !== null && best.v >= buy + 50 && bestIdx >= 3) candidate = "Small Spike";
+      else candidate = "Random";
+    }
+
+    let windowStart = "Thu AM";
+    let windowEnd = "Fri PM";
+    let watchNext = "Keep entering prices, next slot helps confirm the pattern.";
+    let confidence = 35;
+
+    if (candidate === "Decreasing") {
+      windowStart = "Mon AM";
+      windowEnd = "Tue PM";
+      confidence = 45;
+      watchNext = "If Wed keeps dropping, sell the first time you see profit over buy.";
+    }
+
+    if (candidate === "Random") {
+      windowStart = "Wed AM";
+      windowEnd = "Sat PM";
+      confidence = 30;
+      watchNext = maybeBuyText(buy, "Random weeks need more data. Watch for any sudden jump, especially Thu and Fri.");
+    }
+
+    if (candidate === "Small Spike") {
+      windowStart = "Wed AM";
+      windowEnd = "Fri PM";
+      confidence = 55;
+      watchNext = "If you see a jump of 30 or more between two slots, that is your spike forming.";
+    }
+
+    if (candidate === "Big Spike") {
+      windowStart = "Thu AM";
+      windowEnd = "Sat AM";
+      confidence = 65;
+      watchNext = "Big spike usually appears fast. If Thu AM shoots up hard, be ready to sell same day.";
+    }
+
+    confidence += Math.min(entered.length * 4, 20);
+
+    if (bestIdx >= 6) confidence += 5;
+    if (profit !== null && profit >= 80) confidence += 10;
+
+    if (lastIdx >= 6 && last >= best.v) {
+      windowStart = "Fri AM";
+      windowEnd = "Sat PM";
+      watchNext = "You are late week and still rising, watch every slot closely.";
+      confidence = Math.min(confidence + 5, 90);
+    }
+
+    confidence = Math.max(10, Math.min(confidence, 90));
+
+    return {
+      window: `${windowStart} to ${windowEnd}`,
+      confidence: `${confidence}%`,
+      watchNext
+    };
+  }
+
+  function maybeBuyText(buy, text) {
+    if (buy === null) return text;
+    return text;
+  }
+
+  // ---------- Sell alert ----------
+  function maybeShowSellAlert() {
+    if (!sellAlertBadge) return;
+
+    const weeks = getWeeks();
+    const learn = learnFromSavedWeeks(weeks);
+    const current = getCurrentWeekData();
+
+    const buy = parseNum(current["sun-buy"]);
+    const curBest = computeBestSellSlotFromData(current);
+
+    // If no best, hide
+    if (curBest.bestVal === null) {
+      sellAlertBadge.classList.add("hidden");
+      return;
+    }
+
+    // Determine trigger level:
+    // 1) If we have avgPeak from history, trigger when best meets or beats avgPeak
+    // 2) Else if we have buy price, trigger when profit reaches +50
+    // 3) Else no alert
+    let trigger = null;
+    let reason = "";
+
+    if (learn.avgPeak !== null && ensureFinite(learn.avgPeak)) {
+      trigger = Math.round(learn.avgPeak);
+      reason = `Hit learned target ${trigger}`;
+    } else if (buy !== null) {
+      trigger = buy + 50;
+      reason = "Profit is +50 or more";
+    }
+
+    if (trigger === null) {
+      sellAlertBadge.classList.add("hidden");
+      return;
+    }
+
+    const alreadyShown = localStorage.getItem(KEYS.alertSeen) === "1";
+
+    if (curBest.bestVal >= trigger) {
+      sellAlertBadge.textContent = "Sell alert";
+      sellAlertBadge.classList.remove("hidden");
+
+      // One time popup per week, optional
+      if (!alreadyShown) {
+        localStorage.setItem(KEYS.alertSeen, "1");
+        alert(`Sell alert, best so far is ${curBest.bestVal}. ${reason}.`);
+      }
+    } else {
+      sellAlertBadge.classList.add("hidden");
+    }
+  }
+
+  function ensureFinite(x) {
+    return typeof x === "number" && Number.isFinite(x);
+  }
+
+  // ---------- Predictor update ----------
   function updatePredictSummary() {
     const weeks = getWeeks();
+    const learn = learnFromSavedWeeks(weeks);
+
     if (weeksCountEl) weeksCountEl.textContent = String(weeks.length);
 
     const current = getCurrentWeekData();
@@ -513,8 +744,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    const learn = learnFromSavedWeeks(weeks);
-
     if (bestDayAvgEl) {
       if (!learn.bestDay) bestDayAvgEl.textContent = "-";
       else {
@@ -529,7 +758,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (recommendationEl) {
       if (learn.countedWeeks === 0 || learn.avgPeak === null || curBest.bestVal === null) {
-        // If no history, give a practical message using buy price
         if (buy !== null && curBest.bestVal !== null) {
           const diff = curBest.bestVal - buy;
           if (diff >= 50) recommendationEl.textContent = "Solid profit. If you are happy with it, selling now is reasonable.";
@@ -565,16 +793,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Forecast current week
     const fc = forecastCurrentWeek(current, learnedType);
     if (forecastWindowEl) forecastWindowEl.textContent = fc.window;
     if (forecastConfidenceEl) forecastConfidenceEl.textContent = fc.confidence;
     if (watchNextEl) watchNextEl.textContent = fc.watchNext;
 
+    // Expected max range
+    if (expectedRangeEl) expectedRangeEl.textContent = expectedMaxRangeText(buy, learn);
+
+    // Tiny chart
+    drawTinyChart(current, learn);
+
+    // Sell alert badge
+    maybeShowSellAlert();
+
     if (predictSummaryEl) {
       if (learn.countedWeeks === 0) {
         predictSummaryEl.textContent =
-          "No saved weeks yet. Forecast is based only on this week’s partial data.";
+          "No saved weeks yet. Forecast and expected range are based on this week’s partial data.";
       } else {
         const avgTxt = learn.avgPeak === null ? "-" : String(Math.round(learn.avgPeak));
         const commonTxt = learn.mostCommonBestLabel || "-";
@@ -589,7 +825,7 @@ document.addEventListener("DOMContentLoaded", () => {
     runPredictBtn.addEventListener("click", (e) => {
       e.preventDefault();
       updatePredictSummary();
-      alert("Forecast updated using your current week data.");
+      alert("Predictor updated.");
     });
   }
 
@@ -744,4 +980,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Boot
   loadCurrentDraft();
   setActiveTab("entry");
+  // Also compute alert state on load
+  maybeShowSellAlert();
 });

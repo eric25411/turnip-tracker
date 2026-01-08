@@ -1,122 +1,147 @@
-// app.js
-// Turnip Tracker, autosave all inputs using localStorage
+(function () {
+  const toast = document.getElementById("toast");
+  const saveWeekBtn = document.getElementById("saveWeekBtn");
 
-(() => {
-  const STORAGE_KEY = "turnipTracker.prices.v1";
+  const predictBtn = document.getElementById("predictBtn");
+  const historyBtn = document.getElementById("historyBtn");
 
-  // These IDs must match your index.html exactly
-  const INPUT_IDS = [
-    "mon-am", "mon-pm",
-    "tue-am", "tue-pm",
-    "wed-am", "wed-pm",
-    "thu-am", "thu-pm",
-    "fri-am", "fri-pm",
-    "sat-am", "sat-pm",
-  ];
+  const predictText = document.getElementById("predictText");
+  const buyInput = document.getElementById("buy-price");
 
-  function safeParse(json) {
-    try {
-      return JSON.parse(json);
-    } catch {
-      return null;
-    }
+  const inputs = Array.from(document.querySelectorAll(".priceInput"));
+
+  function showToast(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add("show");
+    window.setTimeout(() => toast.classList.remove("show"), 1100);
   }
 
-  function loadAll() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const data = safeParse(raw) || {};
-    for (const id of INPUT_IDS) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      const value = data[id];
-      el.value = typeof value === "string" ? value : "";
-    }
+  function setActiveNavFromHash() {
+    const hash = (window.location.hash || "#predict").toLowerCase();
+    predictBtn.classList.toggle("isActive", hash === "#predict");
+    historyBtn.classList.toggle("isActive", hash === "#history");
   }
 
-  function readAll() {
-    const data = {};
-    for (const id of INPUT_IDS) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      data[id] = (el.value || "").trim();
-    }
-    return data;
+  function keyFor(id) {
+    return `tt_${id}`;
   }
 
-  function saveAll() {
-    const data = readAll();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
-
-  // Small debounce so it does not write to storage on every single keystroke instantly
-  function debounce(fn, wait = 120) {
-    let t;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), wait);
+  function prettySlot(id) {
+    const [d, t] = id.split("-");
+    const dayMap = {
+      mon: "Monday",
+      tue: "Tuesday",
+      wed: "Wednesday",
+      thu: "Thursday",
+      fri: "Friday",
+      sat: "Saturday",
     };
+    const timeMap = { am: "AM", pm: "PM" };
+    return `${dayMap[d] || d} ${timeMap[t] || t}`;
   }
 
-  const saveAllDebounced = debounce(saveAll, 120);
+  function findBestSoFar() {
+    let best = { id: null, value: -1 };
 
-  function digitsOnly(el) {
-    // keep digits only (no commas, no $, no spaces)
-    const cleaned = (el.value || "").replace(/[^\d]/g, "");
-    if (el.value !== cleaned) el.value = cleaned;
+    inputs.forEach((el) => {
+      const v = Number(el.value || 0);
+      if (v > best.value) best = { id: el.id, value: v };
+    });
+
+    return best.value > 0 ? best : null;
+  }
+
+  function updatePrediction() {
+    if (!predictText) return;
+
+    const best = findBestSoFar();
+    const buy = buyInput ? Number(buyInput.value || 0) : 0;
+
+    if (!best) {
+      predictText.textContent = "Enter prices to get a best sell window.";
+      return;
+    }
+
+    const slot = prettySlot(best.id);
+    const profit = buy > 0 ? best.value - buy : null;
+
+    if (profit === null) {
+      predictText.textContent = `Best sell time so far is ${slot}, at ${best.value}.`;
+      return;
+    }
+
+    if (profit <= 0) {
+      predictText.textContent =
+        `Best sell time so far is ${slot}, at ${best.value}. ` +
+        `That is ${Math.abs(profit)} below your buy price, so you may want to wait if you can.`;
+      return;
+    }
+
+    predictText.textContent =
+      `Best sell time so far is ${slot}, at ${best.value}. ` +
+      `That is ${profit} profit per turnip vs your buy price.`;
+  }
+
+  function loadWeek() {
+    if (buyInput) {
+      const savedBuy = localStorage.getItem(keyFor("buy-price"));
+      if (savedBuy !== null) buyInput.value = savedBuy;
+    }
+
+    inputs.forEach((el) => {
+      const saved = localStorage.getItem(keyFor(el.id));
+      if (saved !== null) el.value = saved;
+    });
+
+    updatePrediction();
+  }
+
+  function saveWeekToHistory() {
+    const week = {
+      savedAt: new Date().toISOString(),
+      buy: buyInput ? Number(buyInput.value || 0) : 0,
+      prices: {}
+    };
+
+    inputs.forEach((el) => {
+      week.prices[el.id] = Number(el.value || 0);
+    });
+
+    const history = JSON.parse(localStorage.getItem("tt_history") || "[]");
+    history.unshift(week);
+    localStorage.setItem("tt_history", JSON.stringify(history));
+
+    showToast("Saved to History");
   }
 
   function wireInputs() {
-    for (const id of INPUT_IDS) {
-      const el = document.getElementById(id);
-      if (!el) continue;
+    if (buyInput) {
+      buyInput.addEventListener("input", () => {
+        buyInput.value = buyInput.value.replace(/[^\d]/g, "");
+        localStorage.setItem(keyFor("buy-price"), buyInput.value);
+        updatePrediction();
+      });
+    }
 
-      // Load-time: optional numeric keyboard hint is already in HTML via inputmode
-      // Input-time: enforce digits only, then autosave
+    inputs.forEach((el) => {
       el.addEventListener("input", () => {
-        digitsOnly(el);
-        saveAllDebounced();
+        el.value = el.value.replace(/[^\d]/g, "");
+        localStorage.setItem(keyFor(el.id), el.value);
+        updatePrediction();
       });
-
-      // Make editing easier on mobile
-      el.addEventListener("focus", () => {
-        // slight delay helps iOS reliably select
-        setTimeout(() => el.select(), 0);
-      });
-    }
+    });
   }
 
-  function wireNavButtons() {
-    const predictBtn = document.getElementById("predictBtn");
-    const historyBtn = document.getElementById("historyBtn");
+  // Nav state
+  window.addEventListener("hashchange", setActiveNavFromHash);
+  setActiveNavFromHash();
 
-    if (predictBtn) {
-      predictBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        saveAll(); // always save before actions
-        alert("Predict is coming next. Your prices are saved.");
-      });
-    }
-
-    if (historyBtn) {
-      historyBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        saveAll(); // always save before actions
-        alert("History is coming next. Your prices are saved.");
-      });
-    }
+  // Save week
+  if (saveWeekBtn) {
+    saveWeekBtn.addEventListener("click", saveWeekToHistory);
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    loadAll();
-    wireInputs();
-    wireNavButtons();
-
-    // Extra safety, saves if Safari kills the tab
-    window.addEventListener("beforeunload", () => {
-      saveAll();
-    });
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") saveAll();
-    });
-  });
+  wireInputs();
+  loadWeek();
 })();

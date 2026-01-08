@@ -30,6 +30,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const recommendationEl = document.getElementById("recommendation");
   const topPeaksEl = document.getElementById("topPeaks");
 
+  const likelyPatternEl = document.getElementById("likelyPattern");
+  const patternNoteEl = document.getElementById("patternNote");
+
   // History UI
   const historyList = document.getElementById("historyList");
   const historyEmptyNote = document.getElementById("historyEmptyNote");
@@ -67,12 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
   navPredict.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("predict"); });
   navHistory.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("history"); });
 
-  if (goHomeBtn) {
-    goHomeBtn.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("entry"); });
-  }
-  if (goEntryBtn) {
-    goEntryBtn.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("entry"); });
-  }
+  if (goHomeBtn) goHomeBtn.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("entry"); });
+  if (goEntryBtn) goEntryBtn.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("entry"); });
 
   // Storage helpers
   function getWeeks() {
@@ -101,6 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
     ["Friday", "fri-am", "fri-pm"],
     ["Saturday", "sat-am", "sat-pm"]
   ];
+
+  function parseNum(x) {
+    const n = Number(String(x || "").trim());
+    return Number.isFinite(n) ? n : null;
+  }
 
   function getCurrentWeekData() {
     const ids = SLOT_LIST.map(x => x[1]);
@@ -159,17 +163,101 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveTab("history");
   });
 
-  // ---- Predictor learning logic ----
+  // ---------- Pattern detection ----------
 
-  function parseNum(x) {
-    const n = Number(String(x || "").trim());
-    return Number.isFinite(n) ? n : null;
+  function weekSeriesFromData(dataObj) {
+    // returns numeric series in order, skipping nulls
+    const series = [];
+    SLOT_LIST.forEach(([label, key]) => {
+      const v = parseNum(dataObj ? dataObj[key] : null);
+      if (v !== null) series.push({ label, key, v });
+    });
+    return series;
   }
+
+  function detectPattern(dataObj) {
+    const series = weekSeriesFromData(dataObj);
+    if (series.length < 4) {
+      return { type: "Unknown", note: "Not enough data yet." };
+    }
+
+    const values = series.map(x => x.v);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    // If range is tiny, treat as Random (flat-ish)
+    const range = max - min;
+    if (range < 15) {
+      return { type: "Random", note: "Small movement so far, looks flat or random." };
+    }
+
+    // Find peak index and check shape around it
+    let peakIdx = 0;
+    for (let i = 1; i < series.length; i++) {
+      if (series[i].v > series[peakIdx].v) peakIdx = i;
+    }
+
+    const peak = series[peakIdx].v;
+
+    // Check if mostly decreasing
+    let downMoves = 0;
+    let totalMoves = 0;
+    for (let i = 1; i < series.length; i++) {
+      totalMoves += 1;
+      if (series[i].v <= series[i - 1].v) downMoves += 1;
+    }
+    const downRatio = downMoves / totalMoves;
+
+    if (downRatio >= 0.75 && peakIdx <= 2) {
+      return { type: "Decreasing", note: "Mostly dropping over time, peak tends to be early." };
+    }
+
+    // Spike detection: a large jump into peak and a notable drop after
+    const before = series[Math.max(0, peakIdx - 1)].v;
+    const after = series[Math.min(series.length - 1, peakIdx + 1)].v;
+
+    const jump = peak - before;
+    const drop = peak - after;
+
+    // Big spike if jump is big and drop is big
+    if (jump >= 60 && drop >= 40 && peakIdx >= 3) {
+      return { type: "Big Spike", note: "One big peak then a sharp drop, sell near the spike." };
+    }
+
+    // Small spike if it spikes, but not huge
+    if (jump >= 35 && drop >= 20 && peakIdx >= 3) {
+      return { type: "Small Spike", note: "A moderate peak then fades, watch mid to late week." };
+    }
+
+    // Otherwise random
+    return { type: "Random", note: "Prices bounce without a clear spike pattern." };
+  }
+
+  function mostCommonPattern(weeks) {
+    const freq = new Map();
+    let counted = 0;
+
+    weeks.forEach(w => {
+      const res = detectPattern(w && w.data ? w.data : null);
+      if (!res.type || res.type === "Unknown") return;
+      counted += 1;
+      freq.set(res.type, (freq.get(res.type) || 0) + 1);
+    });
+
+    let bestType = null;
+    let bestCount = 0;
+    for (const [t, c] of freq.entries()) {
+      if (c > bestCount) { bestCount = c; bestType = t; }
+    }
+
+    return { bestType, bestCount, counted };
+  }
+
+  // ---------- Predictor learning ----------
 
   function computeBestSlotFromData(dataObj) {
     let bestVal = null;
     let bestLabel = null;
-    let bestKey = null;
 
     SLOT_LIST.forEach(([label, key]) => {
       const v = parseNum(dataObj ? dataObj[key] : null);
@@ -177,17 +265,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (bestVal === null || v > bestVal) {
         bestVal = v;
         bestLabel = label;
-        bestKey = key;
       }
     });
 
-    return { bestVal, bestLabel, bestKey };
+    return { bestVal, bestLabel };
   }
 
   function computeBestDayAvgFromWeeks(weeks) {
-    // Average each day across weeks (avg of AM/PM where present), then pick best
-    const daySums = new Map();   // day -> sum
-    const dayCounts = new Map(); // day -> count
+    const daySums = new Map();
+    const dayCounts = new Map();
 
     weeks.forEach(w => {
       const d = w && w.data ? w.data : null;
@@ -197,7 +283,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const am = parseNum(d[amKey]);
         const pm = parseNum(d[pmKey]);
 
-        // day avg uses any available slots
         const vals = [am, pm].filter(v => v !== null);
         if (!vals.length) return;
 
@@ -225,7 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function learnFromSavedWeeks(weeks) {
-    const freq = new Map(); // best slot label -> count
+    const freq = new Map();
     let sumPeak = 0;
     let countedWeeks = 0;
 
@@ -240,7 +325,16 @@ document.addEventListener("DOMContentLoaded", () => {
       freq.set(label, (freq.get(label) || 0) + 1);
     });
 
-    // most common best slot
+    const top3 = Array.from(freq.entries())
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([label, c]) => `${label} (${c})`);
+
+    const avgPeak = countedWeeks ? (sumPeak / countedWeeks) : null;
+    const dayAvg = computeBestDayAvgFromWeeks(weeks);
+    const pattern = mostCommonPattern(weeks);
+
+    // most common peak slot
     let mostCommonBestLabel = null;
     let mostCommonCount = 0;
     for (const [label, c] of freq.entries()) {
@@ -250,17 +344,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // top 3 peak slots
-    const top3 = Array.from(freq.entries())
-      .sort((a,b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([label, c]) => `${label} (${c})`);
-
-    const avgPeak = countedWeeks ? (sumPeak / countedWeeks) : null;
-
-    // best day on average
-    const dayAvg = computeBestDayAvgFromWeeks(weeks);
-
     return {
       mostCommonBestLabel,
       mostCommonCount,
@@ -268,7 +351,8 @@ document.addEventListener("DOMContentLoaded", () => {
       countedWeeks,
       top3,
       bestDay: dayAvg.bestDay,
-      bestDayAvg: dayAvg.bestAvg
+      bestDayAvg: dayAvg.bestAvg,
+      pattern
     };
   }
 
@@ -276,7 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const weeks = getWeeks();
     if (weeksCountEl) weeksCountEl.textContent = String(weeks.length);
 
-    // Best so far this week (current draft)
     const current = getCurrentWeekData();
     const curBest = computeBestSlotFromData(current);
 
@@ -288,25 +371,20 @@ document.addEventListener("DOMContentLoaded", () => {
       if (bestWhenEl) bestWhenEl.textContent = curBest.bestLabel;
     }
 
-    // Learning
     const learn = learnFromSavedWeeks(weeks);
 
-    // Best day on average
     if (bestDayAvgEl) {
-      if (!learn.bestDay) {
-        bestDayAvgEl.textContent = "-";
-      } else {
+      if (!learn.bestDay) bestDayAvgEl.textContent = "-";
+      else {
         const avgTxt = learn.bestDayAvg === null ? "-" : String(Math.round(learn.bestDayAvg));
         bestDayAvgEl.textContent = `${learn.bestDay} (~${avgTxt})`;
       }
     }
 
-    // Top peak slots
     if (topPeaksEl) {
       topPeaksEl.textContent = learn.top3 && learn.top3.length ? learn.top3.join(", ") : "-";
     }
 
-    // Recommendation
     if (recommendationEl) {
       if (learn.countedWeeks === 0 || learn.avgPeak === null || curBest.bestVal === null) {
         recommendationEl.textContent = "Need more data. Save weeks to improve.";
@@ -320,7 +398,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Summary paragraph
+    // Pattern output
+    if (likelyPatternEl && patternNoteEl) {
+      const p = learn.pattern;
+      if (!p.bestType) {
+        likelyPatternEl.textContent = "-";
+        patternNoteEl.textContent = "Save more weeks so pattern detection can learn your style.";
+      } else {
+        likelyPatternEl.textContent = `${p.bestType} (${p.bestCount}/${p.counted})`;
+        patternNoteEl.textContent =
+          p.bestType === "Big Spike" ? "Peaks tend to appear mid to late week, watch Thu to Sat." :
+          p.bestType === "Small Spike" ? "Moderate peaks, check Wed to Fri closely." :
+          p.bestType === "Decreasing" ? "Often downhill, sell early if you see a decent price." :
+          "Bouncy weeks, watch for any surprise jump.";
+      }
+    }
+
     if (predictSummaryEl) {
       if (learn.countedWeeks === 0) {
         predictSummaryEl.textContent =
@@ -329,9 +422,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const avgTxt = learn.avgPeak === null ? "-" : String(Math.round(learn.avgPeak));
         const commonTxt = learn.mostCommonBestLabel || "-";
         const confTxt = `${learn.countedWeeks} week${learn.countedWeeks === 1 ? "" : "s"} learned`;
-
         predictSummaryEl.textContent =
-          `From your saved weeks, your most common peak slot is ${commonTxt}. Average weekly peak is about ${avgTxt}. Confidence: ${confTxt}.`;
+          `Most common peak slot: ${commonTxt}. Average weekly peak: ~${avgTxt}. Confidence: ${confTxt}.`;
       }
     }
   }
@@ -340,17 +432,11 @@ document.addEventListener("DOMContentLoaded", () => {
     runPredictBtn.addEventListener("click", (e) => {
       e.preventDefault();
       updatePredictSummary();
-
-      const learn = learnFromSavedWeeks(getWeeks());
-      if (learn.countedWeeks === 0) {
-        alert("No saved weeks with prices yet. Save a week to start learning patterns.");
-      } else {
-        alert("Updated. Next upgrade is curve pattern detection, like spike, decreasing, small spike.");
-      }
+      alert("Updated. Pattern detection is now enabled using your saved weeks.");
     });
   }
 
-  // ---- History render ----
+  // ---- History render (now includes pattern in details) ----
   function renderHistory() {
     const weeks = getWeeks();
     historyList.innerHTML = "";
@@ -409,9 +495,11 @@ document.addEventListener("DOMContentLoaded", () => {
       top.appendChild(label);
       top.appendChild(btnWrap);
 
+      const det = detectPattern(w.data);
+
       const details = document.createElement("div");
       details.className = "weekDetails";
-      details.textContent = summarizeWeek(w.data);
+      details.textContent = `Pattern: ${det.type}. ${det.note}  |  ${summarizeWeek(w.data)}`;
 
       row.appendChild(top);
       row.appendChild(details);

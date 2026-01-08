@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css?v=19" />
+
+  <!-- Cache bust -->
+  <link rel="stylesheet" href="style.css?v=20" />
 </head>
 
 <body>
@@ -28,22 +30,12 @@
     </div>
 
     <!-- MAIN -->
-    <main class="main">
+    <main class="main" id="mainView">
 
-      <!-- ENTRY VIEW -->
-      <section id="entryView" class="view">
-        <div class="buyCard">
-          <div class="buyRow">
-            <div class="buyLabel">
-              <span class="emoji">🧺</span>
-              <span>Buy price</span>
-            </div>
-            <input class="priceInput buyInput" inputmode="numeric" placeholder="-" id="buy-price" />
-          </div>
-          <div class="buyHint">Sunday AM price you paid, used for profit calculation.</div>
-        </div>
-
+      <!-- ENTRY VIEW (your day inputs live here) -->
+      <section id="predictView" class="view">
         <section class="days">
+
           <div class="dayCard">
             <h2 class="dayTitle">Monday</h2>
             <div class="row">
@@ -115,42 +107,39 @@
               <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-pm" />
             </div>
           </div>
+
         </section>
       </section>
 
-      <!-- PREDICT VIEW -->
-      <section id="predictView" class="view hidden">
+      <!-- PREDICTOR VIEW -->
+      <section id="predictorView" class="view hidden">
         <div class="predictCard">
           <h2 class="predictTitle">Predictor</h2>
 
+          <div class="buyCard">
+            <div class="buyRow">
+              <div class="buyLabel">💰 Buy price</div>
+              <input id="buyPrice" class="priceInput buyInput" inputmode="numeric" placeholder="-" />
+            </div>
+            <div class="buyHint">This is the price you paid from Daisy Mae on Sunday.</div>
+          </div>
+
           <div class="chartWrap">
-            <canvas id="chartCanvas" width="760" height="260"></canvas>
+            <canvas id="chartCanvas" width="640" height="280"></canvas>
             <div class="chartCaption">Left to right, Mon AM to Sat PM</div>
           </div>
 
-          <div class="metrics">
-            <div class="metric"><span class="k">Buy price:</span> <span id="buyPriceVal">-</span></div>
-            <div class="metric"><span class="k">Best so far this week:</span> <span id="bestSoFarVal">-</span></div>
-            <div class="metric"><span class="k">Best day time:</span> <span id="bestTimeVal">-</span></div>
-            <div class="metric"><span class="k">Profit vs buy:</span> <span id="profitVsBuyVal">-</span></div>
-
-            <div class="metric"><span class="k">Likely pattern:</span> <span id="patternTypeVal">-</span></div>
-            <div class="metric small"><span class="k">Pattern note:</span> <span id="patternNoteVal">Save more weeks so pattern detection can learn your style.</span></div>
-
-            <div class="metric"><span class="k">Forecast peak window:</span> <span id="forecastWindowVal">-</span></div>
-            <div class="metric"><span class="k">Forecast confidence:</span> <span id="forecastConfVal">-</span></div>
-            <div class="metric"><span class="k">What to watch next:</span> <span id="watchNextVal">-</span></div>
-            <div class="metric"><span class="k">Expected max range:</span> <span id="rangeVal">-</span></div>
-          </div>
+          <div class="metrics" id="metrics"></div>
         </div>
       </section>
 
       <!-- HISTORY VIEW -->
       <section id="historyView" class="view hidden">
         <div class="historyWrap">
+
           <div class="historyCard">
             <h2 class="historyTitle">Past weeks</h2>
-            <p class="historyHint">Tap Expand to see a summary. Use Load to edit an old week.</p>
+            <p class="historyHint">Tap Expand to see details. Use Load to edit an old week.</p>
             <div id="historyList" class="historyList"></div>
           </div>
 
@@ -169,6 +158,7 @@
               No saved weeks yet. Fill the week, then hit Save week.
             </p>
           </div>
+
         </div>
       </section>
 
@@ -181,18 +171,16 @@
       <span class="navIcon">🧾</span>
       <span>Entry</span>
     </button>
-
     <button id="navPredict" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
       <span>Predict</span>
     </button>
-
     <button id="navHistory" class="navBtn" type="button">
       <span class="navIcon">🕰️</span>
       <span>History</span>
     </button>
   </nav>
 
-  <script src="app.js?v=19"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
   <title>Turnip Tracker</title>
 
   <!-- Cache bust -->
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 
 <body>
@@ -21,31 +21,19 @@
         onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
       />
 
-      <div id="headerFallback" style="display:none; font-size:22px; font-weight:700;">
+      <div id="headerFallback" class="headerFallback">
         Turnip Tracker
       </div>
 
-      <button id="saveWeekBtn" class="primaryBtn">Save week to History</button>
+      <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
     </div>
 
     <!-- MAIN -->
-    <main id="mainView">
+    <main id="mainView" class="mainView">
 
       <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
         <section class="days">
-
-          <!-- SUNDAY BUY PRICE -->
-          <div class="dayCard">
-            <h2 class="dayTitle">Sunday</h2>
-            <div class="row">
-              <div class="label"><span class="emoji">🧺</span><span>Buy</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="sun-buy" />
-            </div>
-            <div class="row hintRow">
-              <div class="hintText">Enter the price you bought turnips for.</div>
-            </div>
-          </div>
 
           <div class="dayCard">
             <h2 class="dayTitle">Monday</h2>
@@ -124,52 +112,34 @@
 
       <!-- PREDICT VIEW -->
       <section id="predictView" class="view hidden">
-        <div class="predictWrap">
-          <div class="predictCard">
-            <div class="predictHeaderRow">
-              <h2 class="historyTitle">Predictor</h2>
-              <span id="sellAlertBadge" class="sellAlertBadge hidden">Sell alert</span>
-            </div>
+        <div class="historyWrap">
 
-            <!-- Tiny chart -->
-            <div class="chartWrap">
-              <canvas id="priceChart" width="320" height="140" aria-label="Price chart"></canvas>
-              <div class="chartLegend">
-                <span>Left to right, Mon AM to Sat PM</span>
+          <div class="historyCard">
+            <h2 class="historyTitle">Predictor</h2>
+
+            <div class="chartCard">
+              <div class="chartFrame">
+                <!-- IMPORTANT: This filename must match GitHub exactly -->
+                <img
+                  src="ac-chart.png.PNG"
+                  alt="Animal Crossing chart frame"
+                  class="chartBg"
+                />
+                <canvas id="chartCanvas" class="chartCanvas" width="900" height="360"></canvas>
               </div>
+              <div class="chartHint">Left to right, Mon AM to Sat PM</div>
             </div>
 
-            <div class="predictLine"><strong>Buy price:</strong> <span id="buyPrice">-</span></div>
-            <div class="predictLine"><strong>Best so far this week:</strong> <span id="bestSoFar">-</span></div>
-            <div class="predictLine"><strong>Best day time:</strong> <span id="bestWhen">-</span></div>
-            <div class="predictLine"><strong>Profit vs buy:</strong> <span id="profitVsBuy">-</span></div>
-
-            <div class="predictLine"><strong>Likely pattern:</strong> <span id="likelyPattern">-</span></div>
-            <div class="predictLine"><strong>Pattern note:</strong> <span id="patternNote">-</span></div>
-
-            <div class="predictLine"><strong>Forecast peak window:</strong> <span id="forecastWindow">-</span></div>
-            <div class="predictLine"><strong>Forecast confidence:</strong> <span id="forecastConfidence">-</span></div>
-            <div class="predictLine"><strong>What to watch next:</strong> <span id="watchNext">-</span></div>
-
-            <!-- Expected max range -->
-            <div class="predictLine"><strong>Expected max range:</strong> <span id="expectedRange">-</span></div>
-
-            <div class="predictLine"><strong>Best day on average:</strong> <span id="bestDayAvg">-</span></div>
-            <div class="predictLine"><strong>Recommendation:</strong> <span id="recommendation">-</span></div>
-            <div class="predictLine"><strong>Top peak slots:</strong> <span id="topPeaks">-</span></div>
-
-            <div class="predictLine"><strong>Saved weeks count:</strong> <span id="weeksCount">0</span></div>
-
-            <button id="runPredictBtn" class="primaryBtn">Run prediction</button>
-
-            <p id="predictSummary" class="historySmall">
-              Enter prices, save weeks, then I will learn your best sell windows.
-            </p>
+            <div class="predictStats">
+              <div><b>Buy price:</b> <span id="buyPrice">-</span></div>
+              <div><b>Best so far this week:</b> <span id="bestSoFar">-</span></div>
+              <div><b>Best day time:</b> <span id="bestTime">-</span></div>
+              <div><b>Profit vs buy:</b> <span id="profitVsBuy">-</span></div>
+              <div><b>Likely pattern:</b> <span id="patternType">-</span></div>
+              <div class="smallNote" id="patternNote">Save more weeks so pattern detection can learn your style.</div>
+            </div>
           </div>
 
-          <div class="predictCard">
-            <button id="goEntryBtn" class="chipBtn" type="button">Back to Entry</button>
-          </div>
         </div>
       </section>
 
@@ -185,12 +155,12 @@
           <div class="historyCard">
             <h3 class="historySubtitle">Import, Export</h3>
             <div class="historyActions">
-              <button id="exportBtn" class="chipBtn">Export</button>
+              <button id="exportBtn" class="chipBtn" type="button">Export</button>
               <label class="chipBtn fileBtn">
                 Import
                 <input id="importFile" type="file" accept="application/json" />
               </label>
-              <button id="goHomeBtn" class="chipBtn">Home</button>
+              <button id="goHomeBtn" class="chipBtn" type="button">Home</button>
             </div>
 
             <p class="historySmall" id="historyEmptyNote">
@@ -209,16 +179,18 @@
       <span class="navIcon">🧾</span>
       <span>Entry</span>
     </button>
+
     <button id="navPredict" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
       <span>Predict</span>
     </button>
+
     <button id="navHistory" class="navBtn" type="button">
       <span class="navIcon">🕰️</span>
       <span>History</span>
     </button>
   </nav>
 
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>

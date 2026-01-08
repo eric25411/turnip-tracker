@@ -69,14 +69,8 @@ body{
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-.saveWeekBtn{
-  color: #2b6fff;
-}
-
-.newWeekBtn{
-  color: #1b1b1b;
-  opacity: 0.9;
-}
+.saveWeekBtn{ color: #2b6fff; }
+.newWeekBtn{ color: #1b1b1b; opacity: 0.9; }
 
 .saveWeekBtn:active,
 .newWeekBtn:active{
@@ -330,6 +324,18 @@ body{
 
 .miniLabel{ opacity: 0.85; }
 .miniVal{ font-weight: 900; }
+
+/* NEW SAVED WEEK HIGHLIGHT */
+.weekCard.isNew{
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.9), 0 14px 30px rgba(0,0,0,0.12);
+  animation: newGlow 1.1s ease-in-out 0s 3;
+}
+
+@keyframes newGlow{
+  0%{ transform: translateY(0); }
+  50%{ transform: translateY(-2px); }
+  100%{ transform: translateY(0); }
+}
 
 /* BOTTOM NAV */
 .bottomNav{

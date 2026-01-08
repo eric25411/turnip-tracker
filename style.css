@@ -1,15 +1,10 @@
-/* =========================
-   Turnip Tracker, style.css
-   Fix: inputs back, no overlap, iPhone friendly
-   ========================= */
-
 :root{
   --bg1: #d8e6ff;
   --bg2: #f7efe3;
   --card: #e3b191;
   --cardInner: rgba(255,255,255,0.18);
-  --pill: rgba(255,255,255,0.38);
-  --pillBorder: rgba(255,255,255,0.55);
+  --pill: rgba(255,255,255,0.40);
+  --pillBorder: rgba(255,255,255,0.60);
   --ink: #1f1f1f;
   --muted: rgba(0,0,0,0.35);
   --shadow: 0 10px 26px rgba(0,0,0,0.10);
@@ -26,18 +21,14 @@ body{
   background: radial-gradient(1200px 600px at 50% 35%, var(--bg1), var(--bg2));
 }
 
-/* App layout */
 .app{
   max-width: 520px;
   margin: 0 auto;
-  padding: 14px 14px 120px; /* bottom padding for nav */
+  padding: 14px 14px 120px;
 }
 
-/* Header banner */
-.headerCard{
-  margin-top: 8px;
-  border-radius: 40px;
-}
+/* Banner */
+.headerCard{ margin-top: 8px; }
 
 .bannerWrap{
   border-radius: 40px;
@@ -49,24 +40,23 @@ body{
   display:block;
   width:100%;
   height:auto;
-  /* If you want the banner “higher”, crop from bottom by moving image up */
-  transform: translateY(-10px);
+  transform: translateY(-8px);
 }
 
-/* Save week button (under banner) */
+/* Save week button */
 .headerActions{
   display:flex;
   justify-content:center;
-  margin: 12px 0 8px;
+  margin: 12px 0 10px;
 }
 
 .saveWeekBtn{
   appearance:none;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.10);
   background: rgba(255,255,255,0.70);
   border-radius: 999px;
   padding: 12px 18px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--ink);
   box-shadow: 0 8px 22px rgba(0,0,0,0.10);
 }
@@ -74,7 +64,7 @@ body{
 /* Days grid */
 .daysGrid{
   display:grid;
-  grid-template-columns: 1fr 1fr; /* 2 columns */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   margin-top: 10px;
 }
@@ -82,76 +72,77 @@ body{
 .dayCard{
   background: var(--card);
   border-radius: var(--radius);
-  padding: 18px 18px 16px;
+  padding: 16px 16px 14px;
   box-shadow: var(--shadow);
-  position: relative;
-  overflow: hidden; /* IMPORTANT: stops title bleeding into neighbors */
+  overflow: hidden;
 }
 
-/* Day title, prevent overlap */
+/* Day title */
 .dayTitle{
   margin: 0 0 12px;
   font-weight: 900;
   letter-spacing: -0.5px;
-  font-size: clamp(28px, 7.2vw, 44px);
+  font-size: clamp(26px, 6.8vw, 42px);
   line-height: 1.05;
-  overflow-wrap: anywhere;
+
+  /* Better wrapping than "Wednesd / ay" */
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
-/* AM/PM rows */
+/* AM/PM row: lock to two columns so input never spills */
 .row{
-  display:flex;
+  display:grid;
+  grid-template-columns: 92px 1fr;
   align-items:center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+
   background: var(--cardInner);
   border-radius: 22px;
   padding: 12px 12px;
   margin-top: 12px;
 }
 
-/* Left label area */
+/* Label column */
 .label{
   display:flex;
   align-items:center;
   gap: 10px;
   font-weight: 900;
-  font-size: 22px;
-  min-width: 92px;
+  font-size: 20px;
+  min-width: 0;
 }
 
 .emoji{
-  width: 28px;
+  width: 26px;
   text-align:center;
-  font-size: 22px;
+  font-size: 20px;
 }
 
-/* The input, make sure it is visible and sized */
+/* Input column */
 .priceInput{
-  flex: 1;
-  min-width: 120px;
-  height: 44px;
+  width: 100%;
+  max-width: 140px;          /* KEY: prevents spill on small cards */
+  justify-self: end;         /* keeps it aligned right */
+  height: 42px;
 
   border-radius: 18px;
   border: 2px solid var(--pillBorder);
   background: var(--pill);
 
-  padding: 0 14px;
-  font-size: 22px;
+  padding: 0 12px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--ink);
 
   outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .priceInput::placeholder{
   color: var(--muted);
-}
-
-/* Remove iOS weirdness */
-.priceInput{
-  -webkit-appearance: none;
-  appearance: none;
 }
 
 /* Bottom nav */
@@ -181,70 +172,29 @@ body{
 }
 
 .navBtn{
-  width: min(520px, calc(100% - 32px));
-  display:grid;
-  grid-template-columns: 1fr 1fr; /* side by side */
-  align-items:center;
-  text-decoration:none;
-  color: var(--ink);
-  padding: 12px 18px;
-  gap: 12px;
-}
-
-/* Each half clickable area */
-.navBtn#predictBtn,
-.navBtn#historyBtn{
-  width: auto;
-}
-
-/* We are using two <a> tags, so style them as two halves */
-.bottomNav{
-  gap: 0;
-}
-.bottomNav a.navBtn{
-  width: min(520px, calc(100% - 32px));
-  max-width: 520px;
-  display:flex;
-  justify-content: space-between;
-  gap: 0;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-  border: none;
-}
-.bottomNav a.navBtn .navIcon,
-.bottomNav a.navBtn .navText{
-  display:none; /* hide these if you keep 2 links */
-}
-
-/* If you keep TWO links (Predict + History), make them look like the original */
-#predictBtn, #historyBtn{
   flex: 1;
-  padding: 14px 16px;
+  max-width: 260px;
   display:flex;
   flex-direction: column;
   align-items:center;
   justify-content:center;
   gap: 6px;
+  text-decoration:none;
+  color: var(--ink);
+  padding: 14px 16px;
 }
 
-#predictBtn .navIcon,
-#historyBtn .navIcon{
-  display:block;
-  font-size: 28px;
-}
-
-#predictBtn .navText,
-#historyBtn .navText{
-  display:block;
+.navIcon{ font-size: 28px; }
+.navText{
   font-weight: 900;
   font-size: 22px;
 }
 
-/* Small screens tweaks */
+/* Small phones */
 @media (max-width: 380px){
   .daysGrid{ gap: 14px; }
-  .label{ font-size: 20px; }
-  .priceInput{ font-size: 20px; height: 42px; }
-  #predictBtn .navText, #historyBtn .navText{ font-size: 20px; }
+  .row{ grid-template-columns: 84px 1fr; }
+  .label{ font-size: 18px; }
+  .priceInput{ max-width: 128px; font-size: 18px; height: 40px; }
+  .navText{ font-size: 20px; }
 }

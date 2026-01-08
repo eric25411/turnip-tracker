@@ -1,46 +1,53 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-
-  <!-- Cache bust -->
   <link rel="stylesheet" href="style.css?v=18" />
 </head>
 
 <body>
   <div class="app">
+
     <!-- HEADER -->
-    <div class="header">
+    <header class="headerCard">
       <img
         src="banner.png.jpg"
         alt="Turnip Tracker"
         class="headerImage"
         onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
       />
-      <div id="headerFallback" class="headerFallback" style="display:none;">Turnip Tracker</div>
-
-      <button id="saveWeekBtn" class="primaryBtn">Save week to History</button>
-    </div>
+      <div id="headerFallback" class="headerFallback" style="display:none;">
+        Turnip Tracker
+      </div>
+    </header>
 
     <!-- MAIN -->
-    <main id="mainView">
+    <main class="main contentPad">
 
       <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
-        <!-- Small buy price card -->
-        <div class="miniCard">
-          <div class="row">
-            <div class="label">
-              <span class="emoji">💰</span>
-              <span>Buy price</span>
+
+        <!-- Sticky mini buy card -->
+        <div class="buySticky">
+          <div class="buyMiniCard">
+            <div class="buyMiniLeft">
+              <div class="buyMiniTitle"><span class="emoji">💰</span><span>Buy price</span></div>
+              <div class="buyMiniHint">Price you paid from Daisy Mae on Sunday.</div>
             </div>
-            <input class="priceInput miniInput" inputmode="numeric" placeholder="-" id="buyPrice" />
+            <input
+              id="buy-price"
+              class="buyMiniInput"
+              inputmode="numeric"
+              placeholder="-"
+              aria-label="Buy price"
+            />
           </div>
-          <div class="miniHint">Price you paid from Daisy Mae on Sunday.</div>
         </div>
 
+        <!-- Day cards -->
         <section class="days">
 
           <div class="dayCard">
@@ -116,21 +123,38 @@
           </div>
 
         </section>
+
+        <!-- Save button at bottom -->
+        <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
       </section>
 
       <!-- PREDICT VIEW -->
       <section id="predictView" class="view hidden">
-        <div class="predictWrap">
-          <div class="predictCard">
-            <h2 class="predictTitle">Predictor</h2>
+        <div class="panelCard">
+          <h2 class="panelTitle">Predictor</h2>
 
-            <div class="chartCard">
-              <div class="chartBg" aria-hidden="true"></div>
-              <canvas id="priceChart" width="600" height="240"></canvas>
-              <div class="chartCaption">Left to right, Mon AM to Sat PM</div>
-            </div>
+          <div class="chartCard">
+            <div class="chartBg" aria-hidden="true"></div>
+            <canvas id="priceChart" width="600" height="220" aria-label="Price chart"></canvas>
+            <div class="chartHint">Left to right, Mon AM to Sat PM</div>
+          </div>
 
-            <div class="predictStats" id="predictStats"></div>
+          <div class="stats">
+            <div class="statRow"><span class="statKey">Buy price</span><span class="statVal" id="statBuy">-</span></div>
+            <div class="statRow"><span class="statKey">Best so far this week</span><span class="statVal" id="statBest">-</span></div>
+            <div class="statRow"><span class="statKey">Best day time</span><span class="statVal" id="statBestTime">-</span></div>
+            <div class="statRow"><span class="statKey">Profit vs buy</span><span class="statVal" id="statProfit">-</span></div>
+
+            <div class="divider"></div>
+
+            <div class="statRow"><span class="statKey">Likely pattern</span><span class="statVal" id="statPattern">-</span></div>
+            <div class="statNote" id="statPatternNote">Save more weeks so pattern detection can learn your style.</div>
+
+            <div class="divider"></div>
+
+            <div class="statRow"><span class="statKey">Forecast peak window</span><span class="statVal" id="statWindow">-</span></div>
+            <div class="statRow"><span class="statKey">Forecast confidence</span><span class="statVal" id="statConf">-</span></div>
+            <div class="statNote" id="statWatch">What to watch next will appear as you enter more prices.</div>
           </div>
         </div>
       </section>
@@ -147,12 +171,12 @@
           <div class="historyCard">
             <h3 class="historySubtitle">Import, Export</h3>
             <div class="historyActions">
-              <button id="exportBtn" class="chipBtn">Export</button>
+              <button id="exportBtn" class="chipBtn" type="button">Export</button>
               <label class="chipBtn fileBtn">
                 Import
                 <input id="importFile" type="file" accept="application/json" />
               </label>
-              <button id="goHomeBtn" class="chipBtn">Home</button>
+              <button id="goHomeBtn" class="chipBtn" type="button">Home</button>
             </div>
 
             <p class="historySmall" id="historyEmptyNote">
@@ -166,7 +190,7 @@
   </div>
 
   <!-- BOTTOM NAV -->
-  <nav class="bottomNav">
+  <nav class="bottomNav" aria-label="Bottom navigation">
     <button id="navEntry" class="navBtn active" type="button">
       <span class="navIcon">🧾</span>
       <span>Entry</span>

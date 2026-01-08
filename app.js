@@ -21,6 +21,23 @@
   const inputs = Array.from(document.querySelectorAll(".priceInput"));
   const satPmInput = document.getElementById("sat-pm");
 
+  const SLOT_ORDER = [
+    ["mon-am", "Monday AM"],
+    ["mon-pm", "Monday PM"],
+    ["tue-am", "Tuesday AM"],
+    ["tue-pm", "Tuesday PM"],
+    ["wed-am", "Wednesday AM"],
+    ["wed-pm", "Wednesday PM"],
+    ["thu-am", "Thursday AM"],
+    ["thu-pm", "Thursday PM"],
+    ["fri-am", "Friday AM"],
+    ["fri-pm", "Friday PM"],
+    ["sat-am", "Saturday AM"],
+    ["sat-pm", "Saturday PM"],
+  ];
+
+  const SLOT_NAME = Object.fromEntries(SLOT_ORDER);
+
   function showToast(msg) {
     if (!toast) return;
     toast.textContent = msg;
@@ -32,20 +49,6 @@
     return `tt_${id}`;
   }
 
-  function prettySlot(id) {
-    const [d, t] = id.split("-");
-    const dayMap = {
-      mon: "Monday",
-      tue: "Tuesday",
-      wed: "Wednesday",
-      thu: "Thursday",
-      fri: "Friday",
-      sat: "Saturday",
-    };
-    const timeMap = { am: "AM", pm: "PM" };
-    return `${dayMap[d] || d} ${timeMap[t] || t}`;
-  }
-
   function getHistory() {
     return JSON.parse(localStorage.getItem("tt_history") || "[]");
   }
@@ -54,10 +57,22 @@
     localStorage.setItem("tt_history", JSON.stringify(arr));
   }
 
+  function num(v) {
+    const n = Number(v || 0);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function median(arr) {
+    const a = arr.filter((x) => Number.isFinite(x)).slice().sort((x, y) => x - y);
+    if (!a.length) return 0;
+    const mid = Math.floor(a.length / 2);
+    return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+  }
+
   function findBestFromInputs() {
     let best = { id: null, value: -1 };
     inputs.forEach((el) => {
-      const v = Number(el.value || 0);
+      const v = num(el.value);
       if (v > best.value) best = { id: el.id, value: v };
     });
     return best.value > 0 ? best : null;
@@ -73,39 +88,6 @@
     if (!best) return;
     const el = document.getElementById(best.id);
     if (el) el.classList.add("bestNow");
-  }
-
-  function updatePrediction() {
-    if (!predictText) return;
-
-    const best = findBestFromInputs();
-    const buy = buyInput ? Number(buyInput.value || 0) : 0;
-
-    applyBestHighlight();
-
-    if (!best) {
-      predictText.textContent = "Enter prices to get a best sell window.";
-      return;
-    }
-
-    const slot = prettySlot(best.id);
-    const profit = buy > 0 ? best.value - buy : null;
-
-    if (profit === null) {
-      predictText.textContent = `Best sell time so far is ${slot}, at ${best.value}.`;
-      return;
-    }
-
-    if (profit <= 0) {
-      predictText.textContent =
-        `Best sell time so far is ${slot}, at ${best.value}. ` +
-        `That is ${Math.abs(profit)} below your buy price, so you may want to wait if you can.`;
-      return;
-    }
-
-    predictText.textContent =
-      `Best sell time so far is ${slot}, at ${best.value}. ` +
-      `That is ${profit} profit per turnip vs your buy price.`;
   }
 
   function loadWeek() {
@@ -137,16 +119,20 @@
     updatePrediction();
   }
 
-  function saveWeekToHistory(auto) {
+  function getCurrentWeekObject() {
     const week = {
       savedAt: new Date().toISOString(),
-      buy: buyInput ? Number(buyInput.value || 0) : 0,
+      buy: buyInput ? num(buyInput.value) : 0,
       prices: {}
     };
-
     inputs.forEach((el) => {
-      week.prices[el.id] = Number(el.value || 0);
+      week.prices[el.id] = num(el.value);
     });
+    return week;
+  }
+
+  function saveWeekToHistory(auto) {
+    const week = getCurrentWeekObject();
 
     const history = getHistory();
     history.unshift(week);
@@ -160,11 +146,189 @@
 
   function bestSellInWeek(week) {
     let best = { id: null, value: -1 };
-    Object.keys(week.prices || {}).forEach((k) => {
-      const v = Number(week.prices[k] || 0);
-      if (v > best.value) best = { id: k, value: v };
-    });
+    const prices = week?.prices || {};
+    for (const [slotId] of SLOT_ORDER) {
+      const v = num(prices[slotId]);
+      if (v > best.value) best = { id: slotId, value: v };
+    }
     return best.value > 0 ? best : null;
+  }
+
+  function weekSeries(week) {
+    const prices = week?.prices || {};
+    return SLOT_ORDER.map(([slotId]) => num(prices[slotId]));
+  }
+
+  function countNonZero(series) {
+    return series.reduce((acc, v) => acc + (v > 0 ? 1 : 0), 0);
+  }
+
+  function classifyPattern(series, buy) {
+    const nz = series.filter((v) => v > 0);
+    if (nz.length < 4 || buy <= 0) return "unknown";
+
+    let inc = 0;
+    let dec = 0;
+    for (let i = 1; i < nz.length; i++) {
+      if (nz[i] > nz[i - 1]) inc++;
+      if (nz[i] < nz[i - 1]) dec++;
+    }
+
+    const maxV = Math.max(...nz);
+    const ratio = maxV / buy;
+
+    // Simple, readable rules
+    if (ratio <= 1.02 && dec >= inc) return "decreasing";
+    if (ratio >= 1.8) return "big spike";
+    if (ratio >= 1.4) return "small spike";
+
+    // If it goes up a little but not much, treat as random
+    if (inc >= 3 && dec >= 3) return "random";
+    if (inc <= 2 && dec >= 3) return "decreasing";
+
+    return "random";
+  }
+
+  function buildHistoryStats() {
+    const history = getHistory();
+
+    const usable = history
+      .filter((w) => num(w?.buy) > 0)
+      .filter((w) => countNonZero(weekSeries(w)) >= 8); // need enough data to be meaningful
+
+    const byPattern = {
+      "decreasing": [],
+      "small spike": [],
+      "big spike": [],
+      "random": [],
+    };
+
+    for (const w of usable) {
+      const buy = num(w.buy);
+      const series = weekSeries(w);
+      const pat = classifyPattern(series, buy);
+      if (!byPattern[pat]) continue;
+      byPattern[pat].push(w);
+    }
+
+    function summarize(weeks) {
+      if (!weeks.length) return null;
+
+      const peakCounts = {};
+      const peakPrices = [];
+      const peakProfits = [];
+
+      for (const w of weeks) {
+        const buy = num(w.buy);
+        const best = bestSellInWeek(w);
+        if (!best) continue;
+
+        peakCounts[best.id] = (peakCounts[best.id] || 0) + 1;
+        peakPrices.push(best.value);
+        peakProfits.push(best.value - buy);
+      }
+
+      let topSlot = null;
+      let topCount = 0;
+      for (const slotId of Object.keys(peakCounts)) {
+        if (peakCounts[slotId] > topCount) {
+          topCount = peakCounts[slotId];
+          topSlot = slotId;
+        }
+      }
+
+      const total = weeks.length;
+      const pct = total ? Math.round((topCount / total) * 100) : 0;
+
+      return {
+        n: total,
+        topSlot,
+        topSlotPct: pct,
+        medPeak: Math.round(median(peakPrices)),
+        medProfit: Math.round(median(peakProfits)),
+      };
+    }
+
+    return {
+      all: summarize(usable),
+      patterns: {
+        "decreasing": summarize(byPattern["decreasing"]),
+        "small spike": summarize(byPattern["small spike"]),
+        "big spike": summarize(byPattern["big spike"]),
+        "random": summarize(byPattern["random"]),
+      }
+    };
+  }
+
+  function updatePrediction() {
+    if (!predictText) return;
+
+    applyBestHighlight();
+
+    const best = findBestFromInputs();
+    const buy = buyInput ? num(buyInput.value) : 0;
+
+    // Base line: current best
+    if (!best) {
+      predictText.textContent = "Enter prices to get a best sell window.";
+      return;
+    }
+
+    const slotName = SLOT_NAME[best.id] || best.id;
+    const profit = buy > 0 ? (best.value - buy) : null;
+
+    let line1 = "";
+    if (profit === null) {
+      line1 = `Best sell time so far is ${slotName}, at ${best.value}.`;
+    } else if (profit <= 0) {
+      line1 = `Best sell time so far is ${slotName}, at ${best.value}. That is ${Math.abs(profit)} below your buy price.`;
+    } else {
+      line1 = `Best sell time so far is ${slotName}, at ${best.value}. That is ${profit} profit per turnip vs your buy price.`;
+    }
+
+    // History learning (Option 1)
+    const currentSeries = getCurrentWeekObject();
+    const pat = classifyPattern(weekSeries(currentSeries), buy);
+    const stats = buildHistoryStats();
+
+    // Pick stats: pattern first, fallback to all
+    const patStats = stats?.patterns?.[pat] || null;
+    const allStats = stats?.all || null;
+    const useStats = patStats || allStats;
+
+    if (!useStats || !useStats.topSlot) {
+      predictText.textContent = line1 + " Save a few weeks to unlock history based predictions.";
+      return;
+    }
+
+    const recSlotName = SLOT_NAME[useStats.topSlot] || useStats.topSlot;
+    const conf = useStats.topSlotPct;
+    const n = useStats.n;
+
+    let line2 = "";
+    if (patStats) {
+      line2 = `Based on your saved weeks with a similar pattern, peaks most often hit ${recSlotName}. That happens about ${conf}% of the time across ${n} weeks.`;
+    } else {
+      line2 = `Based on your saved history, peaks most often hit ${recSlotName}. That happens about ${conf}% of the time across ${n} weeks.`;
+    }
+
+    let line3 = "";
+    if (useStats.medPeak > 0) {
+      if (buy > 0) {
+        line3 = `Your median peak is around ${useStats.medPeak}, and your median profit is around ${useStats.medProfit}.`;
+      } else {
+        line3 = `Your median peak is around ${useStats.medPeak}.`;
+      }
+    }
+
+    let line4 = "";
+    if (pat !== "unknown") {
+      line4 = `Current week pattern guess is ${pat}.`;
+    }
+
+    // Keep it readable on mobile
+    const msgParts = [line1, line4, line2, line3].filter(Boolean);
+    predictText.textContent = msgParts.join(" ");
   }
 
   function formatDate(iso) {
@@ -203,9 +367,7 @@
 
     historyList.innerHTML = history.map((week, idx) => {
       const best = bestSellInWeek(week);
-      const bestText = best ? `${prettySlot(best.id)} at ${best.value}` : "No prices saved";
-      const buy = Number(week.buy || 0);
-
+      const buy = num(week.buy);
       const isNew = lastSavedAt && week.savedAt === lastSavedAt;
 
       return `
@@ -224,14 +386,14 @@
           </div>
 
           <button class="weekExpandBtn" type="button">
-            ${best ? `Best sell: ${bestText}` : "Expand week"}
+            ${best ? `Best sell: ${(SLOT_NAME[best.id] || best.id)} at ${best.value}` : "Expand week"}
           </button>
 
           <div class="weekDetails">
             <div class="miniGrid">
               ${dayOrder.map(([dayName, amId, pmId]) => {
-                const am = Number(week.prices?.[amId] || 0) || "-";
-                const pm = Number(week.prices?.[pmId] || 0) || "-";
+                const am = num(week.prices?.[amId]) || "-";
+                const pm = num(week.prices?.[pmId]) || "-";
                 return `
                   <div class="miniCell">
                     <div class="miniLabel">${dayName} AM</div>
@@ -273,9 +435,7 @@
       const newCard = historyList.querySelector(".weekCard.isNew");
       if (newCard) {
         newCard.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.setTimeout(() => {
-          newCard.classList.remove("isNew");
-        }, 4500);
+        window.setTimeout(() => newCard.classList.remove("isNew"), 4500);
       }
     }
   }
@@ -297,9 +457,10 @@
       });
     });
 
+    // Auto save when Saturday PM is entered (only once per week)
     if (satPmInput) {
       satPmInput.addEventListener("input", () => {
-        const v = Number(satPmInput.value || 0);
+        const v = num(satPmInput.value);
         if (v <= 0) return;
 
         const already = localStorage.getItem("tt_autosaved_this_week");
@@ -347,12 +508,12 @@
     if (!week) return;
 
     if (buyInput) {
-      buyInput.value = week.buy ? String(week.buy) : "";
+      buyInput.value = week.buy ? String(num(week.buy)) : "";
       localStorage.setItem(keyFor("buy-price"), buyInput.value);
     }
 
     inputs.forEach((el) => {
-      const v = Number(week.prices?.[el.id] || 0);
+      const v = num(week.prices?.[el.id]);
       el.value = v > 0 ? String(v) : "";
       localStorage.setItem(keyFor(el.id), el.value);
     });
@@ -360,7 +521,6 @@
     localStorage.removeItem("tt_autosaved_this_week");
     showToast("Week loaded");
     updatePrediction();
-
     window.location.hash = "#predict";
   }
 
@@ -377,6 +537,9 @@
 
     showToast("Week deleted");
     renderHistory(false);
+
+    // Option 1 benefit: predictor automatically forgets because stats come from history every time
+    updatePrediction();
   }
 
   function exportHistory() {
@@ -411,7 +574,10 @@
         const text = String(reader.result || "");
         const parsed = JSON.parse(text);
 
-        const incoming = Array.isArray(parsed?.history) ? parsed.history : (Array.isArray(parsed) ? parsed : null);
+        const incoming = Array.isArray(parsed?.history)
+          ? parsed.history
+          : (Array.isArray(parsed) ? parsed : null);
+
         if (!incoming) {
           showToast("Import failed");
           return;
@@ -434,6 +600,7 @@
 
         showToast("Imported");
         renderHistory(true);
+        updatePrediction();
       } catch {
         showToast("Import failed");
       }

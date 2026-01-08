@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css?v=99" />
+  <link rel="stylesheet" href="style.css?v=100" />
 </head>
 
 <body>
@@ -28,7 +28,7 @@
 
       <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
-        <!-- Sticky buy price (small, locked while scrolling Entry) -->
+        <!-- Sticky buy price -->
         <div class="buySticky">
           <div class="buyCard">
             <div class="buyTop">
@@ -122,7 +122,7 @@
             </div>
           </div>
 
-          <!-- Save button at the bottom (after days) -->
+          <!-- Save button at bottom -->
           <div class="saveWrap">
             <button id="saveWeekBtn" class="saveBtn" type="button">Save week to History</button>
             <div class="saveNote">This saves the week and clears your Entry screen.</div>
@@ -137,25 +137,12 @@
           <h2 class="panelTitle">Predictor</h2>
 
           <div class="chartCard">
-            <canvas id="chartCanvas" width="900" height="320" aria-label="Turnip price chart"></canvas>
-
-            <div class="markerRow" aria-hidden="true">
-              <span>Mon AM</span><span>Mon PM</span>
-              <span>Tue AM</span><span>Tue PM</span>
-              <span>Wed AM</span><span>Wed PM</span>
-              <span>Thu AM</span><span>Thu PM</span>
-              <span>Fri AM</span><span>Fri PM</span>
-              <span>Sat AM</span><span>Sat PM</span>
-            </div>
-
-            <div class="chartCaption">
-              Your bell trail for the week, cozy and simple.
-            </div>
+            <canvas id="chartCanvas" width="900" height="360" aria-label="Turnip price chart"></canvas>
+            <div class="chartLegend">🌞 AM, 🌙 PM</div>
+            <div class="chartCaption">A quick peek at your week, keep logging and it gets smarter.</div>
           </div>
 
-          <div class="statsCard" id="predictStats">
-            <!-- JS fills this -->
-          </div>
+          <div class="statsCard" id="predictStats"></div>
         </div>
       </section>
 
@@ -206,6 +193,6 @@
     </button>
   </nav>
 
-  <script src="app.js?v=99"></script>
+  <script src="app.js?v=100"></script>
 </body>
 </html>

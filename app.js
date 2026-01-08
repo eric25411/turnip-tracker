@@ -34,7 +34,7 @@
     ["wed-pm", "Wednesday PM"],
     ["thu-am", "Thursday AM"],
     ["thu-pm", "Thursday PM"],
-    ["fri-am", "Friday PM"],
+    ["fri-am", "Friday AM"],
     ["fri-pm", "Friday PM"],
     ["sat-am", "Saturday AM"],
     ["sat-pm", "Saturday PM"],
@@ -43,7 +43,8 @@
   const SLOT_NAME = Object.fromEntries(SLOT_ORDER);
 
   // Edit mode state
-  let editingIndex = null;
+  let editingIndex = null;        // number or null
+  let editSnapshot = null;        // snapshot of values when edit started or after save
 
   function showToast(msg) {
     if (!toast) return;
@@ -85,6 +86,58 @@
     }
   }
 
+  function setEditingUI(on, bannerText) {
+    if (!editBanner || !saveWeekBtn || !saveChangesBtn || !cancelEditBtn) return;
+
+    if (on) {
+      editBanner.textContent = bannerText || "Editing saved week";
+      editBanner.classList.remove("viewHidden");
+
+      saveWeekBtn.classList.add("viewHidden");
+      saveChangesBtn.classList.remove("viewHidden");
+      cancelEditBtn.classList.remove("viewHidden");
+    } else {
+      editBanner.classList.add("viewHidden");
+      editBanner.textContent = "Editing saved week";
+
+      saveWeekBtn.classList.remove("viewHidden");
+      saveChangesBtn.classList.add("viewHidden");
+      cancelEditBtn.classList.add("viewHidden");
+    }
+  }
+
+  function getCurrentValuesSnapshot() {
+    const snap = {
+      buy: buyInput ? String(buyInput.value || "") : "",
+      prices: {}
+    };
+    inputs.forEach((el) => {
+      snap.prices[el.id] = String(el.value || "");
+    });
+    return snap;
+  }
+
+  function snapshotsEqual(a, b) {
+    if (!a || !b) return false;
+    if (String(a.buy || "") !== String(b.buy || "")) return false;
+    for (const el of inputs) {
+      const id = el.id;
+      if (String(a.prices?.[id] || "") !== String(b.prices?.[id] || "")) return false;
+    }
+    return true;
+  }
+
+  function hasUnsavedEdits() {
+    if (editingIndex === null) return false;
+    if (!editSnapshot) return false;
+    return !snapshotsEqual(editSnapshot, getCurrentValuesSnapshot());
+  }
+
+  function confirmDiscardIfNeeded(actionLabel) {
+    if (!hasUnsavedEdits()) return true;
+    return window.confirm(`You have unsaved edits. Discard changes and ${actionLabel}?`);
+  }
+
   function findBestFromInputs() {
     let best = { id: null, value: -1 };
     inputs.forEach((el) => {
@@ -104,26 +157,6 @@
     if (!best) return;
     const el = document.getElementById(best.id);
     if (el) el.classList.add("bestNow");
-  }
-
-  function setEditingUI(on, bannerText) {
-    if (!editBanner || !saveWeekBtn || !saveChangesBtn || !cancelEditBtn) return;
-
-    if (on) {
-      editBanner.textContent = bannerText || "Editing saved week";
-      editBanner.classList.remove("viewHidden");
-
-      saveWeekBtn.classList.add("viewHidden");
-      saveChangesBtn.classList.remove("viewHidden");
-      cancelEditBtn.classList.remove("viewHidden");
-    } else {
-      editBanner.classList.add("viewHidden");
-      editBanner.textContent = "Editing saved week";
-
-      saveWeekBtn.classList.remove("viewHidden");
-      saveChangesBtn.classList.add("viewHidden");
-      cancelEditBtn.classList.add("viewHidden");
-    }
   }
 
   function loadWeek() {
@@ -205,6 +238,9 @@
 
     const label = `Editing: ${formatDateLong(updated.savedAt)}`;
     setEditingUI(true, label);
+
+    // Reset snapshot to the newly saved state
+    editSnapshot = getCurrentValuesSnapshot();
 
     showToast("Changes saved");
     renderHistory();
@@ -433,16 +469,16 @@
       const best = bestSellInWeek(week);
       const buy = num(week.buy);
 
-      const editingTag = (editingIndex === idx)
-        ? `<div class="weekMeta" style="text-align:left; font-weight:900; opacity:.85;">Editing</div>`
-        : "";
+      const tag = (editingIndex === idx)
+        ? `<div class="editTag">Editing</div>`
+        : ``;
 
       return `
         <div class="weekCard" data-idx="${idx}">
           <div class="weekTop">
             <div>
               <div class="weekTitle">${formatDateLong(week.savedAt)}</div>
-              ${editingTag}
+              ${tag}
             </div>
             <div class="weekMeta">
               Buy: ${buy || "-"}<br/>
@@ -564,6 +600,10 @@
   }
 
   function loadWeekFromHistoryIndex(idx) {
+    if (editingIndex !== null && idx !== editingIndex) {
+      if (!confirmDiscardIfNeeded("switch weeks")) return;
+    }
+
     const history = getHistory();
     const week = history[idx];
     if (!week) return;
@@ -584,13 +624,18 @@
       localStorage.setItem(keyFor(el.id), el.value);
     });
 
+    // Snapshot this starting point
+    editSnapshot = getCurrentValuesSnapshot();
+
     showToast("Editing loaded week");
     updatePrediction();
     window.location.hash = "#predict";
+    renderHistory();
   }
 
   function exitEditMode(clearInputs) {
     editingIndex = null;
+    editSnapshot = null;
     setEditingUI(false);
 
     if (clearInputs) clearCurrentWeek();
@@ -614,8 +659,6 @@
         exitEditMode(false);
       } else if (idx < editingIndex) {
         editingIndex = editingIndex - 1;
-        const still = getHistory()[editingIndex];
-        if (still) setEditingUI(true, `Editing: ${formatDateLong(still.savedAt)}`);
       }
     }
 
@@ -696,6 +739,9 @@
 
   if (newWeekBtn) {
     newWeekBtn.addEventListener("click", () => {
+      if (editingIndex !== null) {
+        if (!confirmDiscardIfNeeded("start a new week")) return;
+      }
       exitEditMode(true);
       showToast("New week started");
     });
@@ -703,6 +749,7 @@
 
   if (cancelEditBtn) {
     cancelEditBtn.addEventListener("click", () => {
+      if (!confirmDiscardIfNeeded("cancel editing")) return;
       exitEditMode(false);
       showToast("Edit cancelled");
     });

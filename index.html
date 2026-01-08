@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
 
-  <!-- Cache bust -->
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=21" />
 </head>
 
 <body>
@@ -32,8 +31,15 @@
     <!-- MAIN -->
     <main class="main" id="mainView">
 
-      <!-- ENTRY VIEW (your day inputs live here) -->
+      <!-- ENTRY VIEW -->
       <section id="predictView" class="view">
+
+        <!-- MINI BUY PRICE ROW (small, not like the day boxes) -->
+        <div class="miniBuyCard">
+          <div class="miniBuyLabel">💰 Buy price</div>
+          <input id="buyPrice" class="miniBuyInput" inputmode="numeric" placeholder="-" />
+        </div>
+
         <section class="days">
 
           <div class="dayCard">
@@ -116,12 +122,8 @@
         <div class="predictCard">
           <h2 class="predictTitle">Predictor</h2>
 
-          <div class="buyCard">
-            <div class="buyRow">
-              <div class="buyLabel">💰 Buy price</div>
-              <input id="buyPrice" class="priceInput buyInput" inputmode="numeric" placeholder="-" />
-            </div>
-            <div class="buyHint">This is the price you paid from Daisy Mae on Sunday.</div>
+          <div class="buyInlineNote">
+            Buy price: <span id="buyPriceReadout">-</span>
           </div>
 
           <div class="chartWrap">
@@ -181,6 +183,6 @@
     </button>
   </nav>
 
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>

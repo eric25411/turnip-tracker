@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveWeekBtn = document.getElementById("saveWeekBtn");
   const goHomeBtn = document.getElementById("goHomeBtn");
 
-  // Buy price (now on Entry)
+  // Buy price (Entry)
   const buyPriceEl = document.getElementById("buyPrice");
   const buyPriceReadout = document.getElementById("buyPriceReadout");
 

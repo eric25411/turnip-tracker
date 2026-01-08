@@ -229,3 +229,24 @@ function cryptoRandomId(){
 /* boot */
 loadCurrentDraft();
 setActiveTab("predict");
+document.addEventListener("DOMContentLoaded", () => {
+  const predictBtn = document.getElementById("predictBtn");
+  const historyBtn = document.getElementById("historyBtn");
+
+  // These should exist in your HTML nav
+  if (predictBtn) {
+    predictBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // TEMP behavior for now
+      alert("Predict screen coming next. For now, enter prices and save weeks to build history.");
+    });
+  }
+
+  if (historyBtn) {
+    historyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // TEMP behavior for now
+      alert("History screen opens next. This button will show saved weeks.");
+    });
+  }
+});

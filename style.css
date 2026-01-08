@@ -40,7 +40,7 @@ body{
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .headerTop{
@@ -75,41 +75,42 @@ body{
   box-shadow: 0 10px 22px rgba(0,0,0,.14);
 }
 
-/* BUY PRICE CARD */
-.buyCard{
-  background: linear-gradient(180deg, var(--tan), var(--tan2));
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
-}
-
-.buyRow{
+/* MINI BUY PRICE ROW (small chip style) */
+.miniBuyCard{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap: 12px;
-  background: var(--pill);
-  border-radius: 20px;
-  padding: 12px;
+  background: rgba(255,255,255,.40);
+  border-radius: 18px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.10);
+  margin: 0 0 14px;
 }
 
-.buyLabel{
-  display:flex;
-  align-items:center;
-  gap: 10px;
-  font-size: 18px;
+.miniBuyLabel{
+  font-weight: 950;
+  font-size: 16px;
+}
+
+.miniBuyInput{
+  width: 110px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,.55);
+  background: rgba(255,255,255,.78);
+  font-size: 16px;
   font-weight: 900;
+  text-align:center;
+  outline:none;
 }
 
-.buyHint{
-  margin-top: 8px;
-  color: rgba(0,0,0,.70);
-  font-weight: 650;
-  font-size: 14px;
+.miniBuyInput:focus{
+  border-color: rgba(0,0,0,.25);
+  box-shadow: 0 0 0 4px rgba(0,0,0,.08);
 }
 
-/* DAY CARDS (smaller, safe) */
+/* DAY CARDS */
 .days{
   display:flex;
   flex-direction:column;
@@ -169,8 +170,6 @@ body{
   box-shadow: 0 0 0 4px rgba(0,0,0,.08);
 }
 
-.buyInput{ width: 130px; }
-
 /* PREDICTOR */
 .predictCard{
   background: rgba(255,255,255,.30);
@@ -180,9 +179,16 @@ body{
 }
 
 .predictTitle{
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   font-size: 38px;
   font-weight: 950;
+}
+
+.buyInlineNote{
+  font-weight: 900;
+  font-size: 16px;
+  color: rgba(0,0,0,.78);
+  margin: 0 0 12px;
 }
 
 .chartWrap{

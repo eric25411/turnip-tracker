@@ -1,253 +1,204 @@
-/* =========================
-   BASE
-========================= */
-* { box-sizing: border-box; }
+:root{
+  --bg1: #dfe8ff;
+  --card: rgba(255,255,255,0.35);
+  --shadow: 0 18px 40px rgba(0,0,0,0.08);
+  --radius: 26px;
 
-html, body {
-  margin: 0;
-  padding: 0;
+  --tan: #d9b08c;
+  --tan2: #d2a47e;
+  --pill: rgba(255,255,255,0.55);
+
+  --text: #1f1f1f;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
   height: 100%;
 }
 
-body {
+body{
+  margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: linear-gradient(180deg, #e9f0ff 0%, #dfe9ff 45%, #edf2ff 100%);
-  color: #1b1b1b;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--bg1), #f4f7ff 70%);
 }
 
-/* =========================
-   APP WRAP
-========================= */
-.app {
-  max-width: 560px;
+/* Center the whole app */
+.app{
+  width: min(980px, 100%);
   margin: 0 auto;
-  padding: 18px 14px 120px;
+  padding: 18px 14px 120px; /* bottom padding so nav never covers cards */
 }
 
-/* =========================
-   HEADER CARD (FIXED CENTERING)
-========================= */
-.headerCard {
+/* HEADER CARD */
+.headerCard{
   width: 100%;
-  margin: 0 auto 16px;
+  background: var(--card);
+  border-radius: 30px;
   padding: 18px 16px 16px;
-  background: rgba(255,255,255,0.35);
-  border-radius: 26px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.10);
-  backdrop-filter: blur(6px);
-
-  /* This is the key: center everything inside the header card */
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center;       /* key */
+  gap: 14px;
 }
 
-.bannerWrap {
+.bannerWrap{
   width: 100%;
   display: flex;
-  justify-content: center;  /* centers the image */
-  align-items: center;
+  justify-content: center;   /* key */
 }
 
-.bannerWrap img {
-  width: 100%;
-  max-width: 520px;
-  height: auto;
-  display: block;
-  border-radius: 22px;
+.bannerWrap img{
+  width: min(900px, 100%);
+  max-height: 260px;
+  object-fit: cover;
+  border-radius: 24px;
+  display: block;            /* key */
+  margin: 0 auto;            /* key */
 }
 
-/* Button area under banner */
-.headerActions {
+.headerActions{
   width: 100%;
   display: flex;
-  justify-content: center;  /* centers the button */
-  margin-top: 12px;
+  justify-content: center;   /* key */
 }
 
-.saveWeekBtn {
-  appearance: none;
-  border: none;
-  cursor: pointer;
-  padding: 10px 18px;
+.saveWeekBtn{
+  border: 0;
+  padding: 12px 18px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.70);
-  color: #1f6feb;
-  font-weight: 800;
-  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.75);
+  color: #2a78ff;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.08);
 }
 
-.saveWeekBtn:active {
-  transform: scale(0.98);
-}
-
-/* =========================
-   DAYS GRID
-========================= */
-.daysGrid {
+/* GRID */
+.daysGrid{
+  width: 100%;
+  margin-top: 18px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
-/* =========================
-   DAY CARD
-========================= */
-.dayCard {
-  background: #e4b48f;
-  border-radius: 30px;
-  padding: 16px 14px 14px;
-  box-shadow: 0 18px 36px rgba(0,0,0,0.12);
+@media (max-width: 560px){
+  .daysGrid{
+    grid-template-columns: 1fr;
+  }
 }
 
-/* Day title */
-.dayTitle {
-  margin: 0 0 10px;
-  font-size: 46px;
-  line-height: 1;
+/* DAY CARDS */
+.dayCard{
+  background: linear-gradient(180deg, var(--tan), var(--tan2));
+  border-radius: var(--radius);
+  padding: 18px 18px 16px;
+  box-shadow: var(--shadow);
+}
+
+.dayTitle{
+  margin: 0 0 14px;
   font-weight: 900;
-  letter-spacing: -0.5px;
+  letter-spacing: 0.2px;
+
+  /* prevents “Mond...” wrapping issues */
+  font-size: clamp(34px, 5.5vw, 54px);
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Each AM/PM row */
-.row {
+/* ROWS */
+.row{
+  width: 100%;
   background: rgba(255,255,255,0.18);
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 12px 12px;
-  margin-top: 12px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-top: 12px;
 }
 
-/* Label on the left (sun/moon + AM/PM) */
-.label {
-  display: inline-flex;
+/* This is the trick that stops the emoji and AM/PM from shifting */
+.label{
+  width: 92px;               /* fixed */
+  min-width: 92px;           /* fixed */
+  display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 900;
-  font-size: 24px;
+  font-size: 20px;
 }
 
-.emoji {
-  font-size: 26px;
-  line-height: 1;
-}
-
-/* =========================
-   INPUT PILL (LOCKED POSITION BEFORE/AFTER TYPING)
-========================= */
-.priceInput {
-  width: 120px;
-  height: 56px;
-  border-radius: 18px;
-  border: 2px solid rgba(255,255,255,0.70);
-  background: rgba(255,255,255,0.65);
-
+.emoji{
+  width: 28px;               /* fixed */
   text-align: center;
+}
+
+/* PRICE INPUT PILL */
+.priceInput{
+  width: 112px;              /* fixed pill width */
+  height: 52px;
+  border-radius: 18px;
+  border: 2px solid rgba(255,255,255,0.6);
+  background: var(--pill);
   font-size: 26px;
   font-weight: 900;
-  color: #1b1b1b;
-
+  text-align: center;
   outline: none;
-  box-shadow: inset 0 2px 0 rgba(255,255,255,0.65);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.6);
 }
 
-.priceInput::placeholder {
+.priceInput::placeholder{
   color: rgba(0,0,0,0.35);
   font-weight: 900;
 }
 
-/* =========================
-   BOTTOM NAV (SIDE BY SIDE)
-========================= */
-.bottomNav {
+/* BOTTOM NAV */
+.bottomNav{
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 16px;
+  bottom: 12px;
   display: flex;
   justify-content: center;
-  pointer-events: none;
-  z-index: 50;
+  pointer-events: none; /* so only buttons receive touches */
 }
 
-.bottomNavInner {
-  width: min(560px, calc(100% - 28px));
-  background: rgba(255,255,255,0.70);
-  border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.18);
-  backdrop-filter: blur(8px);
-
+.bottomNavInner{
+  width: min(980px, calc(100% - 28px));
+  background: rgba(255,255,255,0.65);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-
-  padding: 12px;
+  gap: 14px;
   pointer-events: auto;
 }
 
-.navBtn {
+.navBtn{
   flex: 1;
   text-decoration: none;
-  color: #1b1b1b;
-  font-weight: 900;
-
+  color: var(--text);
+  border-radius: 22px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-
-  padding: 14px 12px;
-  border-radius: 18px;
+  font-weight: 900;
 }
 
-.navBtn:active {
-  transform: scale(0.98);
-}
-
-.navIcon {
-  font-size: 22px;
-  line-height: 1;
-}
-
-.navText {
+.navIcon{
   font-size: 22px;
 }
 
-/* =========================
-   RESPONSIVE TUNING
-========================= */
-@media (max-width: 420px) {
-  .dayTitle { font-size: 42px; }
-  .label { font-size: 22px; }
-  .priceInput { width: 112px; height: 54px; font-size: 24px; }
-}
-
-@media (max-width: 360px) {
-  .dayTitle { font-size: 38px; }
-  .priceInput { width: 104px; }
-}
-/* FORCE HEADER CARD TO BE FULL WIDTH AND CENTERED */
-.headerCard{
-  width: 100% !important;
-  max-width: 560px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  align-self: stretch !important;
-}
-
-.bannerWrap{
-  width: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-}
-
-.bannerWrap img{
-  width: 100% !important;
-  max-width: 520px !important;  /* keeps the image from getting huge */
-  margin: 0 auto !important;
-  display: block !important;
+.navText{
+  font-size: 20px;
 }

@@ -2,51 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Turnip Tracker</title>
-
-  <!-- bump the v number when you update files to bust cache -->
-  <link rel="stylesheet" href="style.css?v=30" />
+  <link rel="stylesheet" href="style.css?v=99" />
 </head>
 
 <body>
   <div class="app">
 
-    <!-- HEADER (logo only) -->
-    <div class="header">
+    <!-- HEADER -->
+    <header class="headerCard">
       <img
         src="banner.png.jpg"
         alt="Turnip Tracker"
         class="headerImage"
         onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
       />
-      <div id="headerFallback" class="headerFallback">Turnip Tracker</div>
-    </div>
+      <div id="headerFallback" class="headerFallback" style="display:none;">
+        Turnip Tracker
+      </div>
+    </header>
 
     <!-- MAIN -->
-    <main id="mainView">
+    <main class="main">
 
       <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
-
-        <!-- Sticky buy price bar (small) -->
+        <!-- Sticky buy price (small, locked while scrolling Entry) -->
         <div class="buySticky">
-          <div class="buyBar">
-            <div class="buyLeft">
-              <div class="buyTitle"><span class="emoji">💰</span><span>Buy price</span></div>
-              <div class="buyHint">Price you paid from Daisy Mae on Sunday.</div>
+          <div class="buyCard">
+            <div class="buyTop">
+              <div class="buyLabel">
+                <span class="emoji">💰</span>
+                <span class="buyTitle">Buy price</span>
+              </div>
+              <input
+                id="buy-price"
+                class="buyInput"
+                inputmode="numeric"
+                placeholder="-"
+                aria-label="Turnip buy price"
+              />
             </div>
-            <input
-              id="buyPrice"
-              class="buyInput"
-              inputmode="numeric"
-              placeholder="-"
-              aria-label="Turnip buy price"
-            />
+            <div class="buyHint">Price you paid from Daisy Mae on Sunday.</div>
           </div>
         </div>
 
-        <!-- Day cards -->
         <section class="days">
 
           <div class="dayCard">
@@ -121,46 +122,40 @@
             </div>
           </div>
 
-          <!-- Save button at bottom (after days) -->
-          <button id="saveWeekBtn" class="primaryBtn" type="button">
-            Save week to History
-          </button>
+          <!-- Save button at the bottom (after days) -->
+          <div class="saveWrap">
+            <button id="saveWeekBtn" class="saveBtn" type="button">Save week to History</button>
+            <div class="saveNote">This saves the week and clears your Entry screen.</div>
+          </div>
 
-          <!-- Spacer so bottom nav never covers content -->
-          <div class="bottomSpacer" aria-hidden="true"></div>
         </section>
       </section>
 
       <!-- PREDICT VIEW -->
       <section id="predictView" class="view hidden">
-        <div class="predictWrap">
+        <div class="panel">
+          <h2 class="panelTitle">Predictor</h2>
 
-          <div class="predictCard">
-            <h2 class="predictTitle">Predictor</h2>
+          <div class="chartCard">
+            <canvas id="chartCanvas" width="900" height="320" aria-label="Turnip price chart"></canvas>
 
-            <div class="chartCard">
-              <canvas id="chartCanvas" width="640" height="220" aria-label="Price chart"></canvas>
-              <div class="chartMeta">
-  <div class="chartMarkers" aria-hidden="true">
-    <span>Mon AM</span><span>Mon PM</span>
-    <span>Tue AM</span><span>Tue PM</span>
-    <span>Wed AM</span><span>Wed PM</span>
-    <span>Thu AM</span><span>Thu PM</span>
-    <span>Fri AM</span><span>Fri PM</span>
-    <span>Sat AM</span><span>Sat PM</span>
-  </div>
-
-  <div class="chartCaption">
-    <div class="chartCaptionMain">Your bell trail this week, Monday morning through Saturday night.</div>
-    <div class="chartCaptionSub">More entries help the forecast feel a lot smarter.</div>
-  </div>
-</div>
+            <div class="markerRow" aria-hidden="true">
+              <span>Mon AM</span><span>Mon PM</span>
+              <span>Tue AM</span><span>Tue PM</span>
+              <span>Wed AM</span><span>Wed PM</span>
+              <span>Thu AM</span><span>Thu PM</span>
+              <span>Fri AM</span><span>Fri PM</span>
+              <span>Sat AM</span><span>Sat PM</span>
             </div>
 
-            <div id="predictStats" class="predictStats"></div>
+            <div class="chartCaption">
+              Your bell trail for the week, cozy and simple.
+            </div>
           </div>
 
-          <div class="bottomSpacer" aria-hidden="true"></div>
+          <div class="statsCard" id="predictStats">
+            <!-- JS fills this -->
+          </div>
         </div>
       </section>
 
@@ -169,7 +164,7 @@
         <div class="historyWrap">
           <div class="historyCard">
             <h2 class="historyTitle">Past weeks</h2>
-            <p class="historyHint">Tap Expand to see details. Use Load to edit an old week.</p>
+            <p class="historyHint">Tap Expand to peek, Load to edit an old week.</p>
             <div id="historyList" class="historyList"></div>
           </div>
 
@@ -181,15 +176,12 @@
                 Import
                 <input id="importFile" type="file" accept="application/json" />
               </label>
-              <button id="goHomeBtn" class="chipBtn" type="button">Home</button>
             </div>
 
             <p class="historySmall" id="historyEmptyNote">
-              No saved weeks yet. Fill the week, then tap Save week to History.
+              No saved weeks yet. Fill the week, then hit Save week.
             </p>
           </div>
-
-          <div class="bottomSpacer" aria-hidden="true"></div>
         </div>
       </section>
 
@@ -202,16 +194,18 @@
       <span class="navIcon">🧾</span>
       <span>Entry</span>
     </button>
+
     <button id="navPredict" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
       <span>Predict</span>
     </button>
+
     <button id="navHistory" class="navBtn" type="button">
       <span class="navIcon">🕰️</span>
       <span>History</span>
     </button>
   </nav>
 
-  <script src="app.js?v=30"></script>
+  <script src="app.js?v=99"></script>
 </body>
 </html>

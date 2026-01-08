@@ -1,83 +1,87 @@
-:root{
-  --bg1:#dfe9ff;
-  --bg2:#f6f9ff;
+/* =========================
+   Turnip Tracker, style.css
+   Matches your HTML classes:
+   .dayCard .dayTitle .row .label .emoji .priceInput
+   .bottomNav .bottomNavInner .navBtn .navIcon .navText
+   ========================= */
 
-  --card:#e3b18d;
-  --cardInner:rgba(255,255,255,0.25);
-
-  --pill:#f4efe7;
-  --pillBorder:rgba(255,255,255,0.55);
-
-  --text:#1f1f1f;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{
-  margin:0;
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color:var(--text);
-  background: radial-gradient(1200px 900px at 50% 0%, var(--bg1), var(--bg2));
+  background: #dfe9fb;
+  color: #1a1a1a;
 }
 
-.app{
-  max-width: 430px;
-  margin: 0 auto;
-  padding: 14px 14px 110px;
+/* App container */
+.app {
+  width: min(900px, calc(100% - 24px));
+  margin: 16px auto 120px;
 }
 
-/* HEADER */
-.headerCard{
-  background: rgba(255,255,255,0.45);
-  border-radius: 26px;
-  padding: 14px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+/* Header card (keeps your banner area stable) */
+.headerCard {
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 28px;
+  padding: 18px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.10);
+  backdrop-filter: blur(10px);
 }
 
-.bannerWrap img{
-  width:100%;
-  height:auto;
-  display:block;
+.bannerWrap img {
+  width: 100%;
+  display: block;
   border-radius: 22px;
 }
 
-.headerActions{
-  display:flex;
-  justify-content:center;
-  margin-top: 10px;
+/* Save button area */
+.headerActions {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
 }
 
-.saveWeekBtn{
-  appearance:none;
-  border: 1px solid rgba(0,0,0,0.06);
-  background: rgba(255,255,255,0.75);
+.saveWeekBtn {
+  appearance: none;
+  border: 0;
+  background: rgba(255, 255, 255, 0.70);
+  color: #1a1a1a;
+  padding: 10px 18px;
   border-radius: 999px;
-  padding: 10px 16px;
   font-weight: 700;
-  color: var(--text);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
 }
 
-/* GRID */
-.daysGrid{
-  margin-top: 14px;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+/* Grid */
+.daysGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.dayCard{
-  background: var(--card);
-  border-radius: 26px;
-  padding: 14px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.10);
-  overflow:hidden;
+/* Day card */
+.dayCard {
+  background: #e1b18f;
+  border-radius: 28px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
 }
 
-.dayTitle{
-  margin: 0 0 10px 0;
-  font-size: 42px;
-  line-height: 1;
-  letter-spacing: 0.2px;
+/* Prevent day titles from doing weird wraps */
+.dayTitle {
+  margin: 0 0 12px;
+  font-size: 46px;
+  line-height: 1.02;
   font-weight: 900;
 
   white-space: nowrap;
@@ -85,114 +89,133 @@ body{
   text-overflow: ellipsis;
 }
 
-/* ROWS */
-.slotRow{
-  background: var(--cardInner);
-  border-radius: 22px;
-  padding: 10px 10px;
-  display:flex;
-  align-items:center;
+/* AM/PM row */
+.row {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 12px 12px;
+  margin-top: 12px;
+
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-
-  margin-top: 10px;
+  gap: 12px;
 }
 
-/* Left side is fixed width so it never shifts */
-.slotLeft{
-  display:flex;
-  align-items:center;
+/* Left label */
+.label {
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
-
-  width: 98px;
-  min-width: 98px;
-}
-
-/* Icon container keeps its space even if icon gets hidden */
-.slotIcon{
-  width: 26px;
-  min-width: 26px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  font-size: 22px;
+  font-weight: 900;
+  font-size: 26px;
   line-height: 1;
+  min-width: 110px;
 }
 
-/* AM / PM fixed width too */
-.slotLabel{
-  width: 48px;
-  min-width: 48px;
+.emoji {
+  display: inline-flex;
+  width: 30px;
+  justify-content: center;
+}
+
+/* The pill input
+   Key fixes:
+   - fixed width and height, so it does not jump after typing
+   - no default iOS styles changing its box model
+   - consistent line-height and padding so AM/PM does not shift
+*/
+.priceInput {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 96px;
+  height: 54px;
+  border-radius: 18px;
+
+  border: 2px solid rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.68);
+
   font-weight: 900;
-  font-size: 22px;
-}
+  font-size: 26px;
+  line-height: 1;
 
-/* Input is hard locked, it will not expand or jump */
-.priceInput{
-  appearance:none;
-  border: 2px solid var(--pillBorder);
-  background: rgba(244,239,231,0.95);
-  border-radius: 16px;
-
-  width: 78px;
-  min-width: 78px;
-  max-width: 78px;
-
-  height: 44px;
-
+  text-align: center;
   padding: 0;
-  text-align:center;
-
-  font-weight: 900;
-  font-size: 22px;
-
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0;
 
   outline: none;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.45);
 }
 
-.priceInput::placeholder{
+.priceInput::placeholder {
   color: rgba(0,0,0,0.35);
 }
 
-/* BOTTOM NAV */
-.bottomNav{
+/* Bottom nav */
+.bottomNav {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  width: min(900px, calc(100% - 24px));
+  z-index: 50;
+}
 
-  width: min(430px, calc(100% - 28px));
-  background: rgba(255,255,255,0.72);
+.bottomNavInner {
+  background: rgba(255, 248, 235, 0.90);
   border-radius: 26px;
-  padding: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+  backdrop-filter: blur(10px);
 
-  display:flex;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-
-  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
-  backdrop-filter: blur(10px);
 }
 
-.navBtn{
-  flex:1;
-  border: 0;
-  background: transparent;
+.navBtn {
+  text-decoration: none;
+  color: inherit;
+
+  flex: 1;
   border-radius: 20px;
   padding: 10px 8px;
-  font-weight: 900;
-  font-size: 20px;
-  color: var(--text);
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.navIcon{
+.navBtn:active {
+  transform: scale(0.98);
+}
+
+.navIcon {
   font-size: 22px;
   line-height: 1;
+}
+
+.navText {
+  font-weight: 900;
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* Tiny screens: keep 2 columns but reduce title size */
+@media (max-width: 420px) {
+  .dayTitle {
+    font-size: 40px;
+  }
+  .label {
+    min-width: 96px;
+    font-size: 24px;
+  }
+  .priceInput {
+    width: 88px;
+    height: 52px;
+    font-size: 24px;
+  }
 }

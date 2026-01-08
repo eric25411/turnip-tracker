@@ -24,9 +24,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const bestSoFarEl = document.getElementById("bestSoFar");
   const bestWhenEl = document.getElementById("bestWhen");
   const weeksCountEl = document.getElementById("weeksCount");
-
-  // We will also write to predictSummary if it exists
   const predictSummaryEl = document.getElementById("predictSummary");
+
+  const bestDayAvgEl = document.getElementById("bestDayAvg");
+  const recommendationEl = document.getElementById("recommendation");
+  const topPeaksEl = document.getElementById("topPeaks");
 
   // History UI
   const historyList = document.getElementById("historyList");
@@ -89,6 +91,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ["Thu AM","thu-am"], ["Thu PM","thu-pm"],
     ["Fri AM","fri-am"], ["Fri PM","fri-pm"],
     ["Sat AM","sat-am"], ["Sat PM","sat-pm"]
+  ];
+
+  const DAY_KEYS = [
+    ["Monday", "mon-am", "mon-pm"],
+    ["Tuesday", "tue-am", "tue-pm"],
+    ["Wednesday", "wed-am", "wed-pm"],
+    ["Thursday", "thu-am", "thu-pm"],
+    ["Friday", "fri-am", "fri-pm"],
+    ["Saturday", "sat-am", "sat-pm"]
   ];
 
   function getCurrentWeekData() {
@@ -173,12 +184,48 @@ document.addEventListener("DOMContentLoaded", () => {
     return { bestVal, bestLabel, bestKey };
   }
 
+  function computeBestDayAvgFromWeeks(weeks) {
+    // Average each day across weeks (avg of AM/PM where present), then pick best
+    const daySums = new Map();   // day -> sum
+    const dayCounts = new Map(); // day -> count
+
+    weeks.forEach(w => {
+      const d = w && w.data ? w.data : null;
+      if (!d) return;
+
+      DAY_KEYS.forEach(([dayName, amKey, pmKey]) => {
+        const am = parseNum(d[amKey]);
+        const pm = parseNum(d[pmKey]);
+
+        // day avg uses any available slots
+        const vals = [am, pm].filter(v => v !== null);
+        if (!vals.length) return;
+
+        const dayAvg = vals.reduce((a,b) => a + b, 0) / vals.length;
+
+        daySums.set(dayName, (daySums.get(dayName) || 0) + dayAvg);
+        dayCounts.set(dayName, (dayCounts.get(dayName) || 0) + 1);
+      });
+    });
+
+    let bestDay = null;
+    let bestAvg = null;
+
+    for (const [day, sum] of daySums.entries()) {
+      const c = dayCounts.get(day) || 0;
+      if (!c) continue;
+      const avg = sum / c;
+      if (bestAvg === null || avg > bestAvg) {
+        bestAvg = avg;
+        bestDay = day;
+      }
+    }
+
+    return { bestDay, bestAvg };
+  }
+
   function learnFromSavedWeeks(weeks) {
-    // Returns:
-    // - mostCommonBestLabel
-    // - avgPeak
-    // - countedWeeks (weeks with at least 1 numeric price)
-    const freq = new Map(); // label -> count
+    const freq = new Map(); // best slot label -> count
     let sumPeak = 0;
     let countedWeeks = 0;
 
@@ -193,6 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
       freq.set(label, (freq.get(label) || 0) + 1);
     });
 
+    // most common best slot
     let mostCommonBestLabel = null;
     let mostCommonCount = 0;
     for (const [label, c] of freq.entries()) {
@@ -202,13 +250,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // top 3 peak slots
+    const top3 = Array.from(freq.entries())
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([label, c]) => `${label} (${c})`);
+
     const avgPeak = countedWeeks ? (sumPeak / countedWeeks) : null;
+
+    // best day on average
+    const dayAvg = computeBestDayAvgFromWeeks(weeks);
 
     return {
       mostCommonBestLabel,
       mostCommonCount,
       avgPeak,
-      countedWeeks
+      countedWeeks,
+      top3,
+      bestDay: dayAvg.bestDay,
+      bestDayAvg: dayAvg.bestAvg
     };
   }
 
@@ -216,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const weeks = getWeeks();
     if (weeksCountEl) weeksCountEl.textContent = String(weeks.length);
 
-    // 1) Best so far this week (current draft)
+    // Best so far this week (current draft)
     const current = getCurrentWeekData();
     const curBest = computeBestSlotFromData(current);
 
@@ -228,10 +288,39 @@ document.addEventListener("DOMContentLoaded", () => {
       if (bestWhenEl) bestWhenEl.textContent = curBest.bestLabel;
     }
 
-    // 2) Learning from saved weeks
+    // Learning
     const learn = learnFromSavedWeeks(weeks);
 
-    // Build a friendly summary line
+    // Best day on average
+    if (bestDayAvgEl) {
+      if (!learn.bestDay) {
+        bestDayAvgEl.textContent = "-";
+      } else {
+        const avgTxt = learn.bestDayAvg === null ? "-" : String(Math.round(learn.bestDayAvg));
+        bestDayAvgEl.textContent = `${learn.bestDay} (~${avgTxt})`;
+      }
+    }
+
+    // Top peak slots
+    if (topPeaksEl) {
+      topPeaksEl.textContent = learn.top3 && learn.top3.length ? learn.top3.join(", ") : "-";
+    }
+
+    // Recommendation
+    if (recommendationEl) {
+      if (learn.countedWeeks === 0 || learn.avgPeak === null || curBest.bestVal === null) {
+        recommendationEl.textContent = "Need more data. Save weeks to improve.";
+      } else {
+        const avgPeakRounded = Math.round(learn.avgPeak);
+        if (curBest.bestVal >= avgPeakRounded) {
+          recommendationEl.textContent = `Sell now. This week’s best (${curBest.bestVal}) is at or above your avg peak (~${avgPeakRounded}).`;
+        } else {
+          recommendationEl.textContent = `Hold. This week’s best (${curBest.bestVal}) is below your avg peak (~${avgPeakRounded}).`;
+        }
+      }
+    }
+
+    // Summary paragraph
     if (predictSummaryEl) {
       if (learn.countedWeeks === 0) {
         predictSummaryEl.textContent =
@@ -242,12 +331,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const confTxt = `${learn.countedWeeks} week${learn.countedWeeks === 1 ? "" : "s"} learned`;
 
         predictSummaryEl.textContent =
-          `From your saved weeks, your most common peak time is ${commonTxt}. Average peak is about ${avgTxt}. Confidence: ${confTxt}.`;
+          `From your saved weeks, your most common peak slot is ${commonTxt}. Average weekly peak is about ${avgTxt}. Confidence: ${confTxt}.`;
       }
     }
-
-    // Optional: also fill the two existing lines if you want them to reflect learning
-    // We keep your current "Best so far" lines as-is, and put learning in the summary.
   }
 
   if (runPredictBtn) {
@@ -255,13 +341,11 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       updatePredictSummary();
 
-      const weeks = getWeeks();
-      const learn = learnFromSavedWeeks(weeks);
-
+      const learn = learnFromSavedWeeks(getWeeks());
       if (learn.countedWeeks === 0) {
         alert("No saved weeks with prices yet. Save a week to start learning patterns.");
       } else {
-        alert("Updated using your saved weeks. Next upgrade is pattern-based price curve prediction.");
+        alert("Updated. Next upgrade is curve pattern detection, like spike, decreasing, small spike.");
       }
     });
   }

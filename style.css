@@ -27,7 +27,6 @@ body{
   padding: 18px;
 }
 
-/* View switching */
 .viewHidden{ display: none; }
 
 /* HEADER */
@@ -220,6 +219,13 @@ body{
   box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
 }
 
+/* Best sell highlight on Home */
+.priceInput.bestNow{
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.85), 0 10px 22px rgba(0,0,0,0.16);
+  transform: scale(1.02);
+}
+
 /* HISTORY VIEW */
 .historyHeader{
   background: rgba(255,255,255,0.65);
@@ -233,11 +239,33 @@ body{
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .historyTitle{
   font-weight: 900;
   font-size: 22px;
+}
+
+.historyTools{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolBtn{
+  border: none;
+  background: rgba(255,255,255,0.9);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+
+.fileHidden{
+  display: none;
 }
 
 .historySub{
@@ -285,6 +313,25 @@ body{
   opacity: 0.8;
   font-size: 14px;
   text-align: right;
+}
+
+.weekActionRow{
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.smallBtn{
+  border: none;
+  border-radius: 16px;
+  padding: 10px 12px;
+  font-weight: 900;
+  background: rgba(255,255,255,0.85);
+  flex: 1 1 auto;
+}
+
+.smallBtn.danger{
+  background: rgba(255,255,255,0.75);
 }
 
 .weekExpandBtn{

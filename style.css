@@ -230,3 +230,24 @@ body {
   .dayTitle { font-size: 38px; }
   .priceInput { width: 104px; }
 }
+/* FORCE HEADER CARD TO BE FULL WIDTH AND CENTERED */
+.headerCard{
+  width: 100% !important;
+  max-width: 560px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  align-self: stretch !important;
+}
+
+.bannerWrap{
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.bannerWrap img{
+  width: 100% !important;
+  max-width: 520px !important;  /* keeps the image from getting huge */
+  margin: 0 auto !important;
+  display: block !important;
+}

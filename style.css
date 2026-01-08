@@ -1,218 +1,198 @@
 :root{
-  --pagePad: 16px;
-  --maxW: 430px;
+  --bg1:#dfe9ff;
+  --bg2:#f6f9ff;
 
-  --cardRadius: 28px;
-  --softRadius: 22px;
+  --card:#e3b18d;
+  --cardInner:rgba(255,255,255,0.25);
 
-  --tan: #e0b08b;
-  --pillBg: rgba(255, 255, 255, 0.22);
-  --inputBg: #f6efe6;
+  --pill:#f4efe7;
+  --pillBorder:rgba(255,255,255,0.55);
 
-  --text: #1f1f1f;
-
-  /* MORE space so fixed nav never overlaps content */
-  --navPadBottom: 150px;
+  --text:#1f1f1f;
 }
 
-*{ box-sizing: border-box; }
-
-html, body{ height: 100%; }
-
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
 body{
-  margin: 0;
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  background: radial-gradient(1200px 700px at 50% 0%, #d8e6ff 0%, #f7f7f7 55%, #ffffff 100%);
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background: radial-gradient(1200px 900px at 50% 0%, var(--bg1), var(--bg2));
 }
 
-/* main wrapper */
 .app{
-  max-width: var(--maxW);
+  max-width: 430px;
   margin: 0 auto;
-  padding: var(--pagePad);
-  padding-bottom: calc(var(--navPadBottom) + env(safe-area-inset-bottom));
+  padding: 14px 14px 110px;
 }
 
-/* header */
+/* HEADER */
 .headerCard{
-  border-radius: var(--cardRadius);
-}
-
-.bannerWrap{
-  border-radius: var(--cardRadius);
-  overflow: hidden;
+  background: rgba(255,255,255,0.45);
+  border-radius: 26px;
+  padding: 14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.08);
 }
 
 .bannerWrap img{
-  width: 100%;
-  display: block;
-  border-radius: var(--cardRadius);
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius: 22px;
 }
 
-/* save button under banner */
 .headerActions{
-  display: flex;
-  justify-content: center;
-  margin-top: 12px;
-  margin-bottom: 14px;
+  display:flex;
+  justify-content:center;
+  margin-top: 10px;
 }
 
 .saveWeekBtn{
-  border: 0;
-  background: rgba(255,255,255,0.85);
-  color: #1f1f1f;
-  font-weight: 800;
-  font-size: 16px;
-  padding: 10px 18px;
+  appearance:none;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.75);
   border-radius: 999px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+  padding: 10px 16px;
+  font-weight: 700;
+  color: var(--text);
 }
 
-/* grid */
+/* GRID */
 .daysGrid{
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  margin-top: 14px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-/* day card */
 .dayCard{
-  background: var(--tan);
-  border-radius: var(--cardRadius);
-  padding: 16px 14px 14px;
-  box-shadow: 0 14px 26px rgba(0,0,0,0.10);
-
-  /* KEY FIX: prevents pill from sticking outside the card */
-  overflow: hidden;
+  background: var(--card);
+  border-radius: 26px;
+  padding: 14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.10);
+  overflow:hidden;
 }
 
 .dayTitle{
-  margin: 0 0 12px;
+  margin: 0 0 10px 0;
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: 0.2px;
   font-weight: 900;
-  font-size: clamp(22px, 6vw, 34px);
-  line-height: 1.0;
 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* AM/PM rows */
-.row{
-  display: flex;
-  align-items: center;
+/* ROWS */
+.slotRow{
+  background: var(--cardInner);
+  border-radius: 22px;
+  padding: 10px 10px;
+  display:flex;
+  align-items:center;
   justify-content: space-between;
-  gap: 12px;
 
-  background: var(--pillBg);
-  border-radius: var(--softRadius);
-  padding: 12px;
   margin-top: 10px;
-
-  /* extra safety */
-  overflow: hidden;
 }
 
-.label{
-  display: flex;
-  align-items: center;
+/* Left side is fixed width so it never shifts */
+.slotLeft{
+  display:flex;
+  align-items:center;
   gap: 10px;
 
-  font-weight: 900;
-  font-size: 18px;
-
-  flex: 1 1 auto;
-  min-width: 86px;
+  width: 98px;
+  min-width: 98px;
 }
 
-.emoji{
-  font-size: 20px;
+/* Icon container keeps its space even if icon gets hidden */
+.slotIcon{
+  width: 26px;
+  min-width: 26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size: 22px;
   line-height: 1;
 }
 
-/* the input pill */
-.priceInput{
-  /* KEY FIX: make it smaller so it always fits */
-  flex: 0 0 78px;
-  width: 78px;
-  max-width: 78px;
-  height: 42px;
-
-  border-radius: 18px;
-  border: 2px solid rgba(255,255,255,0.45);
-  background: var(--inputBg);
-
-  text-align: center;
-  font-size: 18px;
+/* AM / PM fixed width too */
+.slotLabel{
+  width: 48px;
+  min-width: 48px;
   font-weight: 900;
-  color: #1f1f1f;
+  font-size: 22px;
+}
+
+/* Input is hard locked, it will not expand or jump */
+.priceInput{
+  appearance:none;
+  border: 2px solid var(--pillBorder);
+  background: rgba(244,239,231,0.95);
+  border-radius: 16px;
+
+  width: 78px;
+  min-width: 78px;
+  max-width: 78px;
+
+  height: 44px;
+
+  padding: 0;
+  text-align:center;
+
+  font-weight: 900;
+  font-size: 22px;
+
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
 
   outline: none;
-  -webkit-appearance: none;
 }
 
 .priceInput::placeholder{
   color: rgba(0,0,0,0.35);
 }
 
-/* bottom nav */
+/* BOTTOM NAV */
 .bottomNav{
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
 
-  padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
-  background: transparent;
+  width: min(430px, calc(100% - 28px));
+  background: rgba(255,255,255,0.72);
+  border-radius: 26px;
+  padding: 12px;
 
-  pointer-events: none;
-}
-
-.bottomNavInner{
-  max-width: var(--maxW);
-  margin: 0 auto;
-
-  display: flex;
+  display:flex;
+  justify-content: space-between;
   gap: 12px;
 
-  background: rgba(255, 250, 240, 0.92);
-  border-radius: 26px;
-  padding: 10px;
-
-  box-shadow: 0 16px 30px rgba(0,0,0,0.14);
-
-  pointer-events: auto;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+  backdrop-filter: blur(10px);
 }
 
 .navBtn{
-  flex: 1;
-  text-decoration: none;
-  color: #1f1f1f;
+  flex:1;
+  border: 0;
+  background: transparent;
+  border-radius: 20px;
+  padding: 10px 8px;
+  font-weight: 900;
+  font-size: 20px;
+  color: var(--text);
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-
-  padding: 10px 0;
-  border-radius: 18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
 }
 
 .navIcon{
   font-size: 22px;
   line-height: 1;
-}
-
-.navText{
-  font-weight: 900;
-  font-size: 16px;
-}
-
-/* small phones */
-@media (max-width: 360px){
-  .daysGrid{ gap: 14px; }
-  .priceInput{ width: 72px; max-width: 72px; flex-basis: 72px; }
-  .label{ min-width: 78px; font-size: 17px; }
 }

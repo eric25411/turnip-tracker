@@ -4,13 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css?v=99" />
+  <link rel="stylesheet" href="style.css?v=100" />
 </head>
 
 <body>
   <div class="app">
 
-    <!-- HEADER -->
     <div class="header">
       <img
         src="banner.png.jpg"
@@ -23,19 +22,17 @@
       </div>
     </div>
 
-    <!-- MAIN -->
     <main id="mainView" class="mainView">
 
       <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
 
-        <!-- Sticky Buy Price -->
         <div class="buySticky">
           <div class="buyCard">
             <div class="buyRow">
               <div class="buyLeft">
                 <div class="buyTitle"><span class="emoji">💰</span> Buy price</div>
-                <div class="buyHint">Daisy Mae, Sunday.</div>
+                <div id="buyHint" class="buyHint">Sunday.</div>
               </div>
               <input
                 id="buy-price"
@@ -122,7 +119,6 @@
             </div>
           </div>
 
-          <!-- Save card at bottom -->
           <div class="saveCard">
             <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
             <div class="saveHint">Saves the week, then clears your Entry screen.</div>
@@ -191,7 +187,6 @@
     </main>
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottomNav" aria-label="Bottom navigation">
     <button id="navEntry" class="navBtn active" type="button">
       <span class="navIcon">🧾</span>
@@ -209,6 +204,6 @@
     </button>
   </nav>
 
-  <script src="app.js?v=99"></script>
+  <script src="app.js?v=100"></script>
 </body>
 </html>

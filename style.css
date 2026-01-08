@@ -1,6 +1,13 @@
 :root{
-  --bg: #eaf0ff;
+  /* Softer, less bright base */
+  --bg: #dfe6f3;        /* was #eaf0ff */
   --text: #1b1b1b;
+
+  /* Surface colors */
+  --card: rgba(255,255,255,0.55);     /* was 0.65 */
+  --cardStrong: rgba(255,255,255,0.62);
+  --pill: rgba(255,255,255,0.60);     /* inputs */
+  --pillFocus: rgba(255,255,255,0.82);
 
   --radius: 28px;
   --shadow: 0 10px 25px rgba(0,0,0,0.12);
@@ -28,7 +35,7 @@ body{
 
 /* HEADER */
 .headerCard{
-  background: rgba(255,255,255,0.65);
+  background: var(--card);
   border-radius: var(--radius);
   padding: 18px;
   box-shadow: var(--shadow);
@@ -50,7 +57,7 @@ body{
 .editBanner{
   margin: 12px auto 0;
   max-width: 520px;
-  background: rgba(255,255,255,0.85);
+  background: var(--cardStrong);
   border-radius: 999px;
   padding: 10px 14px;
   font-weight: 900;
@@ -68,7 +75,7 @@ body{
 .saveWeekBtn,
 .newWeekBtn{
   border: none;
-  background: white;
+  background: rgba(255,255,255,0.80);
   padding: 10px 18px;
   border-radius: 999px;
   font-weight: 800;
@@ -89,7 +96,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255,255,255,0.65);
+  background: var(--card);
   border-radius: 22px;
   padding: 14px 16px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.10);
@@ -108,18 +115,18 @@ body{
   text-align: center;
   font-size: 20px;
   font-weight: 800;
-  background: rgba(255,255,255,0.72);
+  background: var(--pill);
 }
 .buyInput:focus{
   outline: none;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
+  background: var(--pillFocus);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.35);
 }
 
 /* PREDICT PANEL */
 .predictPanel{
   margin-top: 14px;
-  background: rgba(255,255,255,0.65);
+  background: var(--card);
   border-radius: 22px;
   padding: 14px 16px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.10);
@@ -147,7 +154,8 @@ body{
 }
 
 .dayCard{
-  background: linear-gradient(180deg, #eac09c, #e1b189);
+  /* Slightly toned down wood */
+  background: linear-gradient(180deg, #e6bf9e, #dbae88);
   border-radius: var(--radius);
   padding: 18px;
   box-shadow: var(--shadow);
@@ -161,7 +169,7 @@ body{
   bottom: calc(var(--bottomNavH) + 12px);
   z-index: 2;
   padding: 6px 0 12px;
-  background: linear-gradient(180deg, rgba(234,192,156,0.98), rgba(234,192,156,0.6));
+  background: linear-gradient(180deg, rgba(230,191,158,0.96), rgba(230,191,158,0.55));
   backdrop-filter: blur(6px);
   border-radius: 18px;
 }
@@ -176,7 +184,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.18);
   border-radius: 22px;
   padding: 14px 16px;
   margin-bottom: 12px;
@@ -209,7 +217,7 @@ body{
   text-align: center;
   font-size: 20px;
   font-weight: 800;
-  background: rgba(255,255,255,0.72);
+  background: var(--pill);
   color: var(--text);
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
@@ -217,19 +225,19 @@ body{
 .priceInput:focus{
   outline: none;
   transform: scale(1.02);
-  background: white;
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
+  background: var(--pillFocus);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.35);
 }
 
 .priceInput.bestNow{
-  background: white;
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.85), 0 10px 22px rgba(0,0,0,0.16);
+  background: rgba(255,255,255,0.90);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.70), 0 10px 22px rgba(0,0,0,0.16);
   transform: scale(1.02);
 }
 
 /* HISTORY */
 .historyHeader{
-  background: rgba(255,255,255,0.65);
+  background: var(--card);
   border-radius: var(--radius);
   padding: 16px;
   box-shadow: var(--shadow);
@@ -257,7 +265,7 @@ body{
 
 .toolBtn{
   border: none;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.80);
   border-radius: 999px;
   padding: 10px 14px;
   font-weight: 800;
@@ -275,7 +283,7 @@ body{
 
 .historyHomeBtn{
   border: none;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.80);
   border-radius: 999px;
   padding: 10px 14px;
   font-weight: 800;
@@ -289,7 +297,7 @@ body{
 }
 
 .weekCard{
-  background: rgba(255,255,255,0.65);
+  background: var(--card);
   border-radius: 22px;
   padding: 14px 14px 12px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.10);
@@ -314,13 +322,12 @@ body{
   text-align: right;
 }
 
-/* Editing tag */
 .editTag{
   display: inline-block;
   margin-top: 6px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.78);
   font-weight: 900;
   font-size: 12px;
   opacity: 0.9;
@@ -338,12 +345,12 @@ body{
   border-radius: 16px;
   padding: 10px 12px;
   font-weight: 900;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.78);
   flex: 1 1 auto;
 }
 
 .smallBtn.danger{
-  background: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.70);
 }
 
 .weekExpandBtn{
@@ -353,7 +360,7 @@ body{
   border-radius: 16px;
   padding: 10px 12px;
   font-weight: 900;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.78);
 }
 
 .weekDetails{
@@ -372,7 +379,7 @@ body{
 }
 
 .miniCell{
-  background: rgba(255,255,255,0.60);
+  background: rgba(255,255,255,0.55);
   border-radius: 16px;
   padding: 10px 10px;
   display: flex;
@@ -391,7 +398,7 @@ body{
   right: 0;
   bottom: 0;
   height: var(--bottomNavH);
-  background: rgba(255,255,255,0.86);
+  background: rgba(245,246,250,0.86); /* less stark */
   backdrop-filter: blur(10px);
   padding-bottom: env(safe-area-inset-bottom);
   box-shadow: 0 -8px 20px rgba(0,0,0,0.15);
@@ -422,7 +429,7 @@ body{
 }
 
 .navBtn.isActive{
-  background: rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.55);
   box-shadow: 0 6px 16px rgba(0,0,0,0.10);
 }
 

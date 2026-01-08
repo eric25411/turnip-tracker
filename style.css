@@ -1,280 +1,236 @@
-:root{
-  --bg: #e9eff8;
-  --tan: #e7c19c;
-  --tan2: #dcb38b;
-  --pill: #f6eee5;
-  --text: #1a1a1a;
-  --radius: 22px;
-  --shadow: 0 12px 30px rgba(0,0,0,.12);
-  --navH: 86px;
+/* Basic resets */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+/* App wrapper */
+.app {
+  max-width: 420px;
+  margin: 0 auto;
+  padding-bottom: 90px; /* space for bottom nav */
 }
 
-*{
-  box-sizing: border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-body{
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.hidden{
-  display: none;
-}
-
-/* APP WRAPPER */
-.app{
-  padding: 16px;
-  padding-bottom: calc(var(--navH) + 36px + env(safe-area-inset-bottom));
-}
-
-/* HEADER */
-.header{
-  background: #f3f7ff;
-  border-radius: 28px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: var(--shadow);
-}
-
-.headerImage{
-  max-width: 100%;
-  border-radius: 20px;
-}
-
-.headerFallback{
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(255,255,255,.7);
-  font-weight: 600;
-}
-
-.primaryBtn{
-  margin-top: 14px;
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: none;
-  background: #fff;
-  font-weight: 700;
-}
-
-/* DAYS */
-.days{
-  display: grid;
-  gap: 18px;
-  margin-top: 20px;
-}
-
-/* DAY CARD */
-.dayCard{
-  background: linear-gradient(180deg, var(--tan), var(--tan2));
-  border-radius: var(--radius);
-  padding: 18px;
-  box-shadow: var(--shadow);
-}
-
-.dayTitle{
-  font-size: 34px;
-  margin: 0 0 12px;
-}
-
-/* ROW */
-.row{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(255,255,255,.18);
-  padding: 14px 16px;
-  border-radius: 18px;
-  margin-bottom: 12px;
-}
-
-/* LABEL */
-.label{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  min-width: 88px;
-}
-
-.emoji{
-  font-size: 20px;
-}
-
-/* INPUT PILL */
-.priceInput{
-  width: 92px;
-  height: 46px;
-  border-radius: 999px;
-  border: none;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  background: var(--pill);
-  outline: none;
-  transition: box-shadow .18s ease, transform .12s ease;
-}
-
-.priceInput:focus{
-  box-shadow: 0 0 0 3px rgba(255,255,255,.65);
-  transform: scale(1.03);
-}
-
-/* HISTORY */
-.historyWrap{
-  margin-top: 20px;
-  display: grid;
-  gap: 16px;
-}
-
-.historyCard{
-  background: linear-gradient(180deg, var(--tan), var(--tan2));
-  border-radius: var(--radius);
-  padding: 18px;
-  box-shadow: var(--shadow);
-}
-
-.historyTitle{
-  margin: 0 0 6px;
-  font-size: 28px;
-}
-
-.historySubtitle{
-  margin: 0 0 10px;
-  font-size: 20px;
-}
-
-.historyHint{
-  margin: 0 0 12px;
-  opacity: .9;
-  font-weight: 600;
-}
-
-.historyActions{
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-.chipBtn{
-  border: none;
-  border-radius: 999px;
-  padding: 10px 14px;
-  background: rgba(255,255,255,.7);
-  font-weight: 700;
-}
-
-.fileBtn input{
-  display: none;
-}
-
-.historySmall{
-  margin: 0;
-  font-weight: 700;
-  opacity: .9;
-}
-
-.historyList{
-  display: grid;
-  gap: 10px;
-}
-
-.weekRow{
-  background: rgba(255,255,255,.2);
-  border-radius: 16px;
-  padding: 12px;
-}
-
-.weekRowTop{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.weekLabel{
-  font-weight: 800;
-}
-
-.weekBtns{
-  display: flex;
-  gap: 8px;
-}
-
-.smallBtn{
-  border: none;
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: rgba(255,255,255,.75);
-  font-weight: 800;
-}
-
-.weekDetails{
-  margin-top: 10px;
-  display: none;
-  font-weight: 700;
-}
-
-.weekRow.expanded .weekDetails{
-  display: block;
-}
-
-/* BOTTOM NAV */
-.bottomNav{
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--navH);
-  padding-bottom: env(safe-area-inset-bottom);
-  background: #f8f4ee;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 -8px 30px rgba(0,0,0,.15);
-}
-
-.navBtn{
-  background: none;
-  border: none;
+/* Header */
+.header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  font-weight: 800;
-  color: #222;
-  padding: 10px 14px;
-  border-radius: 16px;
+  padding: 10px 12px 6px 12px;
 }
-
-.navBtn.active{
-  color: #1c73ff;
+.headerImage {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
-
-.navIcon{
-  font-size: 22px;
-}
-.hidden { display: none !important; }
-.hidden { display: none !important; }
-
-.predictWrap{
-  margin-top: 20px;
-  display: grid;
-  gap: 16px;
-}
-
-.predictCard{
-  margin-top: 12px;
-  background: rgba(255,255,255,.25);
-  border-radius: 16px;
-  padding: 14px;
+.primaryBtn {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 14px;
   font-weight: 700;
+  cursor: pointer;
 }
 
-.predictLine{
+/* Views */
+.view.hidden { display: none; }
+.view { display: block; }
+
+/* Days grid */
+.days {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 10px 12px 0 12px;
+}
+
+.dayCard {
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.dayTitle {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin: 8px 0;
 }
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 72px;
+  font-weight: 700;
+}
+.emoji { width: 18px; display: inline-block; text-align: center; }
+
+.priceInput {
+  width: 110px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.12);
+  font-size: 16px;
+  text-align: center;
+  outline: none;
+}
+.priceInput:focus {
+  border-color: rgba(0,0,0,0.35);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
+}
+
+.hintRow { margin-top: 2px; }
+.hintText { font-size: 12px; opacity: 0.75; }
+
+/* Predictor and History cards */
+.predictWrap, .historyWrap {
+  padding: 10px 12px 0 12px;
+}
+.predictCard, .historyCard {
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.historyTitle { margin: 0 0 10px 0; }
+.historyHint { margin: 0 0 10px 0; font-size: 13px; opacity: 0.8; }
+.historySubtitle { margin: 0 0 8px 0; font-size: 14px; }
+.historySmall { margin: 10px 0 0 0; font-size: 12px; opacity: 0.8; }
+
+.predictLine {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.predictHeaderRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sellAlertBadge{
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+.sellAlertBadge.hidden { display: none; }
+
+/* Tiny chart */
+.chartWrap{
+  margin: 10px 0 12px 0;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+#priceChart{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chartLegend{
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* History list rows */
+.historyList { display: flex; flex-direction: column; gap: 10px; }
+.weekRow {
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  padding: 10px;
+}
+.weekRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.weekLabel { font-weight: 800; font-size: 12px; }
+.weekBtns { display: flex; gap: 6px; }
+.smallBtn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+.weekDetails { display: none; margin-top: 8px; font-size: 12px; opacity: 0.85; }
+.weekRow.expanded .weekDetails { display: block; }
+
+.historyActions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.chipBtn {
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+}
+.fileBtn input { display: none; }
+
+/* Bottom nav */
+.bottomNav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 10px;
+  width: min(420px, calc(100% - 24px));
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.12);
+  backdrop-filter: blur(10px);
+}
+
+.navBtn {
+  flex: 1;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 14px;
+  padding: 10px 8px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.navBtn.active {
+  border-color: rgba(0,0,0,0.35);
+}
+
+/* Theme colors, adjust these to change brightness */
+body {
+  background: #f6f6f4;
+  color: #222;
+}
+.dayCard, .predictCard, .historyCard {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.10);
+}
+.primaryBtn {
+  background: #2d7d64;
+  color: #fff;
+}
+.sellAlertBadge {
+  background: rgba(45, 125, 100, 0.12);
+}
+
+/* Optional: slightly warmer cards */
+.dayCard, .predictCard, .historyCard { background: #fbfbf8; }

@@ -20,6 +20,10 @@ body{
   color: var(--text);
 }
 
+.hidden{
+  display: none;
+}
+
 /* APP WRAPPER */
 .app{
   padding: 16px;
@@ -40,13 +44,20 @@ body{
   border-radius: 20px;
 }
 
-#saveWeekBtn{
+.headerFallback{
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.7);
+  font-weight: 600;
+}
+
+.primaryBtn{
   margin-top: 14px;
   padding: 10px 20px;
   border-radius: 999px;
   border: none;
   background: #fff;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* DAYS */
@@ -85,7 +96,7 @@ body{
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 700;
+  font-weight: 800;
   min-width: 88px;
 }
 
@@ -95,20 +106,121 @@ body{
 
 /* INPUT PILL */
 .priceInput{
-  width: 86px;
-  height: 44px;
+  width: 92px;
+  height: 46px;
   border-radius: 999px;
   border: none;
   text-align: center;
   font-size: 18px;
+  font-weight: 700;
   background: var(--pill);
   outline: none;
-  transition: box-shadow .2s ease, transform .1s ease;
+  transition: box-shadow .18s ease, transform .12s ease;
 }
 
 .priceInput:focus{
-  box-shadow: 0 0 0 3px rgba(255,255,255,.6);
-  transform: scale(1.04);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.65);
+  transform: scale(1.03);
+}
+
+/* HISTORY */
+.historyWrap{
+  margin-top: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.historyCard{
+  background: linear-gradient(180deg, var(--tan), var(--tan2));
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.historyTitle{
+  margin: 0 0 6px;
+  font-size: 28px;
+}
+
+.historySubtitle{
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.historyHint{
+  margin: 0 0 12px;
+  opacity: .9;
+  font-weight: 600;
+}
+
+.historyActions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.chipBtn{
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.7);
+  font-weight: 700;
+}
+
+.fileBtn input{
+  display: none;
+}
+
+.historySmall{
+  margin: 0;
+  font-weight: 700;
+  opacity: .9;
+}
+
+.historyList{
+  display: grid;
+  gap: 10px;
+}
+
+.weekRow{
+  background: rgba(255,255,255,.2);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.weekRowTop{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.weekLabel{
+  font-weight: 800;
+}
+
+.weekBtns{
+  display: flex;
+  gap: 8px;
+}
+
+.smallBtn{
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.75);
+  font-weight: 800;
+}
+
+.weekDetails{
+  margin-top: 10px;
+  display: none;
+  font-weight: 700;
+}
+
+.weekRow.expanded .weekDetails{
+  display: block;
 }
 
 /* BOTTOM NAV */
@@ -133,7 +245,14 @@ body{
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  font-weight: 600;
+  font-weight: 800;
+  color: #222;
+  padding: 10px 14px;
+  border-radius: 16px;
+}
+
+.navBtn.active{
+  color: #1c73ff;
 }
 
 .navIcon{

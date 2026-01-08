@@ -140,7 +140,21 @@
 
             <div class="chartCard">
               <canvas id="chartCanvas" width="640" height="220" aria-label="Price chart"></canvas>
-              <div class="chartCaption">Left to right, Mon AM to Sat PM</div>
+              <div class="chartMeta">
+  <div class="chartMarkers" aria-hidden="true">
+    <span>Mon AM</span><span>Mon PM</span>
+    <span>Tue AM</span><span>Tue PM</span>
+    <span>Wed AM</span><span>Wed PM</span>
+    <span>Thu AM</span><span>Thu PM</span>
+    <span>Fri AM</span><span>Fri PM</span>
+    <span>Sat AM</span><span>Sat PM</span>
+  </div>
+
+  <div class="chartCaption">
+    <div class="chartCaptionMain">Your bell trail this week, Monday morning through Saturday night.</div>
+    <div class="chartCaptionSub">More entries help the forecast feel a lot smarter.</div>
+  </div>
+</div>
             </div>
 
             <div id="predictStats" class="predictStats"></div>

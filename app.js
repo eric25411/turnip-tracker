@@ -1,6 +1,8 @@
 (function () {
   const toast = document.getElementById("toast");
+
   const saveWeekBtn = document.getElementById("saveWeekBtn");
+  const newWeekBtn = document.getElementById("newWeekBtn");
 
   const predictBtn = document.getElementById("predictBtn");
   const historyBtn = document.getElementById("historyBtn");
@@ -14,6 +16,7 @@
   const buyInput = document.getElementById("buy-price");
 
   const inputs = Array.from(document.querySelectorAll(".priceInput"));
+  const satPmInput = document.getElementById("sat-pm");
 
   function showToast(msg) {
     if (!toast) return;
@@ -40,7 +43,7 @@
     return `${dayMap[d] || d} ${timeMap[t] || t}`;
   }
 
-  function findBestSoFarFromInputs() {
+  function findBestFromInputs() {
     let best = { id: null, value: -1 };
     inputs.forEach((el) => {
       const v = Number(el.value || 0);
@@ -52,7 +55,7 @@
   function updatePrediction() {
     if (!predictText) return;
 
-    const best = findBestSoFarFromInputs();
+    const best = findBestFromInputs();
     const buy = buyInput ? Number(buyInput.value || 0) : 0;
 
     if (!best) {
@@ -94,7 +97,24 @@
     updatePrediction();
   }
 
-  function saveWeekToHistory() {
+  function clearCurrentWeek() {
+    if (buyInput) {
+      buyInput.value = "";
+      localStorage.removeItem(keyFor("buy-price"));
+    }
+
+    inputs.forEach((el) => {
+      el.value = "";
+      localStorage.removeItem(keyFor(el.id));
+    });
+
+    // also clear autosave marker
+    localStorage.removeItem("tt_autosaved_this_week");
+
+    updatePrediction();
+  }
+
+  function saveWeekToHistory(auto) {
     const week = {
       savedAt: new Date().toISOString(),
       buy: buyInput ? Number(buyInput.value || 0) : 0,
@@ -109,7 +129,7 @@
     history.unshift(week);
     localStorage.setItem("tt_history", JSON.stringify(history));
 
-    showToast("Saved to History");
+    showToast(auto ? "Week auto saved" : "Saved to History");
     renderHistory();
   }
 
@@ -140,7 +160,7 @@
       historyList.innerHTML = `
         <div class="weekCard">
           <div class="weekTitle">No saved weeks yet</div>
-          <div class="weekMeta">Hit “Save week to History” on the home screen.</div>
+          <div class="weekMeta">Fill the week, then it auto saves on Saturday PM, or hit Save week.</div>
         </div>
       `;
       return;
@@ -196,7 +216,6 @@
       `;
     }).join("");
 
-    // Expand/collapse
     historyList.querySelectorAll(".weekCard").forEach((card) => {
       const btn = card.querySelector(".weekExpandBtn");
       btn.addEventListener("click", () => {
@@ -221,6 +240,23 @@
         updatePrediction();
       });
     });
+
+    // Auto-save when Saturday PM is entered (only once per week)
+    if (satPmInput) {
+      satPmInput.addEventListener("input", () => {
+        const v = Number(satPmInput.value || 0);
+        if (v <= 0) return;
+
+        const already = localStorage.getItem("tt_autosaved_this_week");
+        if (already === "yes") return;
+
+        localStorage.setItem("tt_autosaved_this_week", "yes");
+        saveWeekToHistory(true);
+
+        // Start fresh for the next week
+        clearCurrentWeek();
+      });
+    }
   }
 
   function showView(which) {
@@ -252,8 +288,16 @@
     }
   }
 
-  // Save week
-  if (saveWeekBtn) saveWeekBtn.addEventListener("click", saveWeekToHistory);
+  // Manual save
+  if (saveWeekBtn) saveWeekBtn.addEventListener("click", () => saveWeekToHistory(false));
+
+  // Manual new week
+  if (newWeekBtn) {
+    newWeekBtn.addEventListener("click", () => {
+      clearCurrentWeek();
+      showToast("New week started");
+    });
+  }
 
   // Home button in history
   if (historyHomeBtn) {
@@ -262,7 +306,6 @@
     });
   }
 
-  // Routing
   window.addEventListener("hashchange", handleRoute);
 
   wireInputs();

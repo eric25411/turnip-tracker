@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const KEYS = {
-    weeks: "turnipTracker_weeks_v1",
-    current: "turnipTracker_current_v1"
+    weeks: "turnipTracker_weeks_v2",
+    current: "turnipTracker_current_v2"
   };
 
   // Views
@@ -25,15 +25,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const importFile = document.getElementById("importFile");
 
   // Predictor UI
-  const chartCanvas = document.getElementById("chartCanvas");
-  const buyPriceEl = document.getElementById("buyPrice");
-  const bestSoFarEl = document.getElementById("bestSoFar");
-  const bestTimeEl = document.getElementById("bestTime");
-  const profitVsBuyEl = document.getElementById("profitVsBuy");
-  const patternTypeEl = document.getElementById("patternType");
-  const patternNoteEl = document.getElementById("patternNote");
+  const canvas = document.getElementById("chartCanvas");
+  const buyPriceEl = document.getElementById("buyPriceVal");
+  const bestSoFarEl = document.getElementById("bestSoFarVal");
+  const bestTimeEl = document.getElementById("bestTimeVal");
+  const profitVsBuyEl = document.getElementById("profitVsBuyVal");
+  const patternTypeEl = document.getElementById("patternTypeVal");
+  const patternNoteEl = document.getElementById("patternNoteVal");
+  const forecastWindowEl = document.getElementById("forecastWindowVal");
+  const forecastConfEl = document.getElementById("forecastConfVal");
+  const watchNextEl = document.getElementById("watchNextVal");
+  const rangeEl = document.getElementById("rangeVal");
 
   const IDS = [
+    "buy-price",
+    "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
+    "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
+  ];
+
+  const WEEK_IDS = [
     "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
     "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
   ];
@@ -43,7 +53,12 @@ document.addEventListener("DOMContentLoaded", () => {
     "Thu AM","Thu PM","Fri AM","Fri PM","Sat AM","Sat PM"
   ];
 
-  function setActiveTab(tab) {
+  // Guard
+  if (!entryView || !predictView || !historyView) return;
+  if (!navEntry || !navPredict || !navHistory) return;
+  if (!saveWeekBtn) return;
+
+  function setActiveTab(tab){
     const isEntry = tab === "entry";
     const isPredict = tab === "predict";
     const isHistory = tab === "history";
@@ -56,8 +71,8 @@ document.addEventListener("DOMContentLoaded", () => {
     navPredict.classList.toggle("active", isPredict);
     navHistory.classList.toggle("active", isHistory);
 
-    if (isHistory) renderHistory();
     if (isPredict) renderPredictor();
+    if (isHistory) renderHistory();
   }
 
   navEntry.addEventListener("click", () => setActiveTab("entry"));
@@ -91,7 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function clearWeek(){
-    document.querySelectorAll(".priceInput").forEach(i => i.value = "");
+    IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
     localStorage.removeItem(KEYS.current);
   }
 
@@ -100,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadCurrentDraft(){
-    try {
+    try{
       const raw = localStorage.getItem(KEYS.current);
       if (!raw) return;
       loadWeekData(JSON.parse(raw));
@@ -110,7 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".priceInput").forEach(inp => {
     inp.addEventListener("input", () => {
       saveCurrentDraft();
-      // keep predictor fresh if user is already on it
       if (!predictView.classList.contains("hidden")) renderPredictor();
     });
   });
@@ -131,6 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function renderHistory(){
+    if (!historyList || !historyEmptyNote) return;
+
     const weeks = getWeeks();
     historyList.innerHTML = "";
     historyEmptyNote.style.display = weeks.length ? "none" : "block";
@@ -151,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const toggleBtn = document.createElement("button");
       toggleBtn.className = "smallBtn";
+      toggleBtn.type = "button";
       toggleBtn.textContent = "Expand";
       toggleBtn.addEventListener("click", () => {
         const expanded = row.classList.toggle("expanded");
@@ -159,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const loadBtn = document.createElement("button");
       loadBtn.className = "smallBtn";
+      loadBtn.type = "button";
       loadBtn.textContent = "Load";
       loadBtn.addEventListener("click", () => {
         loadWeekData(w.data);
@@ -168,6 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const delBtn = document.createElement("button");
       delBtn.className = "smallBtn";
+      delBtn.type = "button";
       delBtn.textContent = "Delete";
       delBtn.addEventListener("click", () => {
         const next = getWeeks().filter(x => x.id !== w.id);
@@ -192,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (exportBtn) {
+  if (exportBtn){
     exportBtn.addEventListener("click", () => {
       const payload = { exportedAt: new Date().toISOString(), weeks: getWeeks() };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -209,12 +231,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (importFile) {
+  if (importFile){
     importFile.addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
-      try {
+      try{
         const text = await file.text();
         const parsed = JSON.parse(text);
         const weeks = Array.isArray(parsed.weeks) ? parsed.weeks : [];
@@ -233,9 +255,170 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function parseVals(){
+    const data = getCurrentWeekData();
+
+    const buyRaw = (data["buy-price"] || "").trim();
+    const buyNum = Number(buyRaw);
+    const buy = Number.isFinite(buyNum) ? buyNum : null;
+
+    const weekVals = WEEK_IDS.map(id => {
+      const raw = (data[id] || "").trim();
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    });
+
+    return { buy, weekVals };
+  }
+
+  function renderPredictor(){
+    if (!canvas) return;
+
+    const { buy, weekVals } = parseVals();
+
+    const best = weekVals.reduce((m,v) => (v !== null && (m === null || v > m) ? v : m), null);
+    let bestIdx = -1;
+    weekVals.forEach((v,i) => { if (best !== null && v === best && bestIdx === -1) bestIdx = i; });
+    const bestLabel = bestIdx >= 0 ? LABELS[bestIdx] : "-";
+
+    if (buyPriceEl) buyPriceEl.textContent = buy === null ? "-" : String(buy);
+    if (bestSoFarEl) bestSoFarEl.textContent = best === null ? "-" : String(best);
+    if (bestTimeEl) bestTimeEl.textContent = best === null ? "-" : bestLabel;
+
+    if (profitVsBuyEl){
+      if (buy !== null && best !== null){
+        const diff = best - buy;
+        profitVsBuyEl.textContent = diff >= 0 ? `+${diff}` : `${diff}`;
+      } else {
+        profitVsBuyEl.textContent = "-";
+      }
+    }
+
+    const knownCount = weekVals.filter(v => v !== null).length;
+
+    if (knownCount < 4){
+      if (patternTypeEl) patternTypeEl.textContent = "-";
+      if (patternNoteEl) patternNoteEl.textContent = "Add more prices this week, and save more weeks so pattern detection can learn.";
+      if (forecastWindowEl) forecastWindowEl.textContent = "-";
+      if (forecastConfEl) forecastConfEl.textContent = "-";
+      if (watchNextEl) watchNextEl.textContent = "-";
+      if (rangeEl) rangeEl.textContent = "-";
+    } else {
+      const first = weekVals.find(v => v !== null);
+      const last = [...weekVals].reverse().find(v => v !== null);
+
+      let pattern = "Mixed";
+      if (first !== null && last !== null && last > first) pattern = "Rising";
+      if (first !== null && last !== null && last < first) pattern = "Falling";
+      if (first !== null && last !== null && last === first) pattern = "Flat";
+
+      if (patternTypeEl) patternTypeEl.textContent = pattern;
+      if (patternNoteEl) patternNoteEl.textContent = "Early read only. More saved weeks will improve pattern detection.";
+
+      let window = "Wed AM to Thu PM";
+      let conf = 60;
+      let watch = "If it keeps dropping, sell the first time you see profit over buy.";
+      let minR = 90;
+      let maxR = 170;
+
+      if (first !== null && last !== null && last > first){
+        window = "Mon PM to Tue PM";
+        conf = 68;
+        watch = "Early pop vibes. If you see profit, consider taking it.";
+      }
+
+      if (first !== null && last !== null && last < first){
+        window = "Thu AM to Fri PM";
+        conf = 62;
+        watch = "Looks like a slower week. Watch mid to late week for a bounce.";
+      }
+
+      if (best !== null){
+        maxR = Math.max(best + 10, 160);
+        minR = Math.max(50, (buy !== null ? buy - 20 : 80));
+      }
+
+      if (forecastWindowEl) forecastWindowEl.textContent = window;
+      if (forecastConfEl) forecastConfEl.textContent = `${conf}%`;
+      if (watchNextEl) watchNextEl.textContent = watch;
+      if (rangeEl) rangeEl.textContent = `${minR} to ${maxR}`;
+    }
+
+    drawChart(weekVals);
+  }
+
+  function drawChart(vals){
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.clearRect(0,0,w,h);
+
+    // Grid
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    for (let i = 1; i <= 4; i++){
+      const y = (h * i) / 5;
+      ctx.beginPath();
+      ctx.moveTo(20, y);
+      ctx.lineTo(w - 20, y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    const known = vals.filter(v => v !== null);
+    const minV = known.length ? Math.min(...known) : 0;
+    const maxV = known.length ? Math.max(...known) : 100;
+
+    const pad = 20;
+    const xStep = (w - pad * 2) / (vals.length - 1 || 1);
+
+    const yFor = (v) => {
+      if (v === null) return null;
+      if (maxV === minV) return h / 2;
+      const t = (v - minV) / (maxV - minV);
+      return (h - pad) - t * (h - pad * 2);
+    };
+
+    // Line
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.beginPath();
+    let started = false;
+    vals.forEach((v, i) => {
+      const y = yFor(v);
+      if (y === null) return;
+      const x = pad + i * xStep;
+      if (!started){
+        ctx.moveTo(x, y);
+        started = true;
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+
+    // Points
+    ctx.fillStyle = "#111";
+    vals.forEach((v, i) => {
+      const y = yFor(v);
+      if (y === null) return;
+      const x = pad + i * xStep;
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
   function summarizeWeek(data){
     const get = (k) => (data && data[k] ? data[k] : "-");
+    const buy = get("buy-price");
     return [
+      `Buy ${buy}`,
       `Mon AM ${get("mon-am")}, Mon PM ${get("mon-pm")}`,
       `Tue AM ${get("tue-am")}, Tue PM ${get("tue-pm")}`,
       `Wed AM ${get("wed-am")}, Wed PM ${get("wed-pm")}`,
@@ -248,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function formatWeekLabel(iso){
     try{
       const d = new Date(iso);
-      return `Saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
+      return `Saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}`;
     } catch {
       return "Saved week";
     }
@@ -257,112 +440,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function cryptoRandomId(){
     const rnd = Math.random().toString(16).slice(2);
     return `w_${Date.now()}_${rnd}`;
-  }
-
-  // Predictor basics
-  function parseVals(){
-    const data = getCurrentWeekData();
-    return IDS.map(id => {
-      const raw = data[id];
-      const n = Number(raw);
-      return Number.isFinite(n) ? n : null;
-    });
-  }
-
-  function renderPredictor(){
-    const vals = parseVals();
-
-    // buy price guess
-    const buy = vals[0] ?? vals.find(v => v !== null) ?? null;
-
-    const best = vals.reduce((m,v) => (v !== null && (m === null || v > m) ? v : m), null);
-    let bestIdx = -1;
-    vals.forEach((v,i) => { if (best !== null && v === best && bestIdx === -1) bestIdx = i; });
-
-    const bestLabel = bestIdx >= 0 ? LABELS[bestIdx] : "-";
-
-    buyPriceEl.textContent = buy === null ? "-" : String(buy);
-    bestSoFarEl.textContent = best === null ? "-" : String(best);
-    bestTimeEl.textContent = best === null ? "-" : bestLabel;
-
-    if (buy !== null && best !== null) {
-      const diff = best - buy;
-      profitVsBuyEl.textContent = (diff >= 0 ? `+${diff}` : `${diff}`);
-    } else {
-      profitVsBuyEl.textContent = "-";
-    }
-
-    // very light pattern placeholder
-    const knownCount = vals.filter(v => v !== null).length;
-    if (knownCount < 4) {
-      patternTypeEl.textContent = "-";
-      patternNoteEl.textContent = "Add more prices this week, and save more weeks so pattern detection can learn.";
-    } else {
-      // basic slope check
-      const first = vals.find(v => v !== null);
-      const last = [...vals].reverse().find(v => v !== null);
-      if (first !== null && last !== null && last > first) patternTypeEl.textContent = "Rising";
-      else if (first !== null && last !== null && last < first) patternTypeEl.textContent = "Falling";
-      else patternTypeEl.textContent = "Flat";
-      patternNoteEl.textContent = "Early read only. More saved weeks will improve pattern detection.";
-    }
-
-    drawChart(vals);
-  }
-
-  function drawChart(vals){
-    if (!chartCanvas) return;
-
-    const ctx = chartCanvas.getContext("2d");
-    const w = chartCanvas.width;
-    const h = chartCanvas.height;
-
-    ctx.clearRect(0,0,w,h);
-
-    // plot area padding inside the AC frame
-    const padL = 70, padR = 40, padT = 38, padB = 48;
-    const pw = w - padL - padR;
-    const ph = h - padT - padB;
-
-    const points = vals
-      .map((v,i) => (v === null ? null : { x: padL + (pw * (i/(vals.length-1))), yVal: v }))
-      .filter(Boolean);
-
-    if (!points.length) return;
-
-    const minV = Math.min(...points.map(p => p.yVal));
-    const maxV = Math.max(...points.map(p => p.yVal));
-    const range = Math.max(1, maxV - minV);
-
-    function yFor(v){
-      const t = (v - minV) / range;
-      return padT + (ph * (1 - t));
-    }
-
-    // line style
-    ctx.lineWidth = 6;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "rgba(30,30,30,.85)";
-
-    ctx.beginPath();
-    points.forEach((p, idx) => {
-      const x = p.x;
-      const y = yFor(p.yVal);
-      if (idx === 0) ctx.moveTo(x,y);
-      else ctx.lineTo(x,y);
-    });
-    ctx.stroke();
-
-    // dots
-    ctx.fillStyle = "rgba(30,30,30,.85)";
-    points.forEach(p => {
-      const x = p.x;
-      const y = yFor(p.yVal);
-      ctx.beginPath();
-      ctx.arc(x,y,8,0,Math.PI*2);
-      ctx.fill();
-    });
   }
 
   // Boot

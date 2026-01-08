@@ -4,27 +4,22 @@ document.addEventListener("DOMContentLoaded", () => {
     current: "turnipTracker_current_v2"
   };
 
-  // Views
   const entryView = document.getElementById("entryView");
   const predictView = document.getElementById("predictView");
   const historyView = document.getElementById("historyView");
 
-  // Bottom nav
   const navEntry = document.getElementById("navEntry");
   const navPredict = document.getElementById("navPredict");
   const navHistory = document.getElementById("navHistory");
 
-  // Entry inputs
   const buyInput = document.getElementById("buy-price");
   const saveWeekBtn = document.getElementById("saveWeekBtn");
 
-  // History UI
   const historyList = document.getElementById("historyList");
   const historyEmptyNote = document.getElementById("historyEmptyNote");
   const exportBtn = document.getElementById("exportBtn");
   const importFile = document.getElementById("importFile");
 
-  // Predict UI
   const chartCanvas = document.getElementById("chartCanvas");
   const predictStats = document.getElementById("predictStats");
 
@@ -33,34 +28,14 @@ document.addEventListener("DOMContentLoaded", () => {
     "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
   ];
 
-  const SLOT_LABELS = [
-    "Mon AM","Mon PM","Tue AM","Tue PM","Wed AM","Wed PM",
-    "Thu AM","Thu PM","Fri AM","Fri PM","Sat AM","Sat PM"
-  ];
+  const DAY_NAMES = ["Mon","Tue","Wed","Thu","Fri","Sat"];
 
-  // --- Safety checks
-  if (!entryView || !predictView || !historyView) {
-    console.log("Missing one of the views in HTML.");
-    return;
-  }
-  if (!navEntry || !navPredict || !navHistory) {
-    console.log("Missing bottom nav buttons. Check ids navEntry/navPredict/navHistory.");
-    return;
-  }
-  if (!buyInput || !saveWeekBtn) {
-    console.log("Missing buy-price input or saveWeekBtn.");
-    return;
-  }
-  if (!historyList || !historyEmptyNote) {
-    console.log("Missing historyList or historyEmptyNote.");
-    return;
-  }
-  if (!chartCanvas || !predictStats) {
-    console.log("Missing chartCanvas or predictStats.");
-    return;
-  }
+  if (!entryView || !predictView || !historyView) return;
+  if (!navEntry || !navPredict || !navHistory) return;
+  if (!buyInput || !saveWeekBtn) return;
+  if (!historyList || !historyEmptyNote) return;
+  if (!chartCanvas || !predictStats) return;
 
-  // --- Tab navigation
   function setActiveTab(tab){
     const isEntry = tab === "entry";
     const isPredict = tab === "predict";
@@ -82,11 +57,11 @@ document.addEventListener("DOMContentLoaded", () => {
   navPredict.addEventListener("click", () => setActiveTab("predict"));
   navHistory.addEventListener("click", () => setActiveTab("history"));
 
-  // --- Storage helpers
   function getWeeks(){
     try { return JSON.parse(localStorage.getItem(KEYS.weeks) || "[]"); }
     catch { return []; }
   }
+
   function setWeeks(weeks){
     localStorage.setItem(KEYS.weeks, JSON.stringify(weeks));
   }
@@ -95,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try { return JSON.parse(localStorage.getItem(KEYS.current) || "{}"); }
     catch { return {}; }
   }
+
   function setCurrentDraft(draft){
     localStorage.setItem(KEYS.current, JSON.stringify(draft));
   }
@@ -136,13 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setCurrentDraft(readEntryData());
   }
 
-  // Auto-save on input
   buyInput.addEventListener("input", saveDraftNow);
   document.querySelectorAll(".priceInput").forEach(inp => {
     inp.addEventListener("input", saveDraftNow);
   });
 
-  // Save week
   saveWeekBtn.addEventListener("click", () => {
     const draft = readEntryData();
 
@@ -161,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveTab("history");
   });
 
-  // --- History
   function renderHistory(){
     const weeks = getWeeks();
     historyList.innerHTML = "";
@@ -229,11 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {
-      const payload = {
-        exportedAt: new Date().toISOString(),
-        weeks: getWeeks()
-      };
-
+      const payload = { exportedAt: new Date().toISOString(), weeks: getWeeks() };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
 
@@ -262,7 +231,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         weeks.forEach(w => {
           if (w && w.id && (w.prices || w.data)) {
-            // allow older format field "data"
             const normalized = {
               id: w.id,
               savedAt: w.savedAt || new Date().toISOString(),
@@ -314,7 +282,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return `w_${Date.now()}_${rnd}`;
   }
 
-  // --- Predictor
   function renderPredictor(){
     const draft = readEntryData();
     const buy = toNum(draft.buyPrice);
@@ -323,12 +290,11 @@ document.addEventListener("DOMContentLoaded", () => {
     drawChart(values);
 
     const best = bestSoFar(values);
-    const bestLabel = best.index >= 0 ? SLOT_LABELS[best.index] : "-";
+    const bestLabel = best.index >= 0 ? slotLabel(best.index) : "-";
 
     const profit = (buy > 0 && best.value > 0) ? (best.value - buy) : null;
 
     const pattern = detectPattern(values);
-
     const forecast = forecastWindow(pattern);
 
     predictStats.innerHTML = "";
@@ -350,6 +316,12 @@ document.addEventListener("DOMContentLoaded", () => {
     watch.className = "noteBox";
     watch.textContent = forecast.watch;
     predictStats.appendChild(watch);
+  }
+
+  function slotLabel(i){
+    const day = DAY_NAMES[Math.floor(i / 2)] || "";
+    const half = (i % 2 === 0) ? "AM" : "PM";
+    return `${day} ${half}`;
   }
 
   function statRow(k, v){
@@ -387,17 +359,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return n > 0 ? `+${n}` : `${n}`;
   }
 
-  // Simple cozy pattern detector (v1)
   function detectPattern(values){
     const known = values.filter(v => v > 0);
     if (known.length < 3){
-      return {
-        name: "Mixed",
-        note: "Not enough notes yet. Add a few prices and the guess gets smarter."
-      };
+      return { name: "Mixed", note: "Not enough notes yet. Add a few prices and the guess gets smarter." };
     }
 
-    // rough slope checks
     let drops = 0;
     let rises = 0;
     for (let i=1; i<values.length; i++){
@@ -409,144 +376,136 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (drops >= rises + 2){
-      return {
-        name: "Decreasing",
-        note: "Looks like a steady slide. If you see a profit moment, do not overthink it."
-      };
+      return { name: "Decreasing", note: "Looks like a steady slide. If you see a profit moment, do not overthink it." };
     }
 
     if (rises >= drops + 2){
-      return {
-        name: "Increasing",
-        note: "Nice upward vibe. Keep logging, mid to late week could get spicy."
-      };
+      return { name: "Increasing", note: "Nice upward vibe. Keep logging, mid to late week could get spicy." };
     }
 
-    return {
-      name: "Mixed",
-      note: "This week is bouncing around. More entries will make the call cleaner."
-    };
+    return { name: "Mixed", note: "This week is bouncing around. More entries will make the call cleaner." };
   }
 
   function forecastWindow(pattern){
     if (pattern.name === "Increasing"){
-      return {
-        window: "Wed PM to Sat PM",
-        confidence: "70%",
-        watch: "Keep an eye on late week, that is where the best bells usually show up."
-      };
+      return { window: "Wed PM to Sat PM", confidence: "70%", watch: "Keep an eye on late week, that is where the best bells usually show up." };
     }
     if (pattern.name === "Decreasing"){
-      return {
-        window: "Mon AM to Tue PM",
-        confidence: "65%",
-        watch: "If it keeps dropping, sell the first time you see profit over buy."
-      };
+      return { window: "Mon AM to Tue PM", confidence: "65%", watch: "If it keeps dropping, sell the first time you see profit over buy." };
     }
-    return {
-      window: "Tue PM to Fri PM",
-      confidence: "55%",
-      watch: "If you see a random jump, that might be your moment. Log each slot to tighten it up."
-    };
+    return { window: "Tue PM to Fri PM", confidence: "55%", watch: "If you see a random jump, that might be your moment. Log each slot to tighten it up." };
   }
 
-  // Chart drawing (cozy)
+  // Chart with bell dots + non scrolling day labels
   function drawChart(values){
     const ctx = chartCanvas.getContext("2d");
     const W = chartCanvas.width;
     const H = chartCanvas.height;
 
-    // clear
     ctx.clearRect(0,0,W,H);
 
     // background
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     roundRect(ctx, 0, 0, W, H, 20, true, false);
 
+    // plot area
+    const left = 34;
+    const right = W - 34;
+    const top = 22;
+    const bottom = H - 64; // leave room for day labels
+
     // grid
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
     ctx.lineWidth = 2;
     for (let i=1; i<=4; i++){
-      const y = (H/5)*i;
+      const y = top + ((bottom - top)/5)*i;
       ctx.beginPath();
-      ctx.moveTo(26, y);
-      ctx.lineTo(W-26, y);
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y);
       ctx.stroke();
     }
 
-    // watermark (bigger again)
+    // watermark (still bigger)
     const img = new Image();
     img.onload = () => {
-      const targetW = Math.min(W * 0.38, 300);
+      const targetW = Math.min(W * 0.40, 320);
       const ratio = img.height / img.width;
       const targetH = targetW * ratio;
 
       const x = (W - targetW) / 2;
-      const y = (H - targetH) / 2 - 8;
+      const y = (top + bottom - targetH) / 2 - 6;
 
       ctx.globalAlpha = 0.22;
       ctx.drawImage(img, x, y, targetW, targetH);
       ctx.globalAlpha = 1;
 
-      // after watermark, draw data
-      drawLine(values);
+      drawLineAndBells();
+      drawDayLabels();
     };
     img.onerror = () => {
-      // still draw line if image missing
-      drawLine(values);
+      drawLineAndBells();
+      drawDayLabels();
     };
 
-    // IMPORTANT: this matches your renamed GitHub file
     img.src = "ac-chart.png.PNG";
 
-    function drawLine(vals){
-      const maxVal = Math.max(200, ...vals.filter(v => v>0), 1);
+    function drawLineAndBells(){
+      const maxVal = Math.max(200, ...values.filter(v => v>0), 1);
       const minVal = 0;
+      const stepX = (right - left) / (values.length - 1);
 
-      const left = 30;
-      const right = W - 30;
-      const top = 22;
-      const bottom = H - 22;
-
-      const stepX = (right - left) / (vals.length - 1);
-
-      // baseline dots and line
+      // line
       ctx.strokeStyle = "rgba(0,0,0,0.75)";
       ctx.lineWidth = 4;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      // path
       ctx.beginPath();
-      let started = false;
-
-      vals.forEach((v, i) => {
+      values.forEach((v, i) => {
         const x = left + stepX * i;
-        const y = v > 0
-          ? map(v, minVal, maxVal, bottom, top)
-          : bottom;
-
-        if (!started){
-          ctx.moveTo(x,y);
-          started = true;
-        } else {
-          ctx.lineTo(x,y);
-        }
+        const y = v > 0 ? map(v, minVal, maxVal, bottom, top) : bottom;
+        if (i === 0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
       });
       ctx.stroke();
 
-      // dots
-      ctx.fillStyle = "rgba(0,0,0,0.85)";
-      vals.forEach((v, i) => {
-        const x = left + stepX * i;
-        const y = v > 0
-          ? map(v, minVal, maxVal, bottom, top)
-          : bottom;
+      // bell dots
+      ctx.font = "22px system-ui, Apple Color Emoji, Segoe UI Emoji";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
-        ctx.beginPath();
-        ctx.arc(x, y, 7, 0, Math.PI*2);
-        ctx.fill();
+      values.forEach((v, i) => {
+        const x = left + stepX * i;
+        const y = v > 0 ? map(v, minVal, maxVal, bottom, top) : bottom;
+
+        // little shadow so bells pop on light bg
+        ctx.globalAlpha = 0.22;
+        ctx.fillText("🔔", x + 1, y + 2);
+        ctx.globalAlpha = 1;
+
+        ctx.fillText("🔔", x, y);
       });
+    }
+
+    function drawDayLabels(){
+      // 6 labels centered between each AM/PM pair
+      ctx.fillStyle = "rgba(0,0,0,0.70)";
+      ctx.font = "16px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+
+      const stepX = (right - left) / (values.length - 1);
+      const labelY = H - 26;
+
+      for (let d=0; d<6; d++){
+        const iAM = d * 2;
+        const iPM = d * 2 + 1;
+        const xAM = left + stepX * iAM;
+        const xPM = left + stepX * iPM;
+        const xMid = (xAM + xPM) / 2;
+
+        ctx.fillText(DAY_NAMES[d], xMid, labelY);
+      }
     }
 
     function map(v, inMin, inMax, outMin, outMax){
@@ -572,7 +531,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Boot
+  // Boot
   loadEntryData(getCurrentDraft());
   setActiveTab("entry");
 });

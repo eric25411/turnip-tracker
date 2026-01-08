@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Inputs
   const buyInput = document.getElementById("buy-price");
+  const buyHintEl = document.getElementById("buyHint");
   const priceInputs = Array.from(document.querySelectorAll(".priceInput"));
 
   // History UI
@@ -166,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadBtn.className = "smallBtn";
       loadBtn.textContent = "Load";
       loadBtn.addEventListener("click", () => {
-        loadWeekData(w.data);
+        loadWeekData(normalizeWeekData(w.data));
         saveCurrentDraft();
         setActiveTab("entry");
       });
@@ -214,28 +215,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (importFile){
-    importFile.addEventListener("change", async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      try{
-        const text = await file.text();
-        const parsed = JSON.parse(text);
-        const weeks = Array.isArray(parsed.weeks) ? parsed.weeks : [];
-
-        const existing = getWeeks told();
-      } catch {}
-
-      e.target.value = "";
-    });
-  }
-
-  // Fix: do not crash if someone imports older format
   function normalizeWeekData(d){
     if (!d) return { buy:"", slots:{} };
     if (d.slots) return { buy: d.buy || "", slots: d.slots || {} };
-    // older format, flat ids
+
     const slots = {};
     SLOT_IDS.forEach(id => { slots[id] = (d[id] || "").toString(); });
     return { buy: d["buy-price"] || d.buy || "", slots };
@@ -283,7 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const series = SLOT_IDS.map((id) => toNumber(current.slots[id]));
     const buy = toNumber(current.buy);
 
-    // Stats
     statBuy.textContent = isFinite(buy) ? String(buy) : "-";
 
     let bestVal = -Infinity;
@@ -320,12 +302,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ctx.clearRect(0,0,w,h);
 
-    // Soft background
     roundRect(ctx, 0, 0, w, h, 18);
     ctx.fillStyle = "rgba(255,255,255,0.65)";
     ctx.fill();
 
-    // Guide lines
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
     ctx.lineWidth = 1;
     for (let i=1;i<=4;i++){
@@ -336,7 +316,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
 
-    // Watermark (turnip emoji)
     ctx.save();
     ctx.globalAlpha = 0.10;
     ctx.font = "140px system-ui";
@@ -348,7 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const top = 18;
     const bottom = h - 46;
 
-    // Scale
     const vals = series.filter(v => isFinite(v));
     const minV = vals.length ? Math.min(...vals) : 0;
     const maxV = vals.length ? Math.max(...vals) : 100;
@@ -364,7 +342,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return bottom - t * (bottom - top);
     }
 
-    // Line
     ctx.strokeStyle = "rgba(0,0,0,0.65)";
     ctx.lineWidth = 4;
     ctx.lineCap = "round";
@@ -385,29 +362,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     if (started) ctx.stroke();
 
-    // Bells as points
     series.forEach((v, i) => {
       const x = left + i * xStep;
       const isAM = (i % 2 === 0);
       const bell = isAM ? "🔔" : "🛎️";
-
       const y = isFinite(v) ? yOf(v) : bottom;
+
       ctx.font = "22px system-ui";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(bell, x, y);
     });
 
-    // Day labels (Mon..Sat) under chart, no scrolling row
     const dayLabels = ["Mon","Tue","Wed","Thu","Fri","Sat"];
     ctx.fillStyle = "rgba(0,0,0,0.60)";
     ctx.font = "14px system-ui";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
 
-    // Place labels under the AM slot of each day
     for (let d=0; d<6; d++){
-      const idx = d*2; // AM index
+      const idx = d*2;
       const x = left + idx * xStep;
       ctx.fillText(dayLabels[d], x, bottom + 16);
     }
@@ -415,16 +389,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function detectPattern(series){
     const vals = series.map(v => (isFinite(v) ? v : null));
-
     const filled = vals.filter(v => v !== null);
+
     if (filled.length < 3){
       return { name: "Mixed", note: "Log a few more entries, and it’ll feel smarter." };
     }
-
-    // Simple vibe friendly heuristics
-    const first = filled[0];
-    const last = filled[filled.length - 1];
-    const trend = last - first;
 
     let drops = 0, rises = 0;
     for (let i=1;i<vals.length;i++){
@@ -439,9 +408,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (rises >= drops + 3){
       return { name: "Increasing", note: "It’s feeling upward. Keep logging, you might catch a sweet peak." };
     }
-    if (Math.abs(trend) <= 6){
-      return { name: "Bouncy", note: "A cozy little bounce. Watch for sudden spikes." };
-    }
+
     return { name: "Mixed", note: "A bit of everything. More entries will sharpen the call." };
   }
 
@@ -493,7 +460,42 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.closePath();
   }
 
+  // Sunday date caption (uses phone locale)
+  function getMostRecentSunday(now){
+    const d = new Date(now);
+    d.setHours(0,0,0,0);
+    const day = d.getDay(); // 0 = Sunday
+    d.setDate(d.getDate() - day);
+    return d;
+  }
+
+  function updateBuyHint(){
+    if (!buyHintEl) return;
+    const sunday = getMostRecentSunday(new Date());
+    const formatted = new Intl.DateTimeFormat(undefined, {
+      weekday: "long",
+      month: "short",
+      day: "numeric"
+    }).format(sunday);
+
+    buyHintEl.textContent = `${formatted}.`;
+  }
+
+  function startSundayRefresh(){
+    updateBuyHint();
+
+    let lastKey = new Date().toDateString();
+    setInterval(() => {
+      const nowKey = new Date().toDateString();
+      if (nowKey !== lastKey){
+        lastKey = nowKey;
+        updateBuyHint();
+      }
+    }, 60 * 1000);
+  }
+
   // Boot
   loadCurrentDraft();
+  startSundayRefresh();
   setActiveTab("entry");
 });

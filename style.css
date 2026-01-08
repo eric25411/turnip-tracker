@@ -235,3 +235,51 @@ body{
 
 .navIcon{ font-size: 24px !important; }
 .navText{ font-size: 20px !important; }
+/* ===== HOTFIX v13 ===== */
+
+.dayTitle{
+  hyphens: none !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  white-space: nowrap !important;
+  font-size: 34px !important;
+}
+
+.row{
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.priceInput{
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  padding: 0 16px !important;
+  border-radius: 22px !important;
+  background: rgba(255,255,255,0.78) !important;
+  border: 2px solid rgba(255,255,255,0.85) !important;
+  color: #1f1f1f !important;
+  text-align: center !important;
+}
+
+.priceInput::placeholder{
+  color: rgba(0,0,0,0.45) !important;
+}
+
+.app{
+  padding-bottom: 160px !important;
+}
+
+.bottomNav{
+  height: 86px !important;
+}
+
+.bottomNav::before{
+  height: 70px !important;
+  border-radius: 22px !important;
+}
+
+.navBtn{
+  padding: 10px 14px !important;
+}

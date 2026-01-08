@@ -27,6 +27,9 @@ body{
   padding: 18px;
 }
 
+/* View switching */
+.viewHidden{ display: none; }
+
 /* HEADER */
 .headerCard{
   background: rgba(255,255,255,0.65);
@@ -63,10 +66,7 @@ body{
   color: #2b6fff;
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
-
-.saveWeekBtn:active{
-  transform: scale(0.98);
-}
+.saveWeekBtn:active{ transform: scale(0.98); }
 
 /* BUY ROW */
 .buyRow{
@@ -95,7 +95,6 @@ body{
   font-weight: 800;
   background: rgba(255,255,255,0.72);
 }
-
 .buyInput:focus{
   outline: none;
   background: white;
@@ -142,22 +141,14 @@ body{
   margin: 0 auto;
 }
 
-/* 🔧 FIXED STICKY HEADER */
+/* Sticky day header, stop before bottom nav */
 .dayHeader{
   position: sticky;
   top: 10px;
-
-  /* THIS is the key fix */
   bottom: calc(var(--bottomNavH) + 12px);
-
   z-index: 2;
-
   padding: 6px 0 12px;
-  background: linear-gradient(
-    180deg,
-    rgba(234,192,156,0.98),
-    rgba(234,192,156,0.6)
-  );
+  background: linear-gradient(180deg, rgba(234,192,156,0.98), rgba(234,192,156,0.6));
   backdrop-filter: blur(6px);
   border-radius: 18px;
 }
@@ -197,9 +188,7 @@ body{
   text-align: center;
 }
 
-.ampm{
-  width: 40px;
-}
+.ampm{ width: 40px; }
 
 /* INPUT PILL */
 .priceInput{
@@ -215,9 +204,7 @@ body{
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
-.priceInput::placeholder{
-  color: rgba(0,0,0,0.35);
-}
+.priceInput::placeholder{ color: rgba(0,0,0,0.35); }
 
 .priceInput:focus{
   outline: none;
@@ -226,7 +213,119 @@ body{
   box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
 }
 
-/* BOTTOM NAV (ALWAYS ON TOP) */
+/* HISTORY VIEW */
+.historyHeader{
+  background: rgba(255,255,255,0.65);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.historyTitleRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.historyTitle{
+  font-weight: 900;
+  font-size: 22px;
+}
+
+.historySub{
+  margin-top: 8px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.historyHomeBtn{
+  border: none;
+  background: rgba(255,255,255,0.9);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+.historyList{
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+/* Week item */
+.weekCard{
+  background: rgba(255,255,255,0.65);
+  border-radius: 22px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
+}
+
+.weekTop{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weekTitle{
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.weekMeta{
+  font-weight: 800;
+  opacity: 0.8;
+  font-size: 14px;
+  text-align: right;
+}
+
+.weekExpandBtn{
+  margin-top: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  padding: 10px 12px;
+  font-weight: 900;
+  background: rgba(255,255,255,0.85);
+}
+
+.weekDetails{
+  margin-top: 12px;
+  display: none;
+  gap: 10px;
+}
+
+.weekCard.isOpen .weekDetails{
+  display: grid;
+}
+
+.miniGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.miniCell{
+  background: rgba(255,255,255,0.60);
+  border-radius: 16px;
+  padding: 10px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 800;
+}
+
+.miniLabel{
+  opacity: 0.85;
+}
+
+.miniVal{
+  font-weight: 900;
+}
+
+/* BOTTOM NAV */
 .bottomNav{
   position: fixed;
   left: 0;
@@ -237,8 +336,6 @@ body{
   backdrop-filter: blur(10px);
   padding-bottom: env(safe-area-inset-bottom);
   box-shadow: 0 -8px 20px rgba(0,0,0,0.15);
-
-  /* ensures nothing floats above it */
   z-index: 50;
 }
 
@@ -270,13 +367,8 @@ body{
   box-shadow: 0 6px 16px rgba(0,0,0,0.10);
 }
 
-.navIcon{
-  font-size: 22px;
-}
-
-.navText{
-  font-size: 16px;
-}
+.navIcon{ font-size: 22px; }
+.navText{ font-size: 16px; }
 
 /* TOAST */
 .toast{
@@ -291,6 +383,7 @@ body{
   font-weight: 700;
   opacity: 0;
   pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
 }
 
 .toast.show{

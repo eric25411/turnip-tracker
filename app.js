@@ -19,8 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveWeekBtn = document.getElementById("saveWeekBtn");
   const goHomeBtn = document.getElementById("goHomeBtn");
 
-  // Predictor UI
+  // Buy price (now on Entry)
   const buyPriceEl = document.getElementById("buyPrice");
+  const buyPriceReadout = document.getElementById("buyPriceReadout");
+
+  // Predictor UI
   const metricsEl = document.getElementById("metrics");
   const canvas = document.getElementById("chartCanvas");
   const ctx = canvas ? canvas.getContext("2d") : null;
@@ -31,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const exportBtn = document.getElementById("exportBtn");
   const importFile = document.getElementById("importFile");
 
-  // --- Helpers ---
   function setActiveTab(tab) {
     const isEntry = tab === "entry";
     const isPredictor = tab === "predict";
@@ -135,14 +137,14 @@ document.addEventListener("DOMContentLoaded", () => {
     ].join(" | ");
   }
 
-  // --- Entry autosave ---
+  // Auto save draft on input
   document.querySelectorAll(".priceInput").forEach((inp) => {
     if (inp && inp.id !== "buyPrice") {
       inp.addEventListener("input", saveCurrentDraft);
     }
   });
 
-  // Buy price autosave
+  // Buy price autosave (entry chip)
   if (buyPriceEl) {
     buyPriceEl.value = getBuyPrice();
     buyPriceEl.addEventListener("input", () => {
@@ -151,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Save week ---
+  // Save week
   if (saveWeekBtn) {
     saveWeekBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -172,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- History ---
+  // History
   function renderHistory() {
     const weeks = getWeeks();
     historyList.innerHTML = "";
@@ -208,10 +210,12 @@ document.addEventListener("DOMContentLoaded", () => {
       loadBtn.addEventListener("click", () => {
         loadWeekData(w.data);
         saveCurrentDraft();
+
         if (w.buyPrice != null && buyPriceEl) {
           buyPriceEl.value = w.buyPrice;
           setBuyPrice(w.buyPrice);
         }
+
         setActiveTab("entry");
       });
 
@@ -300,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Predictor logic (simple for now, can get smarter) ---
+  // Predictor logic
   function parsePricesFromCurrent() {
     const ids = getWeekIds();
     const data = getCurrentWeekData();
@@ -332,7 +336,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const nums = prices.filter((p) => p != null);
     if (nums.length < 4) return { name: "-", note: "Save more weeks so pattern detection can learn your style." };
 
-    // very light heuristic: overall trend of first few points
     const first = nums[0], last = nums[nums.length - 1];
     if (last > first) return { name: "Uptrend", note: "Prices seem to be rising overall. Watch for a late-week peak." };
     if (last < first) return { name: "Downtrend", note: "Prices seem to be falling overall. If you see profit, consider selling sooner." };
@@ -340,22 +343,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function forecast(prices, buy) {
-    // simple: if already above buy, say sell on next drop. Otherwise suggest mid-week.
-    const nums = prices.map((p) => (p == null ? null : p));
-    const best = bestSoFar(nums);
-    const conf = Math.min(90, 40 + nums.filter(x => x != null).length * 4);
+    const best = bestSoFar(prices);
+    const conf = Math.min(90, 40 + prices.filter(x => x != null).length * 4);
 
     let window = "Mon AM to Tue PM";
     let watch = "If Wed keeps dropping, sell the first time you see profit over buy.";
+
     if (buy && best.best != null && best.best > buy) {
       window = "Now to next higher reading";
       watch = "You are already above buy at least once. If it drops twice in a row, sell the next spike.";
-    } else if (nums.filter(x=>x!=null).length >= 6) {
+    } else if (prices.filter(x=>x!=null).length >= 6) {
       window = "Wed AM to Thu PM";
       watch = "Mid-week is usually where peaks show up, keep watching especially Wed and Thu.";
     }
 
-    // expected range (very loose)
     const baseline = buy || (best.best || 100);
     const min = Math.max(10, Math.round(baseline * 1.20));
     const max = Math.max(min + 10, Math.round(baseline * 1.80));
@@ -366,14 +367,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function drawChart(prices) {
     if (!ctx || !canvas) return;
 
-    // clear
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // get numeric points
     const pts = prices.map((p) => (p == null ? null : p));
     const nums = pts.filter((p) => p != null);
 
-    // if nothing entered, draw empty axes hint
     if (!nums.length) {
       ctx.globalAlpha = 0.9;
       ctx.fillStyle = "rgba(0,0,0,.55)";
@@ -391,7 +389,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const w = canvas.width - pad * 2;
     const h = canvas.height - pad * 2;
 
-    // grid
     ctx.globalAlpha = 0.22;
     ctx.strokeStyle = "rgba(0,0,0,.6)";
     ctx.lineWidth = 1;
@@ -403,14 +400,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
 
-    // y labels
     ctx.globalAlpha = 0.75;
     ctx.fillStyle = "rgba(0,0,0,.65)";
     ctx.font = "14px system-ui";
     ctx.fillText(String(max), x0, y0 - 8);
     ctx.fillText(String(min), x0, y0 + h + 18);
 
-    // plot
     const span = Math.max(1, max - min);
     const xStep = w / (pts.length - 1);
 
@@ -438,7 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     ctx.stroke();
 
-    // dots
     ctx.fillStyle = "rgba(0,0,0,.75)";
     pts.forEach((v, i) => {
       if (v == null) return;
@@ -457,6 +451,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const buyRaw = getBuyPrice();
     const buy = Number(String(buyRaw || "").replace(/[^\d.]/g, ""));
     const buyNum = Number.isFinite(buy) ? buy : null;
+
+    if (buyPriceReadout) buyPriceReadout.textContent = buyNum != null ? String(buyNum) : "-";
 
     const best = bestSoFar(prices);
     const bestLabel = best.bestIdx >= 0 ? idxToLabel(best.bestIdx) : "-";
@@ -494,7 +490,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }[c]));
   }
 
-  // --- Nav handlers ---
+  // Nav handlers
   navEntry.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("entry"); });
   navPredict.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("predict"); });
   navHistory.addEventListener("click", (e) => { e.preventDefault(); setActiveTab("history"); });

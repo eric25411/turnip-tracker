@@ -10,10 +10,9 @@
   --cardRadius: 28px;
   --shadow: 0 14px 35px rgba(0,0,0,0.12);
 
-  --navH: 104px; /* base nav height */
+  --navH: 104px;
 }
 
-/* Base */
 *{ box-sizing:border-box; }
 html, body{ height:100%; }
 body{
@@ -23,7 +22,6 @@ body{
   background: radial-gradient(circle at top, var(--bg1), var(--bg2));
 }
 
-/* Layout */
 .app{
   width: 100%;
   max-width: 680px;
@@ -31,13 +29,9 @@ body{
   padding: 14px 14px calc(var(--navH) + env(safe-area-inset-bottom) + 22px);
 }
 
-.main{
-  padding-bottom: 18px; /* extra breathing room above nav */
-}
-
+.main{ padding-bottom: 18px; }
 .view.hidden{ display:none; }
 
-/* Header */
 .headerCard{
   background: rgba(255,255,255,0.35);
   border-radius: var(--cardRadius);
@@ -124,7 +118,6 @@ body{
   gap: 14px;
 }
 
-/* Smaller day cards + fonts (your request) */
 .dayCard{
   background: linear-gradient(180deg, var(--tan), var(--tan2));
   border-radius: 28px;
@@ -134,7 +127,7 @@ body{
 
 .dayTitle{
   margin: 0 0 10px;
-  font-size: 56px;   /* smaller than before */
+  font-size: 56px;
   line-height: 0.95;
   letter-spacing: -0.6px;
   font-weight: 900;
@@ -176,7 +169,6 @@ body{
   box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
 }
 
-/* Save button at bottom */
 .saveWrap{
   background: rgba(255,255,255,0.28);
   border-radius: var(--cardRadius);
@@ -196,9 +188,7 @@ body{
   background: #1f7a5b;
 }
 
-.saveBtn:active{
-  transform: scale(0.99);
-}
+.saveBtn:active{ transform: scale(0.99); }
 
 .saveNote{
   margin-top: 8px;
@@ -239,30 +229,20 @@ body{
   background: rgba(255,255,255,0.55);
 }
 
-.markerRow{
-  display: grid;
-  grid-template-columns: repeat(12, minmax(70px, 1fr));
-  gap: 8px;
+.chartLegend{
   margin-top: 10px;
-  padding: 0 4px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  font-size: 13px;
-  font-weight: 800;
-  opacity: 0.75;
-  scrollbar-width: none;
+  font-size: 14px;
+  font-weight: 850;
+  opacity: 0.78;
 }
-.markerRow::-webkit-scrollbar{ display:none; }
-.markerRow span{ white-space: nowrap; }
 
 .chartCaption{
-  margin-top: 10px;
+  margin-top: 8px;
   font-size: 16px;
   font-weight: 800;
   opacity: 0.80;
 }
 
-/* Predictor stats */
 .statsCard{
   margin-top: 14px;
   background: rgba(255,255,255,0.40);
@@ -280,7 +260,6 @@ body{
   font-weight: 850;
 }
 .statRow:last-child{ border-bottom:none; }
-
 .statKey{ opacity: 0.88; }
 .statVal{ font-weight: 950; }
 
@@ -398,9 +377,7 @@ body{
   display:none;
 }
 
-.weekRow.expanded .weekDetails{
-  display:block;
-}
+.weekRow.expanded .weekDetails{ display:block; }
 
 /* Bottom nav */
 .bottomNav{
@@ -442,7 +419,6 @@ body{
 
 .navIcon{ font-size: 18px; }
 
-/* Mobile tweaks */
 @media (max-width: 420px){
   .dayTitle{ font-size: 52px; }
   .panelTitle{ font-size: 60px; }

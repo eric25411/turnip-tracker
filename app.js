@@ -1,4 +1,3 @@
-// app.js
 document.addEventListener("DOMContentLoaded", () => {
   const KEYS = {
     weeks: "turnipTracker_weeks_v1",
@@ -16,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const navHistory = document.getElementById("navHistory");
 
   // Entry
-  const buyPriceInput = document.getElementById("buy-price");
+  const buyPriceInput = document.getElementById("buyPrice");
   const saveWeekBtn = document.getElementById("saveWeekBtn");
 
   // History
@@ -26,29 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const importFile = document.getElementById("importFile");
   const goHomeBtn = document.getElementById("goHomeBtn");
 
-  // Predictor UI
-  const priceChart = document.getElementById("priceChart");
-  const statBuy = document.getElementById("statBuy");
-  const statBest = document.getElementById("statBest");
-  const statBestTime = document.getElementById("statBestTime");
-  const statProfit = document.getElementById("statProfit");
-  const statPattern = document.getElementById("statPattern");
-  const statPatternNote = document.getElementById("statPatternNote");
-  const statWindow = document.getElementById("statWindow");
-  const statConf = document.getElementById("statConf");
-  const statWatch = document.getElementById("statWatch");
+  // Predictor
+  const chartCanvas = document.getElementById("chartCanvas");
+  const predictStats = document.getElementById("predictStats");
 
-  const timeLabels = [
-    "Mon AM","Mon PM","Tue AM","Tue PM","Wed AM","Wed PM",
-    "Thu AM","Thu PM","Fri AM","Fri PM","Sat AM","Sat PM"
-  ];
+  // Safety
+  if (!entryView || !predictView || !historyView) return;
+  if (!navEntry || !navPredict || !navHistory) return;
 
-  const ids = [
-    "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
-    "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
-  ];
-
-  function setActiveTab(tab){
+  function setActiveTab(tab) {
     const isEntry = tab === "entry";
     const isPredict = tab === "predict";
     const isHistory = tab === "history";
@@ -70,92 +55,87 @@ document.addEventListener("DOMContentLoaded", () => {
   navHistory.addEventListener("click", () => setActiveTab("history"));
   if (goHomeBtn) goHomeBtn.addEventListener("click", () => setActiveTab("entry"));
 
-  function getWeeks(){
+  function getWeeks() {
     try { return JSON.parse(localStorage.getItem(KEYS.weeks) || "[]"); }
     catch { return []; }
   }
-
-  function setWeeks(weeks){
+  function setWeeks(weeks) {
     localStorage.setItem(KEYS.weeks, JSON.stringify(weeks));
   }
 
-  function parseNum(v){
-    const n = Number(String(v || "").trim());
-    return Number.isFinite(n) ? n : null;
-  }
-
-  function getCurrentWeekData(){
-    const data = {
-      buyPrice: (buyPriceInput && buyPriceInput.value || "").trim(),
-      prices: {}
-    };
-
-    ids.forEach((id) => {
+  function getCurrentWeekData() {
+    const ids = [
+      "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
+      "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
+    ];
+    const data = {};
+    ids.forEach(id => {
       const el = document.getElementById(id);
-      data.prices[id] = ((el && el.value) || "").trim();
+      data[id] = ((el && el.value) || "").trim();
     });
-
+    data.buy = (buyPriceInput && buyPriceInput.value || "").trim();
     return data;
   }
 
-  function loadWeekData(data){
-    if (!data) return;
-
-    if (buyPriceInput) buyPriceInput.value = data.buyPrice ?? "";
-
-    const p = data.prices || {};
-    Object.keys(p).forEach((id) => {
+  function loadWeekData(data) {
+    const safe = data || {};
+    Object.keys(safe).forEach((id) => {
+      if (id === "buy") return;
       const el = document.getElementById(id);
-      if (el) el.value = p[id] ?? "";
+      if (el) el.value = safe[id] ?? "";
     });
+    if (buyPriceInput) buyPriceInput.value = safe.buy ?? "";
   }
 
-  function clearWeek(){
+  function clearWeek() {
+    document.querySelectorAll(".priceInput").forEach(i => i.value = "");
     if (buyPriceInput) buyPriceInput.value = "";
-    document.querySelectorAll(".priceInput").forEach((i) => (i.value = ""));
     localStorage.removeItem(KEYS.current);
   }
 
-  function saveCurrentDraft(){
+  function saveCurrentDraft() {
     localStorage.setItem(KEYS.current, JSON.stringify(getCurrentWeekData()));
   }
 
-  function loadCurrentDraft(){
-    try{
+  function loadCurrentDraft() {
+    try {
       const raw = localStorage.getItem(KEYS.current);
       if (!raw) return;
       loadWeekData(JSON.parse(raw));
-    }catch{}
+    } catch {}
   }
 
-  // Autosave draft
-  if (buyPriceInput) buyPriceInput.addEventListener("input", saveCurrentDraft);
-  document.querySelectorAll(".priceInput").forEach((inp) => {
+  // autosave
+  document.querySelectorAll(".priceInput").forEach(inp => {
     inp.addEventListener("input", saveCurrentDraft);
   });
+  if (buyPriceInput) buyPriceInput.addEventListener("input", saveCurrentDraft);
 
-  // Save week
-  saveWeekBtn.addEventListener("click", () => {
-    const week = {
-      id: cryptoRandomId(),
-      savedAt: new Date().toISOString(),
-      data: getCurrentWeekData()
-    };
+  // save week
+  if (saveWeekBtn) {
+    saveWeekBtn.addEventListener("click", () => {
+      const week = {
+        id: cryptoRandomId(),
+        savedAt: new Date().toISOString(),
+        data: getCurrentWeekData()
+      };
 
-    const weeks = getWeeks();
-    weeks.unshift(week);
-    setWeeks(weeks);
+      const weeks = getWeeks();
+      weeks.unshift(week);
+      setWeeks(weeks);
 
-    clearWeek();
-    setActiveTab("history");
-  });
+      clearWeek();
+      setActiveTab("history");
+    });
+  }
 
-  function renderHistory(){
+  // History UI
+  function renderHistory() {
     const weeks = getWeeks();
     historyList.innerHTML = "";
-    historyEmptyNote.style.display = weeks.length ? "none" : "block";
+    if (historyEmptyNote) historyEmptyNote.style.display = weeks.length ? "none" : "block";
 
-    weeks.forEach((w) => {
+    weeks.forEach(w => {
       const row = document.createElement("div");
       row.className = "weekRow";
 
@@ -193,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       delBtn.type = "button";
       delBtn.textContent = "Delete";
       delBtn.addEventListener("click", () => {
-        const next = getWeeks().filter((x) => x.id !== w.id);
+        const next = getWeeks().filter(x => x.id !== w.id);
         setWeeks(next);
         renderHistory();
       });
@@ -215,14 +195,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Export
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {
-      const payload = {
-        exportedAt: new Date().toISOString(),
-        weeks: getWeeks()
-      };
-
+      const payload = { exportedAt: new Date().toISOString(), weeks: getWeeks() };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
 
@@ -232,11 +207,11 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(a);
       a.click();
       a.remove();
+
       URL.revokeObjectURL(url);
     });
   }
 
-  // Import
   if (importFile) {
     importFile.addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
@@ -248,9 +223,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const weeks = Array.isArray(parsed.weeks) ? parsed.weeks : [];
 
         const existing = getWeeks();
-        const map = new Map(existing.map((w) => [w.id, w]));
+        const map = new Map(existing.map(w => [w.id, w]));
 
-        weeks.forEach((w) => {
+        weeks.forEach(w => {
           if (w && w.id && w.data) map.set(w.id, w);
         });
 
@@ -265,199 +240,181 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Predictor
-  function renderPredictor(){
-    const draft = getCurrentWeekData();
-    const buy = parseNum(draft.buyPrice);
+  function renderPredictor() {
+    const data = getCurrentWeekData();
+    const buy = toNum(data.buy);
 
-    const values = ids.map((id) => parseNum(draft.prices[id]));
-    const best = maxNum(values);
-    const bestIndex = best.index;
-    const bestValue = best.value;
+    const points = [
+      "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
+      "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
+    ].map(k => toNum(data[k]));
 
-    statBuy.textContent = buy == null ? "-" : String(buy);
-    statBest.textContent = bestValue == null ? "-" : String(bestValue);
-    statBestTime.textContent = bestIndex == null ? "-" : timeLabels[bestIndex];
+    const bestVal = Math.max(...points.filter(n => n > 0), 0);
+    const bestIdx = points.findIndex(n => n === bestVal);
+    const bestLabel = bestIdx >= 0 ? indexToLabel(bestIdx) : "-";
 
-    if (buy == null || bestValue == null) {
-      statProfit.textContent = "-";
-    } else {
-      const diff = bestValue - buy;
-      statProfit.textContent = diff >= 0 ? `+${diff}` : String(diff);
-    }
+    const profit = (buy > 0 && bestVal > 0) ? (bestVal - buy) : 0;
 
-    const pattern = detectPattern(values, buy);
-    statPattern.textContent = pattern.name;
-    statPatternNote.textContent = pattern.note;
+    const pattern = detectPattern(points);
+    const forecast = forecastWindow(pattern);
 
-    statWindow.textContent = pattern.window;
-    statConf.textContent = pattern.confidence;
+    drawChart(points);
 
-    statWatch.textContent = pattern.watch;
+    const rows = [
+      { k: "Buy price", v: buy > 0 ? String(buy) : "-" },
+      { k: "Best so far this week", v: bestVal > 0 ? String(bestVal) : "-" },
+      { k: "Best day time", v: bestVal > 0 ? bestLabel : "-" },
+      { k: "Profit vs buy", v: (buy > 0 && bestVal > 0) ? (profit >= 0 ? `+${profit}` : `${profit}`) : "-" },
+      { k: "Likely pattern", v: pattern.name },
+      { k: "Pattern note", v: pattern.note },
+      { k: "Forecast peak window", v: forecast.window },
+      { k: "Forecast confidence", v: forecast.confidence }
+    ];
 
-    drawChart(priceChart, values);
+    predictStats.innerHTML = rows.map(r => {
+      return `<div class="statRow"><div class="k">${escapeHtml(r.k)}</div><div class="v">${escapeHtml(r.v)}</div></div>`;
+    }).join("");
   }
 
-  function detectPattern(values, buy){
-    const nums = values.filter(v => v != null);
-    if (nums.length < 2) {
-      return {
-        name: "-",
-        note: "Enter more prices so I can spot the vibe of the week.",
-        window: "-",
-        confidence: "-",
-        watch: "What to watch next will appear as you enter more prices."
-      };
-    }
+  function drawChart(points) {
+    if (!chartCanvas) return;
+    const ctx = chartCanvas.getContext("2d");
+    const w = chartCanvas.width;
+    const h = chartCanvas.height;
 
-    // Simple logic, not the full AC algorithm, just a helpful guide
-    const diffs = [];
-    for (let i = 1; i < values.length; i++){
-      if (values[i] == null || values[i-1] == null) continue;
-      diffs.push(values[i] - values[i-1]);
-    }
-
-    const drops = diffs.filter(d => d < 0).length;
-    const rises = diffs.filter(d => d > 0).length;
-
-    if (drops >= 3 && rises <= 1) {
-      return {
-        name: "Decreasing",
-        note: "Looks like a steady drop so far. Keep an eye out for any surprise bounce.",
-        window: "Mon AM to Tue PM",
-        confidence: "65%",
-        watch: buy == null ? "If it keeps dropping, sell the first time you see a decent spike." : "If it keeps dropping, sell the first time you see profit over buy."
-      };
-    }
-
-    if (rises >= 3 && drops <= 1) {
-      return {
-        name: "Small spike",
-        note: "Prices are climbing. You might get a nice peak mid week.",
-        window: "Wed AM to Thu PM",
-        confidence: "70%",
-        watch: buy == null ? "Watch for a peak around mid week, then do not get greedy." : "Watch for a peak around mid week, then lock profit."
-      };
-    }
-
-    return {
-      name: "Mixed",
-      note: "This week is bouncing around. More entries will make the call cleaner.",
-      window: "Tue PM to Fri PM",
-      confidence: "55%",
-      watch: buy == null ? "If you see a sudden jump, consider selling sooner." : "If you see profit over buy, consider taking it."
-    };
-  }
-
-  function drawChart(canvas, values){
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-
+    // clear
     ctx.clearRect(0,0,w,h);
 
-    // grid
+    // background
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
+    ctx.fillRect(0,0,w,h);
+
+    // subtle grid
+    ctx.strokeStyle = "rgba(0,0,0,0.08)";
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(0,0,0,.10)";
-    for (let i = 0; i <= 4; i++){
-      const y = 18 + (i * (h - 36) / 4);
+    for (let i=1;i<=4;i++){
+      const y = (h*i)/5;
       ctx.beginPath();
-      ctx.moveTo(14, y);
-      ctx.lineTo(w - 14, y);
+      ctx.moveTo(0,y);
+      ctx.lineTo(w,y);
       ctx.stroke();
     }
 
-    const nums = values.map(v => (v == null ? null : v));
-    const valid = nums.filter(v => v != null);
-    if (!valid.length) return;
+    // AC themed turnip background (bigger again)
+    // IMPORTANT: this file name matches what GitHub might keep: "ac-chart.png.PNG"
+    const img = new Image();
+    img.onload = () => {
+      const scaleW = w * 0.60;   // bigger like before
+      const scaleH = scaleW * (img.height / img.width);
+      const x = (w - scaleW) / 2;
+      const y = (h - scaleH) / 2 + 6;
 
-    const min = Math.min(...valid);
-    const max = Math.max(...valid);
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      ctx.drawImage(img, x, y, scaleW, scaleH);
+      ctx.restore();
 
-    const padTop = 18;
-    const padBot = 18;
-    const padL = 18;
-    const padR = 18;
+      drawLineAndDots(points);
+    };
+    img.onerror = () => {
+      drawLineAndDots(points);
+    };
+    img.src = "ac-chart.png.PNG";
+  }
 
-    const xStep = (w - padL - padR) / (nums.length - 1 || 1);
-    const yRange = (max - min) || 1;
+  function drawLineAndDots(points){
+    const ctx = chartCanvas.getContext("2d");
+    const w = chartCanvas.width;
+    const h = chartCanvas.height;
 
-    const toX = (i) => padL + i * xStep;
-    const toY = (v) => padTop + (h - padTop - padBot) * (1 - ((v - min) / yRange));
+    const vals = points.map(n => (n > 0 ? n : 0));
+    const max = Math.max(...vals, 100);
+    const min = 0;
+
+    const padX = 24;
+    const padY = 22;
+    const innerW = w - padX*2;
+    const innerH = h - padY*2;
+
+    const step = innerW / (points.length - 1);
+
+    function xy(i){
+      const v = vals[i];
+      const t = (v - min) / (max - min || 1);
+      return {
+        x: padX + step*i,
+        y: padY + innerH*(1 - t)
+      };
+    }
 
     // line
+    ctx.strokeStyle = "rgba(20,20,20,0.85)";
     ctx.lineWidth = 4;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
-    ctx.strokeStyle = "rgba(0,0,0,.75)";
-
-    let started = false;
     ctx.beginPath();
-    nums.forEach((v, i) => {
-      if (v == null) return;
-      const x = toX(i);
-      const y = toY(v);
-      if (!started) {
-        ctx.moveTo(x,y);
-        started = true;
-      } else {
-        ctx.lineTo(x,y);
-      }
-    });
+    for (let i=0;i<points.length;i++){
+      const p = xy(i);
+      if (i===0) ctx.moveTo(p.x,p.y);
+      else ctx.lineTo(p.x,p.y);
+    }
     ctx.stroke();
 
     // dots
-    ctx.fillStyle = "rgba(0,0,0,.80)";
-    nums.forEach((v, i) => {
-      if (v == null) return;
-      const x = toX(i);
-      const y = toY(v);
+    ctx.fillStyle = "rgba(20,20,20,0.85)";
+    for (let i=0;i<points.length;i++){
+      const p = xy(i);
       ctx.beginPath();
-      ctx.arc(x,y,5,0,Math.PI*2);
+      ctx.arc(p.x, p.y, 5.2, 0, Math.PI*2);
       ctx.fill();
-    });
-
-    // min/max labels
-    ctx.fillStyle = "rgba(0,0,0,.55)";
-    ctx.font = "900 14px system-ui";
-    ctx.fillText(String(max), 14, 16);
-    ctx.fillText(String(min), 14, h - 6);
+    }
   }
 
-  function maxNum(values){
-    let bestVal = null;
-    let bestIdx = null;
-    values.forEach((v, i) => {
-      if (v == null) return;
-      if (bestVal == null || v > bestVal){
-        bestVal = v;
-        bestIdx = i;
-      }
-    });
-    return { value: bestVal, index: bestIdx };
+  function detectPattern(points){
+    const vals = points.map(n => (n > 0 ? n : 0));
+    const filled = vals.filter(v => v > 0);
+    if (filled.length < 3){
+      return { name: " - ", note: "Add more prices this week and save weeks so the predictor can learn." };
+    }
+
+    // simple slope behavior
+    let ups = 0, downs = 0;
+    for (let i=1;i<vals.length;i++){
+      if (vals[i] === 0 || vals[i-1] === 0) continue;
+      if (vals[i] > vals[i-1]) ups++;
+      if (vals[i] < vals[i-1]) downs++;
+    }
+
+    if (downs > ups + 2) return { name: "Decreasing", note: "Looks like it is trending down. Sell as soon as you see profit." };
+    if (ups > downs + 2) return { name: "Increasing", note: "Looks like it is building. Watch mid to late week for a spike." };
+    return { name: "Mixed", note: "This week is bouncing around. More entries will make the call cleaner." };
+  }
+
+  function forecastWindow(pattern){
+    if (pattern.name === "Increasing") return { window: "Wed PM to Sat PM", confidence: "65%" };
+    if (pattern.name === "Decreasing") return { window: "Mon AM to Tue PM", confidence: "60%" };
+    return { window: "Tue PM to Fri PM", confidence: "55%" };
   }
 
   function summarizeWeek(data){
-    const d = data || {};
-    const buy = d.buyPrice ? `Buy ${d.buyPrice}` : "Buy -";
-    const p = d.prices || {};
-    const get = (k) => (p[k] ? p[k] : "-");
+    const get = (k) => (data && data[k] ? data[k] : "-");
+    const buy = data && data.buy ? data.buy : "-";
     return [
-      buy,
-      `Mon ${get("mon-am")}/${get("mon-pm")}`,
-      `Tue ${get("tue-am")}/${get("tue-pm")}`,
-      `Wed ${get("wed-am")}/${get("wed-pm")}`,
-      `Thu ${get("thu-am")}/${get("thu-pm")}`,
-      `Fri ${get("fri-am")}/${get("fri-pm")}`,
-      `Sat ${get("sat-am")}/${get("sat-pm")}`
+      `Buy ${buy}`,
+      `Mon AM ${get("mon-am")}, Mon PM ${get("mon-pm")}`,
+      `Tue AM ${get("tue-am")}, Tue PM ${get("tue-pm")}`,
+      `Wed AM ${get("wed-am")}, Wed PM ${get("wed-pm")}`,
+      `Thu AM ${get("thu-am")}, Thu PM ${get("thu-pm")}`,
+      `Fri AM ${get("fri-am")}, Fri PM ${get("fri-pm")}`,
+      `Sat AM ${get("sat-am")}, Sat PM ${get("sat-pm")}`
     ].join(" | ");
   }
 
   function formatWeekLabel(iso){
     try{
       const d = new Date(iso);
-      return `Saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`;
-    }catch{
+      return `Saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
+    } catch {
       return "Saved week";
     }
   }
@@ -465,6 +422,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function cryptoRandomId(){
     const rnd = Math.random().toString(16).slice(2);
     return `w_${Date.now()}_${rnd}`;
+  }
+
+  function toNum(v){
+    const n = parseInt(String(v || "").replace(/[^\d]/g,""), 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function indexToLabel(i){
+    const map = ["Mon AM","Mon PM","Tue AM","Tue PM","Wed AM","Wed PM","Thu AM","Thu PM","Fri AM","Fri PM","Sat AM","Sat PM"];
+    return map[i] || "-";
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
   }
 
   // Boot

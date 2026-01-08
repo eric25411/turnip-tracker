@@ -396,7 +396,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return { window: "Tue PM to Fri PM", confidence: "55%", watch: "If you see a random jump, that might be your moment. Log each slot to tighten it up." };
   }
 
-  // Chart with bell dots + non scrolling day labels
+  // Postcard chart: no scrolling labels, AM/PM markers actually different
   function drawChart(values){
     const ctx = chartCanvas.getContext("2d");
     const W = chartCanvas.width;
@@ -412,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const left = 34;
     const right = W - 34;
     const top = 22;
-    const bottom = H - 64; // leave room for day labels
+    const bottom = H - 26;
 
     // grid
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
@@ -425,31 +425,26 @@ document.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
 
-    // watermark (still bigger)
+    // watermark (kept cozy size)
     const img = new Image();
     img.onload = () => {
-      const targetW = Math.min(W * 0.40, 320);
+      const targetW = Math.min(W * 0.44, 340);
       const ratio = img.height / img.width;
       const targetH = targetW * ratio;
 
       const x = (W - targetW) / 2;
-      const y = (top + bottom - targetH) / 2 - 6;
+      const y = (top + bottom - targetH) / 2 - 8;
 
       ctx.globalAlpha = 0.22;
       ctx.drawImage(img, x, y, targetW, targetH);
       ctx.globalAlpha = 1;
 
-      drawLineAndBells();
-      drawDayLabels();
+      drawLineAndMarkers();
     };
-    img.onerror = () => {
-      drawLineAndBells();
-      drawDayLabels();
-    };
-
+    img.onerror = () => drawLineAndMarkers();
     img.src = "ac-chart.png.PNG";
 
-    function drawLineAndBells(){
+    function drawLineAndMarkers(){
       const maxVal = Math.max(200, ...values.filter(v => v>0), 1);
       const minVal = 0;
       const stepX = (right - left) / (values.length - 1);
@@ -469,7 +464,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       ctx.stroke();
 
-      // bell dots
+      // markers
+      // AM = 🔔, PM = 🛎️ (so the key actually matches)
       ctx.font = "22px system-ui, Apple Color Emoji, Segoe UI Emoji";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -478,34 +474,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const x = left + stepX * i;
         const y = v > 0 ? map(v, minVal, maxVal, bottom, top) : bottom;
 
-        // little shadow so bells pop on light bg
+        const isAM = (i % 2 === 0);
+        const icon = isAM ? "🔔" : "🛎️";
+
         ctx.globalAlpha = 0.22;
-        ctx.fillText("🔔", x + 1, y + 2);
+        ctx.fillText(icon, x + 1, y + 2);
         ctx.globalAlpha = 1;
-
-        ctx.fillText("🔔", x, y);
+        ctx.fillText(icon, x, y);
       });
-    }
-
-    function drawDayLabels(){
-      // 6 labels centered between each AM/PM pair
-      ctx.fillStyle = "rgba(0,0,0,0.70)";
-      ctx.font = "16px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "alphabetic";
-
-      const stepX = (right - left) / (values.length - 1);
-      const labelY = H - 26;
-
-      for (let d=0; d<6; d++){
-        const iAM = d * 2;
-        const iPM = d * 2 + 1;
-        const xAM = left + stepX * iAM;
-        const xPM = left + stepX * iPM;
-        const xMid = (xAM + xPM) / 2;
-
-        ctx.fillText(DAY_NAMES[d], xMid, labelY);
-      }
     }
 
     function map(v, inMin, inMax, outMin, outMax){

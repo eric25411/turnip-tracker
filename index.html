@@ -5,39 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
 
-  <link rel="stylesheet" href="style.css?v=22" />
+  <!-- Cache bust -->
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 
 <body>
   <div class="app">
-
     <!-- HEADER -->
-    <div class="headerCard">
-      <div class="headerTop">
-        <img
-          src="banner.png.jpg"
-          alt="Turnip Tracker"
-          class="headerImage"
-          onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
-        />
-        <div id="headerFallback" class="headerFallback" style="display:none;">
-          Turnip Tracker
-        </div>
-      </div>
+    <div class="header">
+      <img
+        src="banner.png.jpg"
+        alt="Turnip Tracker"
+        class="headerImage"
+        onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
+      />
+      <div id="headerFallback" class="headerFallback" style="display:none;">Turnip Tracker</div>
 
-      <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
+      <button id="saveWeekBtn" class="primaryBtn">Save week to History</button>
     </div>
 
     <!-- MAIN -->
-    <main class="main" id="mainView">
+    <main id="mainView">
 
       <!-- ENTRY VIEW -->
-      <section id="predictView" class="view">
-
-        <!-- MINI BUY PRICE ROW (sticky) -->
-        <div class="miniBuyCard">
-          <div class="miniBuyLabel">💰 Buy price</div>
-          <input id="buyPrice" class="miniBuyInput" inputmode="numeric" placeholder="-" />
+      <section id="entryView" class="view">
+        <!-- Small buy price card -->
+        <div class="miniCard">
+          <div class="row">
+            <div class="label">
+              <span class="emoji">💰</span>
+              <span>Buy price</span>
+            </div>
+            <input class="priceInput miniInput" inputmode="numeric" placeholder="-" id="buyPrice" />
+          </div>
+          <div class="miniHint">Price you paid from Daisy Mae on Sunday.</div>
         </div>
 
         <section class="days">
@@ -117,50 +118,47 @@
         </section>
       </section>
 
-      <!-- PREDICTOR VIEW -->
-      <section id="predictorView" class="view hidden">
-        <div class="predictCard">
-          <h2 class="predictTitle">Predictor</h2>
+      <!-- PREDICT VIEW -->
+      <section id="predictView" class="view hidden">
+        <div class="predictWrap">
+          <div class="predictCard">
+            <h2 class="predictTitle">Predictor</h2>
 
-          <div class="buyInlineNote">
-            Buy price: <span id="buyPriceReadout">-</span>
+            <div class="chartCard">
+              <div class="chartBg" aria-hidden="true"></div>
+              <canvas id="priceChart" width="600" height="240"></canvas>
+              <div class="chartCaption">Left to right, Mon AM to Sat PM</div>
+            </div>
+
+            <div class="predictStats" id="predictStats"></div>
           </div>
-
-          <div class="chartWrap">
-            <canvas id="chartCanvas" width="640" height="280"></canvas>
-            <div class="chartCaption">Left to right, Mon AM to Sat PM</div>
-          </div>
-
-          <div class="metrics" id="metrics"></div>
         </div>
       </section>
 
       <!-- HISTORY VIEW -->
       <section id="historyView" class="view hidden">
         <div class="historyWrap">
-
           <div class="historyCard">
             <h2 class="historyTitle">Past weeks</h2>
-            <p class="historyHint">Tap Expand to see details. Use Load to edit an old week.</p>
+            <p class="historyHint">Tap a week to expand. Use Load to edit an old week.</p>
             <div id="historyList" class="historyList"></div>
           </div>
 
           <div class="historyCard">
             <h3 class="historySubtitle">Import, Export</h3>
             <div class="historyActions">
-              <button id="exportBtn" class="chipBtn" type="button">Export</button>
+              <button id="exportBtn" class="chipBtn">Export</button>
               <label class="chipBtn fileBtn">
                 Import
                 <input id="importFile" type="file" accept="application/json" />
               </label>
-              <button id="goHomeBtn" class="chipBtn" type="button">Home</button>
+              <button id="goHomeBtn" class="chipBtn">Home</button>
             </div>
 
             <p class="historySmall" id="historyEmptyNote">
               No saved weeks yet. Fill the week, then hit Save week.
             </p>
           </div>
-
         </div>
       </section>
 
@@ -183,6 +181,6 @@
     </button>
   </nav>
 
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>

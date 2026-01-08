@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-
-  <!-- Cache bust -->
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 
 <body>
@@ -31,8 +29,8 @@
     <!-- MAIN -->
     <main id="mainView">
 
-      <!-- PREDICT VIEW -->
-      <section id="predictView" class="view">
+      <!-- ENTRY VIEW (your day cards screen) -->
+      <section id="entryView" class="view">
         <section class="days">
 
           <div class="dayCard">
@@ -110,6 +108,29 @@
         </section>
       </section>
 
+      <!-- PREDICT VIEW -->
+      <section id="predictView" class="view hidden">
+        <div class="predictWrap">
+          <div class="historyCard">
+            <h2 class="historyTitle">Predictor</h2>
+            <p class="historyHint" id="predictSummary">
+              Enter this week’s prices on Entry, then save your week. Once you have a few weeks saved, we will start learning patterns.
+            </p>
+
+            <div class="historyActions">
+              <button id="runPredictBtn" class="chipBtn" type="button">Run prediction</button>
+              <button id="goEntryBtn" class="chipBtn" type="button">Back to Entry</button>
+            </div>
+
+            <div class="predictCard">
+              <div class="predictLine"><strong>Best so far this week:</strong> <span id="bestSoFar">-</span></div>
+              <div class="predictLine"><strong>Best day/time:</strong> <span id="bestWhen">-</span></div>
+              <div class="predictLine"><strong>Saved weeks count:</strong> <span id="weeksCount">0</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- HISTORY VIEW -->
       <section id="historyView" class="view hidden">
         <div class="historyWrap">
@@ -140,18 +161,24 @@
     </main>
   </div>
 
-  <!-- BOTTOM NAV -->
+  <!-- BOTTOM NAV (3 tabs) -->
   <nav class="bottomNav">
-    <button id="navPredict" class="navBtn active" type="button">
+    <button id="navEntry" class="navBtn active" type="button">
+      <span class="navIcon">📝</span>
+      <span>Entry</span>
+    </button>
+
+    <button id="navPredict" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
       <span>Predict</span>
     </button>
+
     <button id="navHistory" class="navBtn" type="button">
       <span class="navIcon">🕰️</span>
       <span>History</span>
     </button>
   </nav>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>

@@ -1,116 +1,138 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
 
-  <!-- bump v= number anytime Safari refuses to update CSS -->
-  <link rel="stylesheet" href="style.css?v=17" />
+  <!-- FORCE CACHE REFRESH -->
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 
 <body>
   <main class="app">
+
+    <!-- HEADER -->
     <section class="headerCard">
       <div class="bannerWrap">
-        <img src="banner.png.jpg" alt="Turnip Tracker banner" />
+        <img src="banner.png.jpg" alt="Turnip Tracker" />
       </div>
 
-      <!-- SAVE WEEK BUTTON -->
       <div class="headerActions">
-        <button class="saveWeekBtn" id="saveWeekBtn">Save week to History</button>
+        <button class="saveWeekBtn">Save week to History</button>
       </div>
     </section>
 
+    <!-- DAYS GRID -->
     <section class="daysGrid">
+
+      <!-- MONDAY -->
       <div class="dayCard">
         <h2 class="dayTitle">Monday</h2>
+
         <div class="row">
-          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-am" />
+          <div class="label"><span class="emoji">☀️</span> AM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
+
         <div class="row">
-          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-pm" />
+          <div class="label"><span class="emoji">🌙</span> PM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
       </div>
 
+      <!-- TUESDAY -->
       <div class="dayCard">
         <h2 class="dayTitle">Tuesday</h2>
+
         <div class="row">
-          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-am" />
+          <div class="label"><span class="emoji">☀️</span> AM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
+
         <div class="row">
-          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-pm" />
+          <div class="label"><span class="emoji">🌙</span> PM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
       </div>
 
+      <!-- WEDNESDAY -->
       <div class="dayCard">
         <h2 class="dayTitle">Wednesday</h2>
+
         <div class="row">
-          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-am" />
+          <div class="label"><span class="emoji">☀️</span> AM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
+
         <div class="row">
-          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-pm" />
+          <div class="label"><span class="emoji">🌙</span> PM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
       </div>
 
+      <!-- THURSDAY -->
       <div class="dayCard">
         <h2 class="dayTitle">Thursday</h2>
+
         <div class="row">
-          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-am" />
+          <div class="label"><span class="emoji">☀️</span> AM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
+
         <div class="row">
-          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-pm" />
+          <div class="label"><span class="emoji">🌙</span> PM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
       </div>
 
+      <!-- FRIDAY -->
       <div class="dayCard">
         <h2 class="dayTitle">Friday</h2>
+
         <div class="row">
-          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-am" />
+          <div class="label"><span class="emoji">☀️</span> AM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
+
         <div class="row">
-          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-pm" />
+          <div class="label"><span class="emoji">🌙</span> PM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
       </div>
 
+      <!-- SATURDAY -->
       <div class="dayCard">
         <h2 class="dayTitle">Saturday</h2>
+
         <div class="row">
-          <div class="label"><span class="emoji">☀️</span><span>AM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-am" />
+          <div class="label"><span class="emoji">☀️</span> AM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
+
         <div class="row">
-          <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-          <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-pm" />
+          <div class="label"><span class="emoji">🌙</span> PM</div>
+          <input class="priceInput" inputmode="numeric" placeholder="-" />
         </div>
       </div>
+
     </section>
   </main>
 
+  <!-- BOTTOM NAV -->
   <nav class="bottomNav">
     <div class="bottomNavInner">
-      <a class="navBtn" href="#" id="predictBtn">
+      <a class="navBtn" href="#">
         <div class="navIcon">🔮</div>
         <div class="navText">Predict</div>
       </a>
 
-      <a class="navBtn" href="#" id="historyBtn">
+      <a class="navBtn" href="#">
         <div class="navIcon">🕰️</div>
         <div class="navText">History</div>
       </a>
     </div>
   </nav>
 
-  <script src="app.js"></script>
 </body>
 </html>

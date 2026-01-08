@@ -55,18 +55,33 @@ body{
   margin-top: 14px;
   display: flex;
   justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.saveWeekBtn{
+.saveWeekBtn,
+.newWeekBtn{
   border: none;
   background: white;
   padding: 10px 18px;
   border-radius: 999px;
-  font-weight: 700;
-  color: #2b6fff;
+  font-weight: 800;
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
-.saveWeekBtn:active{ transform: scale(0.98); }
+
+.saveWeekBtn{
+  color: #2b6fff;
+}
+
+.newWeekBtn{
+  color: #1b1b1b;
+  opacity: 0.9;
+}
+
+.saveWeekBtn:active,
+.newWeekBtn:active{
+  transform: scale(0.98);
+}
 
 /* BUY ROW */
 .buyRow{
@@ -141,7 +156,7 @@ body{
   margin: 0 auto;
 }
 
-/* Sticky day header, stop before bottom nav */
+/* Sticky day header */
 .dayHeader{
   position: sticky;
   top: 10px;
@@ -165,7 +180,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--cardInner);
+  background: rgba(255,255,255,0.22);
   border-radius: 22px;
   padding: 14px 16px;
   margin-bottom: 12px;
@@ -199,13 +214,11 @@ body{
   text-align: center;
   font-size: 20px;
   font-weight: 800;
-  background: var(--pill);
+  background: rgba(255,255,255,0.72);
   color: var(--text);
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
-
 .priceInput::placeholder{ color: rgba(0,0,0,0.35); }
-
 .priceInput:focus{
   outline: none;
   transform: scale(1.02);
@@ -254,7 +267,6 @@ body{
   gap: 12px;
 }
 
-/* Week item */
 .weekCard{
   background: rgba(255,255,255,0.65);
   border-radius: 22px;
@@ -294,7 +306,6 @@ body{
 .weekDetails{
   margin-top: 12px;
   display: none;
-  gap: 10px;
 }
 
 .weekCard.isOpen .weekDetails{
@@ -317,13 +328,8 @@ body{
   font-weight: 800;
 }
 
-.miniLabel{
-  opacity: 0.85;
-}
-
-.miniVal{
-  font-weight: 900;
-}
+.miniLabel{ opacity: 0.85; }
+.miniVal{ font-weight: 900; }
 
 /* BOTTOM NAV */
 .bottomNav{

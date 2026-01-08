@@ -22,12 +22,16 @@ body {
   background: rgba(255,255,255,0.55);
   border-radius: 26px;
   padding: 18px;
-  margin: 12px;
+
+  /* 🔑 FIX */
+  margin: 12px auto;   /* center horizontally */
+  width: calc(100% - 24px);
 }
 
 .bannerWrap img {
   width: 100%;
   border-radius: 20px;
+  display: block;
 }
 
 .headerActions {
@@ -58,14 +62,13 @@ body {
   padding: 16px;
 }
 
-/* DAY TITLE FIX */
+/* DAY TITLE */
 .dayTitle {
   margin: 0 0 12px;
   font-weight: 900;
   line-height: 1.02;
   white-space: normal;
   overflow: visible;
-  text-overflow: unset;
   font-size: clamp(28px, 6vw, 46px);
 }
 
@@ -98,7 +101,7 @@ body {
   font-size: 1.1em;
 }
 
-/* INPUT PILL – STABLE BEFORE & AFTER INPUT */
+/* INPUT PILL */
 .priceInput {
   appearance: none;
   -webkit-appearance: none;

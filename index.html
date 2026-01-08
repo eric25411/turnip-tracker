@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css?v=101" />
+  <link rel="stylesheet" href="style.css?v=99" />
 </head>
 
 <body>
   <div class="app">
 
     <!-- HEADER -->
-    <header class="headerCard">
+    <div class="header">
       <img
         src="banner.png.jpg"
         alt="Turnip Tracker"
@@ -21,30 +21,30 @@
       <div id="headerFallback" class="headerFallback" style="display:none;">
         Turnip Tracker
       </div>
-    </header>
+    </div>
 
     <!-- MAIN -->
-    <main class="main">
+    <main id="mainView" class="mainView">
 
       <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
-        <!-- Sticky buy price -->
+
+        <!-- Sticky Buy Price -->
         <div class="buySticky">
           <div class="buyCard">
-            <div class="buyTop">
-              <div class="buyLabel">
-                <span class="emoji">💰</span>
-                <span class="buyTitle">Buy price</span>
+            <div class="buyRow">
+              <div class="buyLeft">
+                <div class="buyTitle"><span class="emoji">💰</span> Buy price</div>
+                <div class="buyHint">Daisy Mae, Sunday.</div>
               </div>
               <input
                 id="buy-price"
                 class="buyInput"
                 inputmode="numeric"
                 placeholder="-"
-                aria-label="Turnip buy price"
+                aria-label="Buy price"
               />
             </div>
-            <div class="buyHint">Price you paid from Daisy Mae on Sunday.</div>
           </div>
         </div>
 
@@ -122,10 +122,10 @@
             </div>
           </div>
 
-          <!-- Save button at bottom -->
-          <div class="saveWrap">
-            <button id="saveWeekBtn" class="saveBtn" type="button">Save week to History</button>
-            <div class="saveNote">This saves the week and clears your Entry screen.</div>
+          <!-- Save card at bottom -->
+          <div class="saveCard">
+            <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
+            <div class="saveHint">Saves the week, then clears your Entry screen.</div>
           </div>
 
         </section>
@@ -133,22 +133,33 @@
 
       <!-- PREDICT VIEW -->
       <section id="predictView" class="view hidden">
-        <div class="panel">
-          <h2 class="panelTitle">Predictor</h2>
+        <div class="predictWrap">
+          <h2 class="predictTitle">Predictor</h2>
 
-          <!-- Postcard chart -->
-          <div class="postcardCard">
+          <div class="postcard">
             <div class="postcardTop">
               <div class="postcardTitle">This week’s bell postcard</div>
-              <div class="postcardKey">🔔 AM, 🛎️ PM</div>
+
+              <div class="legendStack" aria-label="Legend">
+                <div class="legendRow"><span class="legendIcon">🔔</span><span class="legendText">AM</span></div>
+                <div class="legendRow"><span class="legendIcon">🛎️</span><span class="legendText">PM</span></div>
+              </div>
             </div>
 
-            <canvas id="chartCanvas" width="900" height="360" aria-label="Turnip price chart"></canvas>
-
-            <div class="postcardCaption">Just a cozy snapshot. The more you log, the smarter it gets.</div>
+            <div class="chartCard">
+              <canvas id="chartCanvas" width="680" height="260"></canvas>
+              <div class="chartCaption">A cozy snapshot of your week.</div>
+            </div>
           </div>
 
-          <div class="statsCard" id="predictStats"></div>
+          <div class="statsCard">
+            <div class="statRow"><span>Daisy Mae buy price</span><strong id="statBuy">-</strong></div>
+            <div class="statRow"><span>Best price seen</span><strong id="statBest">-</strong></div>
+            <div class="statRow"><span>Best time so far</span><strong id="statBestTime">-</strong></div>
+            <div class="statRow"><span>Profit vs buy</span><strong id="statProfit">-</strong></div>
+            <div class="statRow"><span>Likely pattern</span><strong id="statPattern">-</strong></div>
+            <div class="statNote" id="statNote">Log a few more entries, and it’ll feel smarter.</div>
+          </div>
         </div>
       </section>
 
@@ -157,8 +168,11 @@
         <div class="historyWrap">
           <div class="historyCard">
             <h2 class="historyTitle">Past weeks</h2>
-            <p class="historyHint">Tap Expand to peek, Load to edit an old week.</p>
+            <p class="historyHint">Tap Expand to peek, Load to bring one back to Entry.</p>
             <div id="historyList" class="historyList"></div>
+            <p class="historySmall" id="historyEmptyNote">
+              No saved weeks yet. Fill the week, then hit Save.
+            </p>
           </div>
 
           <div class="historyCard">
@@ -170,10 +184,6 @@
                 <input id="importFile" type="file" accept="application/json" />
               </label>
             </div>
-
-            <p class="historySmall" id="historyEmptyNote">
-              No saved weeks yet. Fill the week, then hit Save week.
-            </p>
           </div>
         </div>
       </section>
@@ -185,20 +195,20 @@
   <nav class="bottomNav" aria-label="Bottom navigation">
     <button id="navEntry" class="navBtn active" type="button">
       <span class="navIcon">🧾</span>
-      <span>Entry</span>
+      <span class="navLabel">Entry</span>
     </button>
 
     <button id="navPredict" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
-      <span>Predict</span>
+      <span class="navLabel">Predict</span>
     </button>
 
     <button id="navHistory" class="navBtn" type="button">
       <span class="navIcon">🕰️</span>
-      <span>History</span>
+      <span class="navLabel">History</span>
     </button>
   </nav>
 
-  <script src="app.js?v=101"></script>
+  <script src="app.js?v=99"></script>
 </body>
 </html>

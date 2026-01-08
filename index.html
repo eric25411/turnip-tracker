@@ -6,7 +6,7 @@
   <title>Turnip Tracker</title>
 
   <!-- Cache bust -->
-  <link rel="stylesheet" href="style.css?v=19" />
+  <link rel="stylesheet" href="style.css?v=20" />
 </head>
 
 <body>
@@ -43,7 +43,7 @@
               <input class="priceInput" inputmode="numeric" placeholder="-" id="sun-buy" />
             </div>
             <div class="row hintRow">
-              <div class="hintText">Enter the price you bought turnips for (from Daisy Mae).</div>
+              <div class="hintText">Enter the price you bought turnips for.</div>
             </div>
           </div>
 
@@ -126,7 +126,18 @@
       <section id="predictView" class="view hidden">
         <div class="predictWrap">
           <div class="predictCard">
-            <h2 class="historyTitle">Predictor</h2>
+            <div class="predictHeaderRow">
+              <h2 class="historyTitle">Predictor</h2>
+              <span id="sellAlertBadge" class="sellAlertBadge hidden">Sell alert</span>
+            </div>
+
+            <!-- Tiny chart -->
+            <div class="chartWrap">
+              <canvas id="priceChart" width="320" height="140" aria-label="Price chart"></canvas>
+              <div class="chartLegend">
+                <span>Left to right, Mon AM to Sat PM</span>
+              </div>
+            </div>
 
             <div class="predictLine"><strong>Buy price:</strong> <span id="buyPrice">-</span></div>
             <div class="predictLine"><strong>Best so far this week:</strong> <span id="bestSoFar">-</span></div>
@@ -139,6 +150,9 @@
             <div class="predictLine"><strong>Forecast peak window:</strong> <span id="forecastWindow">-</span></div>
             <div class="predictLine"><strong>Forecast confidence:</strong> <span id="forecastConfidence">-</span></div>
             <div class="predictLine"><strong>What to watch next:</strong> <span id="watchNext">-</span></div>
+
+            <!-- Expected max range -->
+            <div class="predictLine"><strong>Expected max range:</strong> <span id="expectedRange">-</span></div>
 
             <div class="predictLine"><strong>Best day on average:</strong> <span id="bestDayAvg">-</span></div>
             <div class="predictLine"><strong>Recommendation:</strong> <span id="recommendation">-</span></div>
@@ -205,6 +219,6 @@
     </button>
   </nav>
 
-  <script src="app.js?v=19"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>

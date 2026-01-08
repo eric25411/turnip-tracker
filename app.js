@@ -36,6 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const likelyPatternEl = document.getElementById("likelyPattern");
   const patternNoteEl = document.getElementById("patternNote");
 
+  const forecastWindowEl = document.getElementById("forecastWindow");
+  const forecastConfidenceEl = document.getElementById("forecastConfidence");
+  const watchNextEl = document.getElementById("watchNext");
+
   // History UI
   const historyList = document.getElementById("historyList");
   const historyEmptyNote = document.getElementById("historyEmptyNote");
@@ -176,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveTab("history");
   });
 
-  // ---------- Pattern detection (uses buy price baseline) ----------
+  // ---------- Pattern detection (saved weeks) ----------
 
   function sellSeriesFromData(dataObj) {
     const series = [];
@@ -198,11 +202,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const max = Math.max(...values);
     const range = max - min;
 
-    // Baseline adjusted range
     const baseline = buy !== null ? buy : min;
     const peakOverBuy = max - baseline;
 
-    // Mostly decreasing?
     let downMoves = 0;
     let totalMoves = 0;
     for (let i = 1; i < series.length; i++) {
@@ -211,7 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const downRatio = downMoves / totalMoves;
 
-    // Find peak index
     let peakIdx = 0;
     for (let i = 1; i < series.length; i++) {
       if (series[i].v > series[peakIdx].v) peakIdx = i;
@@ -223,7 +224,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const jump = peak - before;
     const drop = peak - after;
 
-    // If range tiny
     if (range < 15) {
       return { type: "Random", note: "Small movement, looks flat or random." };
     }
@@ -232,12 +232,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return { type: "Decreasing", note: "Mostly downhill. If you see profit early, take it." };
     }
 
-    // Big spike: peak far above buy, large jump, large drop, later in week
     if (peakOverBuy >= 80 && jump >= 60 && drop >= 40 && peakIdx >= 4) {
       return { type: "Big Spike", note: "Huge peak then drop. Watch Thu to Sat closely." };
     }
 
-    // Small spike: moderate peak, noticeable jump and drop
     if (peakOverBuy >= 50 && jump >= 35 && drop >= 20 && peakIdx >= 3) {
       return { type: "Small Spike", note: "Moderate peak. Watch Wed to Fri." };
     }
@@ -263,6 +261,127 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return { bestType, bestCount, counted };
+  }
+
+  // ---------- New, Forecast current week ----------
+
+  function getEnteredSellSlots(currentData) {
+    const entered = [];
+    SELL_SLOTS.forEach(([label, key]) => {
+      const v = parseNum(currentData ? currentData[key] : null);
+      if (v !== null) entered.push({ label, key, v });
+    });
+    return entered;
+  }
+
+  function slotIndexByKey(key) {
+    for (let i = 0; i < SELL_SLOTS.length; i++) {
+      if (SELL_SLOTS[i][1] === key) return i;
+    }
+    return -1;
+  }
+
+  function forecastCurrentWeek(currentData, learnedPatternType) {
+    const buy = parseNum(currentData ? currentData["sun-buy"] : null);
+    const entered = getEnteredSellSlots(currentData);
+
+    if (entered.length === 0) {
+      return {
+        window: "-",
+        confidence: "-",
+        watchNext: "Enter at least one sell price (Mon AM is a good start)."
+      };
+    }
+
+    // If we know user pattern style from history, we use it as a prior
+    // If not, we guess based on early movement
+    const first = entered[0].v;
+    const last = entered[entered.length - 1].v;
+    const change = last - first;
+
+    // Highest so far
+    let best = entered[0];
+    for (let i = 1; i < entered.length; i++) {
+      if (entered[i].v > best.v) best = entered[i];
+    }
+
+    const bestIdx = slotIndexByKey(best.key);
+    const lastIdx = slotIndexByKey(entered[entered.length - 1].key);
+
+    const profit = (buy !== null) ? (best.v - buy) : null;
+
+    // Heuristic scoring
+    // We build a candidate pattern for this week so far
+    let candidate = learnedPatternType || "Unknown";
+
+    if (!learnedPatternType || learnedPatternType === "Unknown") {
+      if (change < -20 && (profit === null || profit < 20)) candidate = "Decreasing";
+      else if (best.v >= (buy !== null ? buy + 80 : best.v + 0) && bestIdx >= 4) candidate = "Big Spike";
+      else if (best.v >= (buy !== null ? buy + 50 : best.v + 0) && bestIdx >= 3) candidate = "Small Spike";
+      else candidate = "Random";
+    }
+
+    // Choose a window based on candidate pattern, and where we are in the week
+    // Windows are expressed in SELL_SLOTS labels
+    let windowStart = "Thu AM";
+    let windowEnd = "Fri PM";
+    let watchNext = "Keep entering prices, next slot helps confirm the pattern.";
+    let confidence = 35;
+
+    if (candidate === "Decreasing") {
+      windowStart = "Mon AM";
+      windowEnd = "Tue PM";
+      confidence = 45;
+      watchNext = "If Wed keeps dropping, sell the first time you see profit over buy.";
+    }
+
+    if (candidate === "Random") {
+      windowStart = "Wed AM";
+      windowEnd = "Sat PM";
+      confidence = 30;
+      watchNext = "Random weeks need more data. Watch for any sudden jump, especially Thu and Fri.";
+    }
+
+    if (candidate === "Small Spike") {
+      windowStart = "Wed AM";
+      windowEnd = "Fri PM";
+      confidence = 55;
+      watchNext = "If you see a jump of 30 or more between two slots, that is your spike forming.";
+    }
+
+    if (candidate === "Big Spike") {
+      windowStart = "Thu AM";
+      windowEnd = "Sat AM";
+      confidence = 65;
+      watchNext = "Big spike usually appears fast. If Thu AM shoots up hard, be ready to sell same day.";
+    }
+
+    // Adjust confidence with how much of the week is entered
+    // More entries means higher confidence
+    confidence += Math.min(entered.length * 4, 20);
+
+    // If best is already late week and high, boost
+    if (bestIdx >= 6) confidence += 5;
+
+    // If we already hit a strong profit, raise confidence and nudge recommendation via updatePredictSummary
+    if (profit !== null && profit >= 80) confidence += 10;
+
+    // If we are already past the window and still rising, shift window later
+    if (lastIdx >= 6 && last >= best.v) {
+      windowStart = "Fri AM";
+      windowEnd = "Sat PM";
+      watchNext = "You are late week and still rising, watch every slot closely.";
+      confidence = Math.min(confidence + 5, 90);
+    }
+
+    // Clip confidence
+    confidence = Math.max(10, Math.min(confidence, 90));
+
+    return {
+      window: `${windowStart} to ${windowEnd}`,
+      confidence: `${confidence}%`,
+      watchNext
+    };
   }
 
   // ---------- Predictor learning ----------
@@ -410,7 +529,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (recommendationEl) {
       if (learn.countedWeeks === 0 || learn.avgPeak === null || curBest.bestVal === null) {
-        recommendationEl.textContent = "Need more data. Save weeks to improve.";
+        // If no history, give a practical message using buy price
+        if (buy !== null && curBest.bestVal !== null) {
+          const diff = curBest.bestVal - buy;
+          if (diff >= 50) recommendationEl.textContent = "Solid profit. If you are happy with it, selling now is reasonable.";
+          else recommendationEl.textContent = "Not much profit yet. Keep watching, especially mid to late week.";
+        } else {
+          recommendationEl.textContent = "Need more data. Save weeks to improve.";
+        }
       } else {
         const avgPeakRounded = Math.round(learn.avgPeak);
         if (curBest.bestVal >= avgPeakRounded) {
@@ -421,12 +547,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Learned pattern from saved weeks
+    let learnedType = null;
     if (likelyPatternEl && patternNoteEl) {
       const p = learn.pattern;
       if (!p.bestType) {
         likelyPatternEl.textContent = "-";
         patternNoteEl.textContent = "Save more weeks so pattern detection can learn your style.";
       } else {
+        learnedType = p.bestType;
         likelyPatternEl.textContent = `${p.bestType} (${p.bestCount}/${p.counted})`;
         patternNoteEl.textContent =
           p.bestType === "Big Spike" ? "Peaks tend to hit Thu to Sat, check often." :
@@ -436,10 +565,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Forecast current week
+    const fc = forecastCurrentWeek(current, learnedType);
+    if (forecastWindowEl) forecastWindowEl.textContent = fc.window;
+    if (forecastConfidenceEl) forecastConfidenceEl.textContent = fc.confidence;
+    if (watchNextEl) watchNextEl.textContent = fc.watchNext;
+
     if (predictSummaryEl) {
       if (learn.countedWeeks === 0) {
         predictSummaryEl.textContent =
-          "No saved weeks with prices yet. Save a week or two and I will start learning your best sell windows.";
+          "No saved weeks yet. Forecast is based only on this week’s partial data.";
       } else {
         const avgTxt = learn.avgPeak === null ? "-" : String(Math.round(learn.avgPeak));
         const commonTxt = learn.mostCommonBestLabel || "-";
@@ -454,11 +589,11 @@ document.addEventListener("DOMContentLoaded", () => {
     runPredictBtn.addEventListener("click", (e) => {
       e.preventDefault();
       updatePredictSummary();
-      alert("Updated. Pattern detection now uses your Sunday buy price baseline.");
+      alert("Forecast updated using your current week data.");
     });
   }
 
-  // ---- History render (includes buy and pattern) ----
+  // ---- History render ----
   function renderHistory() {
     const weeks = getWeeks();
     historyList.innerHTML = "";

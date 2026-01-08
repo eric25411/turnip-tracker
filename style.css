@@ -198,3 +198,40 @@ body{
   .priceInput{ max-width: 128px; font-size: 18px; height: 40px; }
   .navText{ font-size: 20px; }
 }
+/* ===== HOTFIX v12 ===== */
+
+/* Stop ugly hyphen splits like Wednes-day */
+.dayTitle{
+  hyphens: none !important;
+  word-break: keep-all !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Make inputs visible again */
+.priceInput{
+  background: rgba(255,255,255,0.78) !important;
+  border: 2px solid rgba(255,255,255,0.85) !important;
+  color: #1f1f1f !important;
+}
+
+.priceInput::placeholder{
+  color: rgba(0,0,0,0.45) !important;
+}
+
+/* Give the page more room so the nav doesn’t cover cards */
+.app{
+  padding-bottom: 150px !important;
+}
+
+/* Make bottom nav less intrusive */
+.bottomNav::before{
+  height: 74px !important;
+  border-radius: 24px !important;
+}
+
+.navBtn{
+  padding: 10px 14px !important;
+}
+
+.navIcon{ font-size: 24px !important; }
+.navText{ font-size: 20px !important; }

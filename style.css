@@ -3,14 +3,10 @@
   --bg2:#c7d8f2;
 
   --card:#ffffffb8;
-  --card2:#ffffffcc;
-
   --tan:#caa57f;
   --tan2:#d7b493;
 
   --ink:#111;
-  --muted:#4b4b4b;
-
   --green:#1f7a5a;
   --green2:#166247;
 
@@ -66,7 +62,7 @@ body{
   position: sticky;
   top: 10px;
   z-index: 20;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .buyCard{
@@ -84,14 +80,11 @@ body{
   gap: 12px;
 }
 
-.buyLeft{
-  flex: 1;
-  min-width: 0;
-}
+.buyLeft{ flex:1; min-width:0; }
 
 .buyTitle{
-  font-weight: 900;
-  font-size: 22px;
+  font-weight: 1000;
+  font-size: 20px;
   display:flex;
   align-items:center;
   gap: 10px;
@@ -99,72 +92,73 @@ body{
 
 .buyHint{
   margin-top: 4px;
-  font-weight: 700;
+  font-weight: 800;
   color: rgba(0,0,0,0.55);
+  font-size: 15px;
 }
 
 .buyInput{
   width: 120px;
-  height: 48px;
-  border-radius: 18px;
+  height: 46px;
+  border-radius: 16px;
   border: 2px solid rgba(255,255,255,0.7);
   background: rgba(255,255,255,0.65);
-  font-size: 22px;
-  font-weight: 900;
+  font-size: 20px;
+  font-weight: 1000;
   text-align: center;
   outline: none;
 }
 
-/* Days */
 .days{
   display:flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .dayCard{
   background: linear-gradient(180deg,var(--tan2),var(--tan));
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 14px;
   box-shadow: 0 14px 30px rgba(0,0,0,0.10);
 }
 
+/* WAY smaller day font */
 .dayTitle{
   margin: 0 0 10px 0;
-  font-size: 64px;
+  font-size: 42px;
   line-height: 1;
   font-weight: 1000;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
 }
 
 .row{
   background: rgba(255,255,255,0.22);
   border-radius: var(--radius2);
-  padding: 14px 14px;
+  padding: 12px 12px;
   display:flex;
   align-items:center;
   justify-content: space-between;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .label{
   display:flex;
   align-items:center;
   gap: 10px;
-  font-size: 26px;
-  font-weight: 900;
+  font-size: 20px;
+  font-weight: 1000;
 }
 
-.emoji{ font-size: 26px; }
+.emoji{ font-size: 20px; }
 
 .priceInput{
-  width: 150px;
-  height: 58px;
-  border-radius: 22px;
+  width: 140px;
+  height: 52px;
+  border-radius: 18px;
   border: 2px solid rgba(255,255,255,0.7);
   background: rgba(255,255,255,0.65);
-  font-size: 26px;
-  font-weight: 900;
+  font-size: 20px;
+  font-weight: 1000;
   text-align:center;
   outline:none;
 }
@@ -186,7 +180,7 @@ body{
   color: white;
   padding: 16px 18px;
   border-radius: 999px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 1000;
   letter-spacing: 0.2px;
 }
@@ -195,7 +189,7 @@ body{
 
 .saveHint{
   margin-top: 10px;
-  font-weight: 800;
+  font-weight: 900;
   color: rgba(0,0,0,0.55);
 }
 
@@ -211,7 +205,7 @@ body{
 
 .predictTitle{
   margin: 0 0 12px 0;
-  font-size: 74px;
+  font-size: 54px;
   line-height: 1;
   font-weight: 1000;
 }
@@ -233,7 +227,7 @@ body{
 
 .postcardTitle{
   font-weight: 1000;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .legendStack{
@@ -252,7 +246,7 @@ body{
 }
 
 .legendIcon{ font-size: 18px; }
-.legendText{ font-size: 16px; }
+.legendText{ font-size: 14px; }
 
 .chartCard{
   background: rgba(255,255,255,0.60);
@@ -272,7 +266,7 @@ body{
 
 .chartCaption{
   margin-top: 10px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 900;
   color: rgba(0,0,0,0.65);
 }
@@ -288,31 +282,24 @@ body{
 .statRow{
   display:flex;
   justify-content: space-between;
-  padding: 14px 8px;
+  padding: 12px 8px;
   border-bottom: 1px solid rgba(0,0,0,0.08);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 900;
 }
 
-.statRow strong{
-  font-weight: 1000;
-}
-
+.statRow strong{ font-weight: 1000; }
 .statRow:last-child{ border-bottom:none; }
 
 .statNote{
   padding: 12px 8px 0 8px;
   font-weight: 900;
   color: rgba(0,0,0,0.55);
-  font-size: 18px;
+  font-size: 16px;
 }
 
 /* History */
-.historyWrap{
-  display:flex;
-  flex-direction: column;
-  gap: 14px;
-}
+.historyWrap{ display:flex; flex-direction: column; gap: 14px; }
 
 .historyCard{
   background: rgba(255,255,255,0.55);
@@ -323,7 +310,7 @@ body{
   border: 1px solid rgba(255,255,255,0.35);
 }
 
-.historyTitle{ margin: 0 0 6px 0; font-size: 34px; font-weight: 1000; }
+.historyTitle{ margin: 0 0 6px 0; font-size: 32px; font-weight: 1000; }
 .historyHint{ margin: 0 0 12px 0; font-weight: 800; color: rgba(0,0,0,0.55); }
 
 .historyList{ display:flex; flex-direction: column; gap: 10px; }
@@ -342,14 +329,9 @@ body{
   align-items:center;
 }
 
-.weekLabel{
-  font-weight: 1000;
-}
+.weekLabel{ font-weight: 1000; }
 
-.weekBtns{
-  display:flex;
-  gap: 8px;
-}
+.weekBtns{ display:flex; gap: 8px; }
 
 .smallBtn{
   border: none;
@@ -366,17 +348,11 @@ body{
   color: rgba(0,0,0,0.65);
 }
 
-.weekRow.expanded .weekDetails{
-  display:block;
-}
+.weekRow.expanded .weekDetails{ display:block; }
 
-.historySubtitle{ margin: 0 0 10px 0; font-size: 22px; font-weight: 1000; }
+.historySubtitle{ margin: 0 0 10px 0; font-size: 20px; font-weight: 1000; }
 
-.historyActions{
-  display:flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+.historyActions{ display:flex; gap: 10px; flex-wrap: wrap; }
 
 .chipBtn{
   border: none;
@@ -386,9 +362,7 @@ body{
   font-weight: 1000;
 }
 
-.fileBtn input{
-  display:none;
-}
+.fileBtn input{ display:none; }
 
 .historySmall{
   margin-top: 12px;
@@ -428,10 +402,7 @@ body{
   box-shadow: 0 8px 18px rgba(0,0,0,0.06);
 }
 
-.navIcon{
-  font-size: 22px;
-  line-height: 1;
-}
+.navIcon{ font-size: 22px; line-height: 1; }
 
 .navLabel{
   font-weight: 1000;
@@ -439,10 +410,5 @@ body{
   font-size: 16px;
 }
 
-.navBtn.active{
-  outline: 2px solid rgba(31,122,90,0.35);
-}
-
-.navBtn.active .navLabel{
-  color: var(--green2);
-}
+.navBtn.active{ outline: 2px solid rgba(31,122,90,0.35); }
+.navBtn.active .navLabel{ color: var(--green2); }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
 
-  <link rel="stylesheet" href="style.css?v=50" />
+  <link rel="stylesheet" href="style.css?v=60" />
 </head>
 
 <body>
@@ -17,9 +17,15 @@
           <img src="banner.png.jpg" alt="Turnip Tracker" />
         </div>
 
+        <div class="editBanner viewHidden" id="editBanner">
+          Editing saved week
+        </div>
+
         <div class="headerActions">
           <button class="saveWeekBtn" id="saveWeekBtn" type="button">Save week to History</button>
+          <button class="saveWeekBtn viewHidden" id="saveChangesBtn" type="button">Save changes</button>
           <button class="newWeekBtn" id="newWeekBtn" type="button">New week</button>
+          <button class="newWeekBtn viewHidden" id="cancelEditBtn" type="button">Cancel edit</button>
         </div>
       </section>
 
@@ -116,10 +122,8 @@
 
           <div class="historyTools">
             <button class="toolBtn" id="exportBtn" type="button">⬇️ Export</button>
-
             <label class="toolBtn" for="importFile">⬆️ Import</label>
             <input id="importFile" class="fileHidden" type="file" accept="application/json,.json" />
-
             <button class="historyHomeBtn" id="historyHomeBtn" type="button">🏠 Home</button>
           </div>
         </div>

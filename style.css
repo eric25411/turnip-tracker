@@ -32,9 +32,7 @@ body{
   padding: 18px 16px calc(var(--navH) + 18px);
 }
 
-.main{
-  padding-bottom: 10px;
-}
+.main{ padding-bottom: 10px; }
 
 /* HEADER */
 .headerCard{
@@ -81,53 +79,54 @@ body{
 .buyCard{
   background: linear-gradient(180deg, var(--tan), var(--tan2));
   border-radius: var(--radius);
-  padding: 16px 18px;
+  padding: 14px 16px;
   box-shadow: var(--shadow);
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .buyRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap: 14px;
+  gap: 12px;
   background: var(--pill);
-  border-radius: 22px;
-  padding: 14px;
+  border-radius: 20px;
+  padding: 12px;
 }
 
 .buyLabel{
   display:flex;
   align-items:center;
   gap: 10px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 900;
 }
 
 .buyHint{
-  margin-top: 10px;
+  margin-top: 8px;
   color: rgba(0,0,0,.70);
   font-weight: 650;
+  font-size: 14px;
 }
 
-/* DAY CARDS */
+/* DAY CARDS (smaller, safe) */
 .days{
   display:flex;
   flex-direction:column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .dayCard{
   background: linear-gradient(180deg, var(--tan), var(--tan2));
   border-radius: var(--radius);
-  padding: 18px 18px 16px;
+  padding: 14px 16px 14px;
   box-shadow: var(--shadow);
 }
 
 .dayTitle{
-  margin: 0 0 14px;
-  font-size: 56px;
-  line-height: 1;
+  margin: 0 0 10px;
+  font-size: 44px;
+  line-height: 1.02;
   font-weight: 950;
   letter-spacing: -1px;
 }
@@ -136,30 +135,30 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap: 14px;
+  gap: 12px;
   background: var(--pill);
-  border-radius: 24px;
-  padding: 16px;
-  margin-top: 14px;
+  border-radius: 20px;
+  padding: 12px;
+  margin-top: 12px;
 }
 
 .label{
   display:flex;
   align-items:center;
   gap: 10px;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 900;
 }
 
-.emoji{ width: 30px; text-align:center; }
+.emoji{ width: 28px; text-align:center; }
 
 .priceInput{
-  width: 150px;
-  padding: 14px 16px;
-  border-radius: 22px;
+  width: 130px;
+  padding: 12px 14px;
+  border-radius: 18px;
   border: 2px solid rgba(255,255,255,.55);
   background: rgba(255,255,255,.78);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 900;
   text-align:center;
   outline:none;
@@ -170,21 +169,19 @@ body{
   box-shadow: 0 0 0 4px rgba(0,0,0,.08);
 }
 
-.buyInput{
-  width: 150px;
-}
+.buyInput{ width: 130px; }
 
 /* PREDICTOR */
 .predictCard{
   background: rgba(255,255,255,.30);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 18px;
+  padding: 16px;
 }
 
 .predictTitle{
-  margin: 0 0 14px;
-  font-size: 44px;
+  margin: 0 0 12px;
+  font-size: 38px;
   font-weight: 950;
 }
 
@@ -218,24 +215,25 @@ body{
 .chartCaption{
   padding: 10px 12px;
   font-weight: 700;
+  font-size: 14px;
   color: rgba(0,0,0,.70);
   position: relative;
   z-index: 1;
 }
 
 .metrics{
-  margin-top: 14px;
+  margin-top: 12px;
   display:flex;
   flex-direction:column;
-  gap: 10px;
-  font-size: 18px;
+  gap: 8px;
+  font-size: 16px;
   font-weight: 750;
 }
 
 .metric .k{ font-weight: 950; }
 
 .metric.small{
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 650;
   color: rgba(0,0,0,.78);
 }
@@ -244,31 +242,32 @@ body{
 .historyWrap{
   display:flex;
   flex-direction:column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .historyCard{
   background: linear-gradient(180deg, var(--tan), var(--tan2));
   border-radius: var(--radius);
-  padding: 18px;
+  padding: 16px;
   box-shadow: var(--shadow);
 }
 
 .historyTitle{
   margin: 0 0 8px;
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 950;
 }
 
 .historyHint{
   margin: 0 0 14px;
   font-weight: 650;
+  font-size: 14px;
   color: rgba(0,0,0,.75);
 }
 
 .historySubtitle{
   margin: 0 0 12px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 950;
 }
 
@@ -292,6 +291,7 @@ body{
 .historySmall{
   margin: 12px 0 0;
   font-weight: 650;
+  font-size: 14px;
   color: rgba(0,0,0,.75);
 }
 
@@ -328,6 +328,7 @@ body{
   display:none;
   margin-top: 10px;
   font-weight: 650;
+  font-size: 14px;
   color: rgba(0,0,0,.78);
 }
 

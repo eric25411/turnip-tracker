@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
+
+  <!-- Cache bust -->
   <link rel="stylesheet" href="style.css?v=18" />
 </head>
 
@@ -19,19 +21,31 @@
         onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
       />
 
-      <div id="headerFallback" style="display:none; font-size:22px; font-weight:700; text-align:center;">
+      <div id="headerFallback" style="display:none; font-size:22px; font-weight:700;">
         Turnip Tracker
       </div>
 
-      <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
+      <button id="saveWeekBtn" class="primaryBtn">Save week to History</button>
     </div>
 
     <!-- MAIN -->
     <main id="mainView">
 
-      <!-- ENTRY VIEW (your day cards screen) -->
+      <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
         <section class="days">
+
+          <!-- SUNDAY BUY PRICE -->
+          <div class="dayCard">
+            <h2 class="dayTitle">Sunday</h2>
+            <div class="row">
+              <div class="label"><span class="emoji">🧺</span><span>Buy</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="sun-buy" />
+            </div>
+            <div class="row hintRow">
+              <div class="hintText">Enter the price you bought turnips for (from Daisy Mae).</div>
+            </div>
+          </div>
 
           <div class="dayCard">
             <h2 class="dayTitle">Monday</h2>
@@ -111,25 +125,32 @@
       <!-- PREDICT VIEW -->
       <section id="predictView" class="view hidden">
         <div class="predictWrap">
-          <div class="historyCard">
+          <div class="predictCard">
             <h2 class="historyTitle">Predictor</h2>
-            <p class="historyHint" id="predictSummary">
-              Enter this week’s prices on Entry, then save your week. Once you have a few weeks saved, we will start learning patterns.
+
+            <div class="predictLine"><strong>Buy price:</strong> <span id="buyPrice">-</span></div>
+            <div class="predictLine"><strong>Best so far this week:</strong> <span id="bestSoFar">-</span></div>
+            <div class="predictLine"><strong>Best day/time:</strong> <span id="bestWhen">-</span></div>
+            <div class="predictLine"><strong>Profit vs buy:</strong> <span id="profitVsBuy">-</span></div>
+
+            <div class="predictLine"><strong>Best day on average:</strong> <span id="bestDayAvg">-</span></div>
+            <div class="predictLine"><strong>Recommendation:</strong> <span id="recommendation">-</span></div>
+            <div class="predictLine"><strong>Top peak slots:</strong> <span id="topPeaks">-</span></div>
+
+            <div class="predictLine"><strong>Likely pattern:</strong> <span id="likelyPattern">-</span></div>
+            <div class="predictLine"><strong>Pattern note:</strong> <span id="patternNote">-</span></div>
+
+            <div class="predictLine"><strong>Saved weeks count:</strong> <span id="weeksCount">0</span></div>
+
+            <button id="runPredictBtn" class="primaryBtn">Run prediction</button>
+
+            <p id="predictSummary" class="historySmall">
+              Enter prices, save weeks, then I will learn your best sell windows.
             </p>
+          </div>
 
-            <div class="historyActions">
-              <button id="runPredictBtn" class="chipBtn" type="button">Run prediction</button>
-              <button id="goEntryBtn" class="chipBtn" type="button">Back to Entry</button>
-            </div>
-
-            <div class="predictCard">
-  <div class="predictLine"><strong>Best so far this week:</strong> <span id="bestSoFar">-</span></div>
-  <div class="predictLine"><strong>Best day/time:</strong> <span id="bestWhen">-</span></div>
-  <div class="predictLine"><strong>Best day on average:</strong> <span id="bestDayAvg">-</span></div>
-  <div class="predictLine"><strong>Recommendation:</strong> <span id="recommendation">-</span></div>
-  <div class="predictLine"><strong>Top peak slots:</strong> <span id="topPeaks">-</span></div>
-  <div class="predictLine"><strong>Saved weeks count:</strong> <span id="weeksCount">0</span></div>
-</div>
+          <div class="predictCard">
+            <button id="goEntryBtn" class="chipBtn" type="button">Back to Entry</button>
           </div>
         </div>
       </section>
@@ -146,12 +167,12 @@
           <div class="historyCard">
             <h3 class="historySubtitle">Import, Export</h3>
             <div class="historyActions">
-              <button id="exportBtn" class="chipBtn" type="button">Export</button>
+              <button id="exportBtn" class="chipBtn">Export</button>
               <label class="chipBtn fileBtn">
                 Import
                 <input id="importFile" type="file" accept="application/json" />
               </label>
-              <button id="goHomeBtn" class="chipBtn" type="button">Home</button>
+              <button id="goHomeBtn" class="chipBtn">Home</button>
             </div>
 
             <p class="historySmall" id="historyEmptyNote">
@@ -164,18 +185,16 @@
     </main>
   </div>
 
-  <!-- BOTTOM NAV (3 tabs) -->
+  <!-- BOTTOM NAV -->
   <nav class="bottomNav">
     <button id="navEntry" class="navBtn active" type="button">
-      <span class="navIcon">📝</span>
+      <span class="navIcon">🧾</span>
       <span>Entry</span>
     </button>
-
     <button id="navPredict" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
       <span>Predict</span>
     </button>
-
     <button id="navHistory" class="navBtn" type="button">
       <span class="navIcon">🕰️</span>
       <span>History</span>
@@ -185,5 +204,3 @@
   <script src="app.js?v=18"></script>
 </body>
 </html>
-<div class="predictLine"><strong>Likely pattern:</strong> <span id="likelyPattern">-</span></div>
-<div class="predictLine"><strong>Pattern note:</strong> <span id="patternNote">-</span></div>

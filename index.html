@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css?v=100" />
+  <link rel="stylesheet" href="style.css?v=101" />
 </head>
 
 <body>
@@ -136,10 +136,16 @@
         <div class="panel">
           <h2 class="panelTitle">Predictor</h2>
 
-          <div class="chartCard">
+          <!-- Postcard chart -->
+          <div class="postcardCard">
+            <div class="postcardTop">
+              <div class="postcardTitle">This week’s bell postcard</div>
+              <div class="postcardKey">🔔 AM, 🛎️ PM</div>
+            </div>
+
             <canvas id="chartCanvas" width="900" height="360" aria-label="Turnip price chart"></canvas>
-            <div class="chartLegend">🌞 AM, 🌙 PM</div>
-            <div class="chartCaption">A quick peek at your week, keep logging and it gets smarter.</div>
+
+            <div class="postcardCaption">Just a cozy snapshot. The more you log, the smarter it gets.</div>
           </div>
 
           <div class="statsCard" id="predictStats"></div>
@@ -193,6 +199,6 @@
     </button>
   </nav>
 
-  <script src="app.js?v=100"></script>
+  <script src="app.js?v=101"></script>
 </body>
 </html>

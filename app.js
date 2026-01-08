@@ -21,8 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const runPredictBtn = document.getElementById("runPredictBtn");
 
   // Predictor UI
+  const buyPriceEl = document.getElementById("buyPrice");
   const bestSoFarEl = document.getElementById("bestSoFar");
   const bestWhenEl = document.getElementById("bestWhen");
+  const profitVsBuyEl = document.getElementById("profitVsBuy");
+
   const weeksCountEl = document.getElementById("weeksCount");
   const predictSummaryEl = document.getElementById("predictSummary");
 
@@ -84,6 +87,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const SLOT_LIST = [
+    ["Sun Buy","sun-buy"],
+    ["Mon AM","mon-am"], ["Mon PM","mon-pm"],
+    ["Tue AM","tue-am"], ["Tue PM","tue-pm"],
+    ["Wed AM","wed-am"], ["Wed PM","wed-pm"],
+    ["Thu AM","thu-am"], ["Thu PM","thu-pm"],
+    ["Fri AM","fri-am"], ["Fri PM","fri-pm"],
+    ["Sat AM","sat-am"], ["Sat PM","sat-pm"]
+  ];
+
+  const SELL_SLOTS = [
     ["Mon AM","mon-am"], ["Mon PM","mon-pm"],
     ["Tue AM","tue-am"], ["Tue PM","tue-pm"],
     ["Wed AM","wed-am"], ["Wed PM","wed-pm"],
@@ -163,12 +176,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveTab("history");
   });
 
-  // ---------- Pattern detection ----------
+  // ---------- Pattern detection (uses buy price baseline) ----------
 
-  function weekSeriesFromData(dataObj) {
-    // returns numeric series in order, skipping nulls
+  function sellSeriesFromData(dataObj) {
     const series = [];
-    SLOT_LIST.forEach(([label, key]) => {
+    SELL_SLOTS.forEach(([label, key]) => {
       const v = parseNum(dataObj ? dataObj[key] : null);
       if (v !== null) series.push({ label, key, v });
     });
@@ -176,30 +188,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function detectPattern(dataObj) {
-    const series = weekSeriesFromData(dataObj);
-    if (series.length < 4) {
-      return { type: "Unknown", note: "Not enough data yet." };
-    }
+    const buy = parseNum(dataObj ? dataObj["sun-buy"] : null);
+    const series = sellSeriesFromData(dataObj);
+
+    if (series.length < 4) return { type: "Unknown", note: "Not enough data yet." };
 
     const values = series.map(x => x.v);
     const min = Math.min(...values);
     const max = Math.max(...values);
-
-    // If range is tiny, treat as Random (flat-ish)
     const range = max - min;
-    if (range < 15) {
-      return { type: "Random", note: "Small movement so far, looks flat or random." };
-    }
 
-    // Find peak index and check shape around it
-    let peakIdx = 0;
-    for (let i = 1; i < series.length; i++) {
-      if (series[i].v > series[peakIdx].v) peakIdx = i;
-    }
+    // Baseline adjusted range
+    const baseline = buy !== null ? buy : min;
+    const peakOverBuy = max - baseline;
 
-    const peak = series[peakIdx].v;
-
-    // Check if mostly decreasing
+    // Mostly decreasing?
     let downMoves = 0;
     let totalMoves = 0;
     for (let i = 1; i < series.length; i++) {
@@ -208,29 +211,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const downRatio = downMoves / totalMoves;
 
-    if (downRatio >= 0.75 && peakIdx <= 2) {
-      return { type: "Decreasing", note: "Mostly dropping over time, peak tends to be early." };
+    // Find peak index
+    let peakIdx = 0;
+    for (let i = 1; i < series.length; i++) {
+      if (series[i].v > series[peakIdx].v) peakIdx = i;
     }
-
-    // Spike detection: a large jump into peak and a notable drop after
+    const peak = series[peakIdx].v;
     const before = series[Math.max(0, peakIdx - 1)].v;
     const after = series[Math.min(series.length - 1, peakIdx + 1)].v;
 
     const jump = peak - before;
     const drop = peak - after;
 
-    // Big spike if jump is big and drop is big
-    if (jump >= 60 && drop >= 40 && peakIdx >= 3) {
-      return { type: "Big Spike", note: "One big peak then a sharp drop, sell near the spike." };
+    // If range tiny
+    if (range < 15) {
+      return { type: "Random", note: "Small movement, looks flat or random." };
     }
 
-    // Small spike if it spikes, but not huge
-    if (jump >= 35 && drop >= 20 && peakIdx >= 3) {
-      return { type: "Small Spike", note: "A moderate peak then fades, watch mid to late week." };
+    if (downRatio >= 0.75 && peakIdx <= 2 && peakOverBuy < 30) {
+      return { type: "Decreasing", note: "Mostly downhill. If you see profit early, take it." };
     }
 
-    // Otherwise random
-    return { type: "Random", note: "Prices bounce without a clear spike pattern." };
+    // Big spike: peak far above buy, large jump, large drop, later in week
+    if (peakOverBuy >= 80 && jump >= 60 && drop >= 40 && peakIdx >= 4) {
+      return { type: "Big Spike", note: "Huge peak then drop. Watch Thu to Sat closely." };
+    }
+
+    // Small spike: moderate peak, noticeable jump and drop
+    if (peakOverBuy >= 50 && jump >= 35 && drop >= 20 && peakIdx >= 3) {
+      return { type: "Small Spike", note: "Moderate peak. Watch Wed to Fri." };
+    }
+
+    return { type: "Random", note: "Bouncy week. Watch for surprise jumps." };
   }
 
   function mostCommonPattern(weeks) {
@@ -255,11 +267,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------- Predictor learning ----------
 
-  function computeBestSlotFromData(dataObj) {
+  function computeBestSellSlotFromData(dataObj) {
     let bestVal = null;
     let bestLabel = null;
 
-    SLOT_LIST.forEach(([label, key]) => {
+    SELL_SLOTS.forEach(([label, key]) => {
       const v = parseNum(dataObj ? dataObj[key] : null);
       if (v === null) return;
       if (bestVal === null || v > bestVal) {
@@ -315,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let countedWeeks = 0;
 
     weeks.forEach(w => {
-      const res = computeBestSlotFromData(w && w.data ? w.data : null);
+      const res = computeBestSellSlotFromData(w && w.data ? w.data : null);
       if (res.bestVal === null) return;
 
       countedWeeks += 1;
@@ -334,7 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const dayAvg = computeBestDayAvgFromWeeks(weeks);
     const pattern = mostCommonPattern(weeks);
 
-    // most common peak slot
     let mostCommonBestLabel = null;
     let mostCommonCount = 0;
     for (const [label, c] of freq.entries()) {
@@ -361,7 +372,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (weeksCountEl) weeksCountEl.textContent = String(weeks.length);
 
     const current = getCurrentWeekData();
-    const curBest = computeBestSlotFromData(current);
+    const buy = parseNum(current["sun-buy"]);
+    const curBest = computeBestSellSlotFromData(current);
+
+    if (buyPriceEl) buyPriceEl.textContent = buy === null ? "-" : String(buy);
 
     if (curBest.bestVal === null) {
       if (bestSoFarEl) bestSoFarEl.textContent = "-";
@@ -369,6 +383,15 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       if (bestSoFarEl) bestSoFarEl.textContent = String(curBest.bestVal);
       if (bestWhenEl) bestWhenEl.textContent = curBest.bestLabel;
+    }
+
+    if (profitVsBuyEl) {
+      if (buy === null || curBest.bestVal === null) profitVsBuyEl.textContent = "-";
+      else {
+        const diff = curBest.bestVal - buy;
+        const sign = diff >= 0 ? "+" : "";
+        profitVsBuyEl.textContent = `${sign}${diff}`;
+      }
     }
 
     const learn = learnFromSavedWeeks(weeks);
@@ -398,7 +421,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Pattern output
     if (likelyPatternEl && patternNoteEl) {
       const p = learn.pattern;
       if (!p.bestType) {
@@ -407,9 +429,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         likelyPatternEl.textContent = `${p.bestType} (${p.bestCount}/${p.counted})`;
         patternNoteEl.textContent =
-          p.bestType === "Big Spike" ? "Peaks tend to appear mid to late week, watch Thu to Sat." :
-          p.bestType === "Small Spike" ? "Moderate peaks, check Wed to Fri closely." :
-          p.bestType === "Decreasing" ? "Often downhill, sell early if you see a decent price." :
+          p.bestType === "Big Spike" ? "Peaks tend to hit Thu to Sat, check often." :
+          p.bestType === "Small Spike" ? "Peaks usually show Wed to Fri, stay alert." :
+          p.bestType === "Decreasing" ? "Often downhill, take profit early if you see it." :
           "Bouncy weeks, watch for any surprise jump.";
       }
     }
@@ -432,11 +454,11 @@ document.addEventListener("DOMContentLoaded", () => {
     runPredictBtn.addEventListener("click", (e) => {
       e.preventDefault();
       updatePredictSummary();
-      alert("Updated. Pattern detection is now enabled using your saved weeks.");
+      alert("Updated. Pattern detection now uses your Sunday buy price baseline.");
     });
   }
 
-  // ---- History render (now includes pattern in details) ----
+  // ---- History render (includes buy and pattern) ----
   function renderHistory() {
     const weeks = getWeeks();
     historyList.innerHTML = "";
@@ -496,10 +518,12 @@ document.addEventListener("DOMContentLoaded", () => {
       top.appendChild(btnWrap);
 
       const det = detectPattern(w.data);
+      const buy = parseNum(w.data && w.data["sun-buy"]);
 
       const details = document.createElement("div");
       details.className = "weekDetails";
-      details.textContent = `Pattern: ${det.type}. ${det.note}  |  ${summarizeWeek(w.data)}`;
+      details.textContent =
+        `Buy: ${buy === null ? "-" : buy}. Pattern: ${det.type}. ${det.note}  |  ${summarizeWeek(w.data)}`;
 
       row.appendChild(top);
       row.appendChild(details);

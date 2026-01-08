@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
 
-  <link rel="stylesheet" href="style.css?v=40" />
+  <link rel="stylesheet" href="style.css?v=50" />
 </head>
 
 <body>
@@ -113,9 +113,18 @@
       <section class="historyHeader">
         <div class="historyTitleRow">
           <div class="historyTitle">Past weeks</div>
-          <button class="historyHomeBtn" id="historyHomeBtn" type="button">🏠 Home</button>
+
+          <div class="historyTools">
+            <button class="toolBtn" id="exportBtn" type="button">⬇️ Export</button>
+
+            <label class="toolBtn" for="importFile">⬆️ Import</label>
+            <input id="importFile" class="fileHidden" type="file" accept="application/json,.json" />
+
+            <button class="historyHomeBtn" id="historyHomeBtn" type="button">🏠 Home</button>
+          </div>
         </div>
-        <div class="historySub">Tap a week to expand.</div>
+
+        <div class="historySub">Tap a week to expand. Use Load to edit an old week.</div>
       </section>
 
       <section id="historyList" class="historyList"></section>

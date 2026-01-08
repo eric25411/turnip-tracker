@@ -12,6 +12,9 @@
   const historyList = document.getElementById("historyList");
   const historyHomeBtn = document.getElementById("historyHomeBtn");
 
+  const exportBtn = document.getElementById("exportBtn");
+  const importFile = document.getElementById("importFile");
+
   const predictText = document.getElementById("predictText");
   const buyInput = document.getElementById("buy-price");
 
@@ -43,6 +46,14 @@
     return `${dayMap[d] || d} ${timeMap[t] || t}`;
   }
 
+  function getHistory() {
+    return JSON.parse(localStorage.getItem("tt_history") || "[]");
+  }
+
+  function setHistory(arr) {
+    localStorage.setItem("tt_history", JSON.stringify(arr));
+  }
+
   function findBestFromInputs() {
     let best = { id: null, value: -1 };
     inputs.forEach((el) => {
@@ -52,11 +63,25 @@
     return best.value > 0 ? best : null;
   }
 
+  function clearBestHighlight() {
+    inputs.forEach((el) => el.classList.remove("bestNow"));
+  }
+
+  function applyBestHighlight() {
+    clearBestHighlight();
+    const best = findBestFromInputs();
+    if (!best) return;
+    const el = document.getElementById(best.id);
+    if (el) el.classList.add("bestNow");
+  }
+
   function updatePrediction() {
     if (!predictText) return;
 
     const best = findBestFromInputs();
     const buy = buyInput ? Number(buyInput.value || 0) : 0;
+
+    applyBestHighlight();
 
     if (!best) {
       predictText.textContent = "Enter prices to get a best sell window.";
@@ -123,11 +148,10 @@
       week.prices[el.id] = Number(el.value || 0);
     });
 
-    const history = JSON.parse(localStorage.getItem("tt_history") || "[]");
+    const history = getHistory();
     history.unshift(week);
-    localStorage.setItem("tt_history", JSON.stringify(history));
+    setHistory(history);
 
-    // store marker so history view can highlight the newest item
     localStorage.setItem("tt_last_saved_at", week.savedAt);
 
     showToast(auto ? "Week auto saved" : "Saved to History");
@@ -155,7 +179,7 @@
   function renderHistory(tryHighlight) {
     if (!historyList) return;
 
-    const history = JSON.parse(localStorage.getItem("tt_history") || "[]");
+    const history = getHistory();
     const lastSavedAt = localStorage.getItem("tt_last_saved_at") || "";
 
     if (history.length === 0) {
@@ -194,6 +218,11 @@
             </div>
           </div>
 
+          <div class="weekActionRow">
+            <button class="smallBtn loadBtn" type="button">Load</button>
+            <button class="smallBtn danger deleteBtn" type="button">Delete</button>
+          </div>
+
           <button class="weekExpandBtn" type="button">
             ${best ? `Best sell: ${bestText}` : "Expand week"}
           </button>
@@ -221,9 +250,22 @@
     }).join("");
 
     historyList.querySelectorAll(".weekCard").forEach((card) => {
-      const btn = card.querySelector(".weekExpandBtn");
-      btn.addEventListener("click", () => {
+      const expand = card.querySelector(".weekExpandBtn");
+      const load = card.querySelector(".loadBtn");
+      const del = card.querySelector(".deleteBtn");
+
+      expand.addEventListener("click", () => {
         card.classList.toggle("isOpen");
+      });
+
+      load.addEventListener("click", () => {
+        const idx = Number(card.getAttribute("data-idx"));
+        loadWeekFromHistoryIndex(idx);
+      });
+
+      del.addEventListener("click", () => {
+        const idx = Number(card.getAttribute("data-idx"));
+        deleteWeek(idx);
       });
     });
 
@@ -231,8 +273,6 @@
       const newCard = historyList.querySelector(".weekCard.isNew");
       if (newCard) {
         newCard.scrollIntoView({ behavior: "smooth", block: "start" });
-
-        // remove highlight after a bit so it feels subtle
         window.setTimeout(() => {
           newCard.classList.remove("isNew");
         }, 4500);
@@ -257,7 +297,6 @@
       });
     });
 
-    // Auto-save when Saturday PM is entered (only once per week)
     if (satPmInput) {
       satPmInput.addEventListener("input", () => {
         const v = Number(satPmInput.value || 0);
@@ -268,8 +307,6 @@
 
         localStorage.setItem("tt_autosaved_this_week", "yes");
         saveWeekToHistory(true);
-
-        // Start fresh for the next week
         clearCurrentWeek();
       });
     }
@@ -304,6 +341,106 @@
     }
   }
 
+  function loadWeekFromHistoryIndex(idx) {
+    const history = getHistory();
+    const week = history[idx];
+    if (!week) return;
+
+    if (buyInput) {
+      buyInput.value = week.buy ? String(week.buy) : "";
+      localStorage.setItem(keyFor("buy-price"), buyInput.value);
+    }
+
+    inputs.forEach((el) => {
+      const v = Number(week.prices?.[el.id] || 0);
+      el.value = v > 0 ? String(v) : "";
+      localStorage.setItem(keyFor(el.id), el.value);
+    });
+
+    localStorage.removeItem("tt_autosaved_this_week");
+    showToast("Week loaded");
+    updatePrediction();
+
+    window.location.hash = "#predict";
+  }
+
+  function deleteWeek(idx) {
+    const history = getHistory();
+    const week = history[idx];
+    if (!week) return;
+
+    const ok = window.confirm("Delete this saved week?");
+    if (!ok) return;
+
+    history.splice(idx, 1);
+    setHistory(history);
+
+    showToast("Week deleted");
+    renderHistory(false);
+  }
+
+  function exportHistory() {
+    const history = getHistory();
+    const payload = {
+      app: "Turnip Tracker",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      history
+    };
+
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `turnip-tracker-history-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+    showToast("Exported");
+  }
+
+  function importHistoryFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const text = String(reader.result || "");
+        const parsed = JSON.parse(text);
+
+        const incoming = Array.isArray(parsed?.history) ? parsed.history : (Array.isArray(parsed) ? parsed : null);
+        if (!incoming) {
+          showToast("Import failed");
+          return;
+        }
+
+        const current = getHistory();
+        const merged = [...incoming, ...current];
+
+        const seen = new Set();
+        const cleaned = [];
+        for (const w of merged) {
+          if (!w || !w.savedAt) continue;
+          if (seen.has(w.savedAt)) continue;
+          seen.add(w.savedAt);
+          cleaned.push(w);
+        }
+
+        cleaned.sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+        setHistory(cleaned);
+
+        showToast("Imported");
+        renderHistory(true);
+      } catch {
+        showToast("Import failed");
+      }
+    };
+    reader.readAsText(file);
+  }
+
   if (saveWeekBtn) saveWeekBtn.addEventListener("click", () => saveWeekToHistory(false));
 
   if (newWeekBtn) {
@@ -316,6 +453,17 @@
   if (historyHomeBtn) {
     historyHomeBtn.addEventListener("click", () => {
       window.location.hash = "#predict";
+    });
+  }
+
+  if (exportBtn) exportBtn.addEventListener("click", exportHistory);
+
+  if (importFile) {
+    importFile.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      importHistoryFromFile(file);
+      importFile.value = "";
     });
   }
 

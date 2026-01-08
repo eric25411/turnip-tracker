@@ -13,15 +13,20 @@
   <div class="app">
 
     <!-- HEADER -->
-    <header class="header">
-      <!-- IMPORTANT: set this to the EXACT filename in your repo -->
-      <!-- Example: header.png, Header.png, turnip_header.png are all different -->
-      <<img src="banner.png.jpg" alt="Turnip Tracker" class="headerImage" />
-        onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
-      />
-      <div id="headerFallback" class="headerFallback" style="display:none;">
-        Header image not found. Check the file name in your repo and update the img src.
-      </div>
+    <div class="header">
+  <img
+    src="banner.png.jpg"
+    alt="Turnip Tracker"
+    class="headerImage"
+    onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
+  />
+
+  <div id="headerFallback" style="display:none; font-size:22px; font-weight:700;">
+    Turnip Tracker
+  </div>
+
+  <button id="saveWeekBtn">Save week to History</button>
+</div>
 
       <button id="saveWeekBtn" class="primaryBtn">Save week to History</button>
     </header>

@@ -96,6 +96,8 @@ body{
   border-radius: var(--radius);
   padding: 18px 18px 16px;
   box-shadow: var(--shadow);
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .dayTitle{

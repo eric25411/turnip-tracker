@@ -5,6 +5,11 @@
   const predictBtn = document.getElementById("predictBtn");
   const historyBtn = document.getElementById("historyBtn");
 
+  const viewPredict = document.getElementById("viewPredict");
+  const viewHistory = document.getElementById("viewHistory");
+  const historyList = document.getElementById("historyList");
+  const historyHomeBtn = document.getElementById("historyHomeBtn");
+
   const predictText = document.getElementById("predictText");
   const buyInput = document.getElementById("buy-price");
 
@@ -15,12 +20,6 @@
     toast.textContent = msg;
     toast.classList.add("show");
     window.setTimeout(() => toast.classList.remove("show"), 1100);
-  }
-
-  function setActiveNavFromHash() {
-    const hash = (window.location.hash || "#predict").toLowerCase();
-    predictBtn.classList.toggle("isActive", hash === "#predict");
-    historyBtn.classList.toggle("isActive", hash === "#history");
   }
 
   function keyFor(id) {
@@ -41,21 +40,19 @@
     return `${dayMap[d] || d} ${timeMap[t] || t}`;
   }
 
-  function findBestSoFar() {
+  function findBestSoFarFromInputs() {
     let best = { id: null, value: -1 };
-
     inputs.forEach((el) => {
       const v = Number(el.value || 0);
       if (v > best.value) best = { id: el.id, value: v };
     });
-
     return best.value > 0 ? best : null;
   }
 
   function updatePrediction() {
     if (!predictText) return;
 
-    const best = findBestSoFar();
+    const best = findBestSoFarFromInputs();
     const buy = buyInput ? Number(buyInput.value || 0) : 0;
 
     if (!best) {
@@ -113,6 +110,99 @@
     localStorage.setItem("tt_history", JSON.stringify(history));
 
     showToast("Saved to History");
+    renderHistory();
+  }
+
+  function bestSellInWeek(week) {
+    let best = { id: null, value: -1 };
+    Object.keys(week.prices || {}).forEach((k) => {
+      const v = Number(week.prices[k] || 0);
+      if (v > best.value) best = { id: k, value: v };
+    });
+    return best.value > 0 ? best : null;
+  }
+
+  function formatDate(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    } catch {
+      return iso;
+    }
+  }
+
+  function renderHistory() {
+    if (!historyList) return;
+
+    const history = JSON.parse(localStorage.getItem("tt_history") || "[]");
+
+    if (history.length === 0) {
+      historyList.innerHTML = `
+        <div class="weekCard">
+          <div class="weekTitle">No saved weeks yet</div>
+          <div class="weekMeta">Hit “Save week to History” on the home screen.</div>
+        </div>
+      `;
+      return;
+    }
+
+    const dayOrder = [
+      ["Monday", "mon-am", "mon-pm"],
+      ["Tuesday", "tue-am", "tue-pm"],
+      ["Wednesday", "wed-am", "wed-pm"],
+      ["Thursday", "thu-am", "thu-pm"],
+      ["Friday", "fri-am", "fri-pm"],
+      ["Saturday", "sat-am", "sat-pm"],
+    ];
+
+    historyList.innerHTML = history.map((week, idx) => {
+      const best = bestSellInWeek(week);
+      const bestText = best ? `${prettySlot(best.id)} at ${best.value}` : "No prices saved";
+      const buy = Number(week.buy || 0);
+
+      return `
+        <div class="weekCard" data-idx="${idx}">
+          <div class="weekTop">
+            <div class="weekTitle">${formatDate(week.savedAt)}</div>
+            <div class="weekMeta">
+              Buy: ${buy || "-"}<br/>
+              Best: ${best ? best.value : "-"}
+            </div>
+          </div>
+
+          <button class="weekExpandBtn" type="button">
+            ${best ? `Best sell: ${bestText}` : "Expand week"}
+          </button>
+
+          <div class="weekDetails">
+            <div class="miniGrid">
+              ${dayOrder.map(([dayName, amId, pmId]) => {
+                const am = Number(week.prices?.[amId] || 0) || "-";
+                const pm = Number(week.prices?.[pmId] || 0) || "-";
+                return `
+                  <div class="miniCell">
+                    <div class="miniLabel">${dayName} AM</div>
+                    <div class="miniVal">${am}</div>
+                  </div>
+                  <div class="miniCell">
+                    <div class="miniLabel">${dayName} PM</div>
+                    <div class="miniVal">${pm}</div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // Expand/collapse
+    historyList.querySelectorAll(".weekCard").forEach((card) => {
+      const btn = card.querySelector(".weekExpandBtn");
+      btn.addEventListener("click", () => {
+        card.classList.toggle("isOpen");
+      });
+    });
   }
 
   function wireInputs() {
@@ -133,15 +223,49 @@
     });
   }
 
-  // Nav state
-  window.addEventListener("hashchange", setActiveNavFromHash);
-  setActiveNavFromHash();
+  function showView(which) {
+    if (!viewPredict || !viewHistory) return;
+
+    if (which === "history") {
+      viewPredict.classList.add("viewHidden");
+      viewHistory.classList.remove("viewHidden");
+    } else {
+      viewHistory.classList.add("viewHidden");
+      viewPredict.classList.remove("viewHidden");
+    }
+  }
+
+  function setActiveNav(which) {
+    predictBtn.classList.toggle("isActive", which === "predict");
+    historyBtn.classList.toggle("isActive", which === "history");
+  }
+
+  function handleRoute() {
+    const hash = (window.location.hash || "#predict").toLowerCase();
+    if (hash === "#history") {
+      showView("history");
+      setActiveNav("history");
+      renderHistory();
+    } else {
+      showView("predict");
+      setActiveNav("predict");
+    }
+  }
 
   // Save week
-  if (saveWeekBtn) {
-    saveWeekBtn.addEventListener("click", saveWeekToHistory);
+  if (saveWeekBtn) saveWeekBtn.addEventListener("click", saveWeekToHistory);
+
+  // Home button in history
+  if (historyHomeBtn) {
+    historyHomeBtn.addEventListener("click", () => {
+      window.location.hash = "#predict";
+    });
   }
+
+  // Routing
+  window.addEventListener("hashchange", handleRoute);
 
   wireInputs();
   loadWeek();
+  handleRoute();
 })();

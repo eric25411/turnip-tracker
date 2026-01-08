@@ -1,225 +1,250 @@
-/* Turnip Tracker - style.css (full file) */
+/* =========================
+   Turnip Tracker, style.css
+   Fix: inputs back, no overlap, iPhone friendly
+   ========================= */
 
 :root{
-  --bg1:#e8f1ff;
-  --bg2:#dfe9ff;
-  --card:#e3b28f;
-  --inner:#eed5c7;
-  --pill:#fff7ef;
-  --ink:#1f1f1f;
-  --muted:#7b7b7b;
-  --shadow: 0 14px 26px rgba(0,0,0,.10);
-  --radius-lg: 34px;
-  --radius-md: 22px;
-  --radius-sm: 18px;
+  --bg1: #d8e6ff;
+  --bg2: #f7efe3;
+  --card: #e3b191;
+  --cardInner: rgba(255,255,255,0.18);
+  --pill: rgba(255,255,255,0.38);
+  --pillBorder: rgba(255,255,255,0.55);
+  --ink: #1f1f1f;
+  --muted: rgba(0,0,0,0.35);
+  --shadow: 0 10px 26px rgba(0,0,0,0.10);
+  --radius: 34px;
 }
 
-*{ box-sizing:border-box; }
+*{ box-sizing: border-box; }
 html,body{ height:100%; }
 
 body{
   margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   color: var(--ink);
-  background:
-    radial-gradient(1200px 600px at 50% 10%, rgba(255,255,255,.85), rgba(255,255,255,0)),
-    linear-gradient(180deg, var(--bg1), var(--bg2));
-  padding-bottom: 120px; /* space for bottom nav */
+  background: radial-gradient(1200px 600px at 50% 35%, var(--bg1), var(--bg2));
 }
 
+/* App layout */
 .app{
-  width:min(760px, 100%);
+  max-width: 520px;
   margin: 0 auto;
-  padding: 18px 16px 22px;
+  padding: 14px 14px 120px; /* bottom padding for nav */
 }
 
-/* Header */
+/* Header banner */
 .headerCard{
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: rgba(255,255,255,.35);
-  box-shadow: var(--shadow);
+  margin-top: 8px;
+  border-radius: 40px;
 }
 
 .bannerWrap{
-  border-radius: var(--radius-lg);
+  border-radius: 40px;
   overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
 .bannerWrap img{
-  width:100%;
-  height: 180px;
   display:block;
-  object-fit: cover;
-  /* raise the banner content slightly */
-  object-position: center 32%;
+  width:100%;
+  height:auto;
+  /* If you want the banner “higher”, crop from bottom by moving image up */
+  transform: translateY(-10px);
 }
 
-/* Save week button area */
+/* Save week button (under banner) */
 .headerActions{
   display:flex;
   justify-content:center;
-  padding: 14px 14px 18px;
+  margin: 12px 0 8px;
 }
 
 .saveWeekBtn{
-  border: 0;
-  background: rgba(255,255,255,.72);
-  color: var(--ink);
-  font-weight: 700;
-  padding: 12px 18px;
+  appearance:none;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.70);
   border-radius: 999px;
-  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  padding: 12px 18px;
+  font-weight: 700;
+  color: var(--ink);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.10);
 }
 
 /* Days grid */
 .daysGrid{
-  margin-top: 16px;
   display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr 1fr; /* 2 columns */
   gap: 18px;
+  margin-top: 10px;
 }
 
-/* Day card */
 .dayCard{
   background: var(--card);
-  border-radius: var(--radius-lg);
-  padding: 18px 16px 18px;
+  border-radius: var(--radius);
+  padding: 18px 18px 16px;
   box-shadow: var(--shadow);
   position: relative;
+  overflow: hidden; /* IMPORTANT: stops title bleeding into neighbors */
 }
 
-/* Day title */
+/* Day title, prevent overlap */
 .dayTitle{
   margin: 0 0 12px;
   font-weight: 900;
-  font-size: 44px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.5px;
+  font-size: clamp(28px, 7.2vw, 44px);
   line-height: 1.05;
-
-  /* IMPORTANT: never truncate day names */
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  overflow-wrap: anywhere;
 }
 
-/* AM/PM row pill */
+/* AM/PM rows */
 .row{
-  background: rgba(255,255,255,.20);
-  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--cardInner);
+  border-radius: 22px;
   padding: 12px 12px;
   margin-top: 12px;
-
-  /* use grid so input can never overflow */
-  display:grid;
-  grid-template-columns: 1fr 120px;
-  align-items:center;
-  gap: 12px;
-
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.22);
 }
 
-/* Left label (emoji + AM/PM) */
+/* Left label area */
 .label{
   display:flex;
   align-items:center;
   gap: 10px;
-  min-width: 0;
+  font-weight: 900;
+  font-size: 22px;
+  min-width: 92px;
 }
 
 .emoji{
-  font-size: 26px;
-  width: 34px;
+  width: 28px;
   text-align:center;
-}
-
-.label span:last-child{
-  font-weight: 900;
-  font-size: 26px;
-  letter-spacing: 0.02em;
-}
-
-/* Input on the right */
-.priceInput{
-  width: 100%;
-  max-width: 100%;
-  height: 46px;
-  border-radius: 16px;
-  border: 0;
-  outline: none;
-  background: rgba(255,255,255,.55);
-  color: var(--ink);
-  font-weight: 800;
   font-size: 22px;
-  text-align: center;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
+}
+
+/* The input, make sure it is visible and sized */
+.priceInput{
+  flex: 1;
+  min-width: 120px;
+  height: 44px;
+
+  border-radius: 18px;
+  border: 2px solid var(--pillBorder);
+  background: var(--pill);
+
+  padding: 0 14px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+
+  outline: none;
+}
+
+.priceInput::placeholder{
+  color: var(--muted);
+}
+
+/* Remove iOS weirdness */
+.priceInput{
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Bottom nav */
 .bottomNav{
   position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  display:flex;
+  justify-content:center;
+  padding: 0 16px;
+  z-index: 50;
+}
+
+.bottomNav::before{
+  content:"";
+  position:absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 14px;
-
-  width: calc(100% - 28px);
-  max-width: 720px;
-
-  display:flex;
-  gap: 14px;
-  justify-content: space-between;
-  align-items: center;
-
-  background: rgba(255,247,230,.92);
-  border-radius: 26px;
-  padding: 14px 16px;
-
-  box-shadow: 0 14px 30px rgba(0,0,0,.14);
-  backdrop-filter: blur(10px);
-  z-index: 9999;
+  width: min(520px, calc(100% - 32px));
+  height: 86px;
+  border-radius: 28px;
+  background: rgba(255,255,255,0.72);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.12);
+  border: 1px solid rgba(0,0,0,0.06);
+  z-index: -1;
 }
 
 .navBtn{
-  flex: 1;
+  width: min(520px, calc(100% - 32px));
+  display:grid;
+  grid-template-columns: 1fr 1fr; /* side by side */
+  align-items:center;
   text-decoration:none;
   color: var(--ink);
+  padding: 12px 18px;
+  gap: 12px;
+}
+
+/* Each half clickable area */
+.navBtn#predictBtn,
+.navBtn#historyBtn{
+  width: auto;
+}
+
+/* We are using two <a> tags, so style them as two halves */
+.bottomNav{
+  gap: 0;
+}
+.bottomNav a.navBtn{
+  width: min(520px, calc(100% - 32px));
+  max-width: 520px;
+  display:flex;
+  justify-content: space-between;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+.bottomNav a.navBtn .navIcon,
+.bottomNav a.navBtn .navText{
+  display:none; /* hide these if you keep 2 links */
+}
+
+/* If you keep TWO links (Predict + History), make them look like the original */
+#predictBtn, #historyBtn{
+  flex: 1;
+  padding: 14px 16px;
   display:flex;
   flex-direction: column;
   align-items:center;
   justify-content:center;
   gap: 6px;
-  padding: 10px 8px;
-  border-radius: 18px;
 }
 
-.navIcon{
-  font-size: 26px;
-  line-height: 1;
+#predictBtn .navIcon,
+#historyBtn .navIcon{
+  display:block;
+  font-size: 28px;
 }
 
-.navText{
+#predictBtn .navText,
+#historyBtn .navText{
+  display:block;
   font-weight: 900;
   font-size: 22px;
 }
 
-/* Mobile tightening */
-@media (max-width: 430px){
-  .bannerWrap img{ height: 165px; object-position: center 30%; }
-
+/* Small screens tweaks */
+@media (max-width: 380px){
   .daysGrid{ gap: 14px; }
-
-  .dayTitle{ font-size: 38px; }
-
-  .row{ grid-template-columns: 1fr 108px; }
-
-  .priceInput{ height: 44px; font-size: 20px; }
-
-  .navText{ font-size: 20px; }
+  .label{ font-size: 20px; }
+  .priceInput{ font-size: 20px; height: 42px; }
+  #predictBtn .navText, #historyBtn .navText{ font-size: 20px; }
 }
-
-/* Super small phones */
-@media (max-width: 360px){
-  .dayTitle{ font-size: 34px; }
-  .row{ grid-template-columns: 1fr 96px; }
-}
-body{ outline: 8px solid red !important; }

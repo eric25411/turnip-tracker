@@ -154,3 +154,6 @@ body {
 .navIcon {
   font-size: 24px;
 }
+.bannerWrap img {
+  transform: translateX(6px);
+}

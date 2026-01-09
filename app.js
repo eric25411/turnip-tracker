@@ -1,369 +1,418 @@
-/* Turnip Tracker - single file app */
+/* Turnip Tracker
+   One file, no partial updates, stable layout.
+*/
 
-const LS_KEY = "tt_state_v1";
-const LS_HISTORY = "tt_history_v1";
-const LS_PATTERN = "tt_pattern_strength_v1";
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const SLOTS = ["AM", "PM"];
 
-const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat"];
-const SLOTS = [
-  { key:"AM", icon:"☀️" },
-  { key:"PM", icon:"🌙" }
-];
+// Storage keys
+const KEY_STATE = "tt_state_v1";
+const KEY_HISTORY = "tt_history_v1";
+const KEY_SETTINGS = "tt_settings_v1";
 
-function $(id){ return document.getElementById(id); }
+function pad2(n){ return String(n).padStart(2,"0"); }
 
-function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-
-function getLastSunday(d = new Date()){
-  // last Sunday (including today if Sunday)
-  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const day = date.getDay(); // 0=Sun
-  date.setDate(date.getDate() - day);
-  return date;
+function getMostRecentSunday(d = new Date()){
+  const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = dt.getDay(); // 0 Sunday
+  const diff = day; // days since Sunday
+  dt.setDate(dt.getDate() - diff);
+  return dt;
 }
 
-function formatMonthDay(d){
-  // "Jan 4"
-  return new Intl.DateTimeFormat(undefined, { month:"short", day:"numeric" }).format(d);
-}
-
-function safeInt(v){
-  const n = parseInt(String(v).trim(), 10);
-  return Number.isFinite(n) ? n : null;
-}
-
-function loadState(){
+function fmtMonthDay(d){
   try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return null;
-    return JSON.parse(raw);
-  }catch(e){
-    return null;
+    return new Intl.DateTimeFormat(undefined, { month:"short", day:"numeric" }).format(d);
+  }catch{
+    return `${d.getMonth()+1}/${d.getDate()}`;
   }
 }
 
-function saveState(state){
-  localStorage.setItem(LS_KEY, JSON.stringify(state));
+function isoDate(d){
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 }
 
 function defaultState(){
-  const sunday = getLastSunday(new Date());
-  const weekStartISO = sunday.toISOString().slice(0,10);
+  const sunday = getMostRecentSunday();
+  const weekId = isoDate(sunday);
 
   const prices = {};
-  for(const d of DAYS){
-    for(const s of SLOTS){
-      prices[`${d}_${s.key}`] = "";
-    }
+  for (const day of DAYS){
+    prices[day] = { AM:"", PM:"" };
   }
 
   return {
-    weekStartISO,
+    weekId,
     buyPrice: "",
     prices
   };
 }
 
-function ensureThisWeek(state){
-  const sunday = getLastSunday(new Date()).toISOString().slice(0,10);
-  if(!state || !state.weekStartISO) return defaultState();
-  if(state.weekStartISO !== sunday){
-    // auto roll to new week, keep history separately
-    const fresh = defaultState();
-    return fresh;
+function loadJSON(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    if(!raw) return fallback;
+    return JSON.parse(raw);
+  }catch{
+    return fallback;
   }
-  // ensure keys exist
-  if(!state.prices) state.prices = {};
-  for(const d of DAYS){
-    for(const s of SLOTS){
-      const k = `${d}_${s.key}`;
-      if(!(k in state.prices)) state.prices[k] = "";
-    }
+}
+
+function saveJSON(key, val){
+  localStorage.setItem(key, JSON.stringify(val));
+}
+
+function ensureCurrentWeek(state){
+  const nowWeek = isoDate(getMostRecentSunday());
+  if(state.weekId !== nowWeek){
+    // Auto roll into new week, keep history as is
+    return defaultState();
   }
-  if(typeof state.buyPrice !== "string") state.buyPrice = "";
   return state;
 }
 
-function loadHistory(){
-  try{
-    const raw = localStorage.getItem(LS_HISTORY);
-    if(!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  }catch(e){
-    return [];
-  }
-}
+let state = ensureCurrentWeek(loadJSON(KEY_STATE, defaultState()));
+let history = loadJSON(KEY_HISTORY, []);
+let settings = loadJSON(KEY_SETTINGS, { patternStrength: 35 });
 
-function saveHistory(arr){
-  localStorage.setItem(LS_HISTORY, JSON.stringify(arr));
-}
+// DOM refs
+const daysWrap = document.querySelector(".days");
+const buyPriceInput = document.getElementById("buyPrice");
+const buyDateLabel = document.getElementById("buyDateLabel");
 
-function buildEntryUI(state){
-  const wrap = $("entry-days");
-  wrap.innerHTML = "";
+const saveWeekBtn = document.getElementById("saveWeekBtn");
+const resetWeekBtn = document.getElementById("resetWeekBtn");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 
-  // Compact day cards
-  for(const day of DAYS){
+const patternStrength = document.getElementById("patternStrength");
+
+const statBuy = document.getElementById("statBuy");
+const statBest = document.getElementById("statBest");
+const statBestTime = document.getElementById("statBestTime");
+const statProfit = document.getElementById("statProfit");
+const statPattern = document.getElementById("statPattern");
+const historyList = document.getElementById("historyList");
+
+const chartDots = document.getElementById("chartDots");
+const chartIcons = document.getElementById("chartIcons");
+
+// Navigation
+const navButtons = document.querySelectorAll(".nav-btn");
+const pages = document.querySelectorAll(".page");
+
+// Build Entry UI
+function buildEntry(){
+  daysWrap.innerHTML = "";
+
+  for (const day of DAYS){
     const card = document.createElement("div");
     card.className = "day-card";
-    card.innerHTML = `
-      <div class="day-title">${day === "Thu" ? "Thursday" : day === "Tue" ? "Tuesday" : day === "Wed" ? "Wednesday" : day === "Sat" ? "Saturday" : day === "Fri" ? "Friday" : day === "Mon" ? "Monday" : day}</div>
-      <div class="slot" data-slot="${day}_AM">
-        <div class="slot-left"><span class="emoji">☀️</span><span>AM</span></div>
-        <input inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="-" />
-      </div>
-      <div class="slot" data-slot="${day}_PM">
-        <div class="slot-left"><span class="emoji">🌙</span><span>PM</span></div>
-        <input inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="-" />
-      </div>
-    `;
-    wrap.appendChild(card);
 
-    // wire inputs
-    for(const s of SLOTS){
-      const key = `${day}_${s.key}`;
-      const slotEl = card.querySelector(`[data-slot="${key}"]`);
-      const input = slotEl.querySelector("input");
-      input.value = state.prices[key] ?? "";
+    const title = document.createElement("div");
+    title.className = "day-title";
+    title.textContent = day;
+
+    const slotWrap = document.createElement("div");
+
+    for (const slot of SLOTS){
+      const row = document.createElement("div");
+      row.className = "slot";
+
+      const left = document.createElement("div");
+      left.className = "slot-left";
+
+      const icon = document.createElement("div");
+      icon.className = "slot-icon";
+      icon.textContent = slot === "AM" ? "☀️" : "🌙";
+
+      const label = document.createElement("div");
+      label.textContent = slot;
+
+      left.appendChild(icon);
+      left.appendChild(label);
+
+      const input = document.createElement("input");
+      input.inputMode = "numeric";
+      input.pattern = "[0-9]*";
+      input.maxLength = 3;
+      input.placeholder = "-";
+      input.value = state.prices[day][slot] || "";
+
       input.addEventListener("input", () => {
-        // keep only digits, max 3
-        input.value = input.value.replace(/[^\d]/g,"").slice(0,3);
-        state.prices[key] = input.value;
-        saveState(state);
-        renderInsights(state);
+        input.value = input.value.replace(/[^\d]/g, "").slice(0,3);
+        state.prices[day][slot] = input.value;
+        persistState();
+        renderInsights();
       });
+
+      row.appendChild(left);
+      row.appendChild(input);
+      slotWrap.appendChild(row);
     }
+
+    card.appendChild(title);
+    card.appendChild(slotWrap);
+    daysWrap.appendChild(card);
   }
+
+  // Buy price wiring
+  buyPriceInput.value = state.buyPrice || "";
+  buyPriceInput.addEventListener("input", () => {
+    buyPriceInput.value = buyPriceInput.value.replace(/[^\d]/g, "").slice(0,3);
+    state.buyPrice = buyPriceInput.value;
+    persistState();
+    renderInsights();
+  });
+
+  // Date label under buy
+  const sunday = getMostRecentSunday();
+  buyDateLabel.textContent = fmtMonthDay(sunday);
 }
 
-function buildChart(){
-  // 12 points, Mon AM..Sat PM
-  const markers = $("chartMarkers");
-  const dots = $("chartDots");
-  markers.innerHTML = "";
-  dots.innerHTML = "";
-
-  for(let i=0;i<12;i++){
-    const m = document.createElement("div");
-    m.className = "marker";
-    m.textContent = (i % 2 === 0) ? "☀️" : "🌙";
-    markers.appendChild(m);
-
-    const d = document.createElement("div");
-    d.className = "dot";
-    dots.appendChild(d);
-  }
+function persistState(){
+  saveJSON(KEY_STATE, state);
 }
 
-function computeInsights(state){
-  const buy = safeInt(state.buyPrice);
-  const entries = [];
+function persistHistory(){
+  saveJSON(KEY_HISTORY, history);
+}
 
+function persistSettings(){
+  saveJSON(KEY_SETTINGS, settings);
+}
+
+// Chart: 12 slots across Mon..Sat AM/PM
+function getSlotList(){
+  const slots = [];
   for(const day of DAYS){
-    for(const s of SLOTS){
-      const k = `${day}_${s.key}`;
-      const v = safeInt(state.prices[k]);
-      if(v !== null){
-        entries.push({ key:k, day, slot:s.key, price:v });
-      }
+    slots.push({ day, slot:"AM", val: state.prices[day].AM });
+    slots.push({ day, slot:"PM", val: state.prices[day].PM });
+  }
+  return slots;
+}
+
+function parseVal(v){
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+function computeInsights(){
+  const buy = parseVal(state.buyPrice);
+
+  const slots = getSlotList().map(s => ({
+    ...s,
+    num: parseVal(s.val)
+  }));
+
+  let best = null;
+  let bestSlot = null;
+
+  for(const s of slots){
+    if(s.num == null) continue;
+    if(best == null || s.num > best){
+      best = s.num;
+      bestSlot = s;
     }
   }
-
-  // Best (highest sell price)
-  let best = null;
-  for(const e of entries){
-    if(best === null || e.price > best.price) best = e;
-  }
-
-  const bestPrice = best ? best.price : null;
-  const bestTime = best ? `${best.day} ${best.slot}` : null;
 
   let profit = null;
-  if(buy !== null && bestPrice !== null){
-    profit = bestPrice - buy;
+  if(buy != null && best != null){
+    profit = best - buy;
   }
 
-  // Pattern (simple heuristic)
-  let pattern = "Mixed";
-  const count = entries.length;
-  const amCount = entries.filter(e => e.slot === "AM").length;
-  const pmCount = entries.filter(e => e.slot === "PM").length;
-  if(count >= 4){
-    if(amCount >= pmCount * 2) pattern = "AM leaning";
-    else if(pmCount >= amCount * 2) pattern = "PM leaning";
+  // Super simple pattern label (not a real predictor)
+  // Mixed if both up and down exist, Rising if last > first, Falling if last < first
+  const nums = slots.map(s => s.num).filter(n => n != null);
+  let pattern = "-";
+  if(nums.length >= 2){
+    const first = nums[0];
+    const last = nums[nums.length - 1];
+    const up = nums.some((n,i) => i>0 && n > nums[i-1]);
+    const down = nums.some((n,i) => i>0 && n < nums[i-1]);
+
+    if(up && down) pattern = "Mixed";
+    else if(last > first) pattern = "Rising";
+    else if(last < first) pattern = "Falling";
+    else pattern = "Flat";
   }
 
-  return { buy, bestPrice, bestTime, profit, pattern };
+  return { buy, best, bestSlot, profit, pattern, slots };
 }
 
-function renderInsights(state){
-  const ins = computeInsights(state);
+function renderChart(){
+  // dots (always 12)
+  chartDots.innerHTML = "";
+  chartIcons.innerHTML = "";
 
-  $("i-buy").textContent = ins.buy === null ? "-" : String(ins.buy);
-  $("i-best").textContent = ins.bestPrice === null ? "-" : String(ins.bestPrice);
-  $("i-besttime").textContent = ins.bestTime === null ? "-" : ins.bestTime;
-  $("i-profit").textContent = (ins.profit === null) ? "-" : (ins.profit >= 0 ? `+${ins.profit}` : `${ins.profit}`);
-  $("i-pattern").textContent = ins.pattern;
+  const { slots } = computeInsights();
 
-  // History list
-  const hist = loadHistory();
-  const list = $("historyList");
-  if(hist.length === 0){
-    list.textContent = "No saved weeks yet.";
+  for(let i=0; i<12; i++){
+    const d = document.createElement("div");
+    d.className = "dot";
+    chartDots.appendChild(d);
+
+    const ico = document.createElement("div");
+    ico.className = "ico";
+
+    // Only show icons where there is data in that slot.
+    const hasVal = slots[i] && slots[i].num != null;
+    if(hasVal){
+      ico.textContent = slots[i].slot === "AM" ? "☀️" : "🌙";
+    }else{
+      ico.textContent = "";
+    }
+
+    chartIcons.appendChild(ico);
+  }
+}
+
+function renderStats(){
+  const { buy, best, bestSlot, profit, pattern } = computeInsights();
+
+  statBuy.textContent = buy != null ? String(buy) : "-";
+  statBest.textContent = best != null ? String(best) : "-";
+
+  if(bestSlot){
+    const shortDay = bestSlot.day.slice(0,3);
+    statBestTime.textContent = `${shortDay} ${bestSlot.slot}`;
   }else{
-    list.innerHTML = hist.slice(0,12).map(h => {
-      return `<div style="padding:6px 0;border-bottom:1px solid rgba(15,15,18,.08);">
-        <div style="font-weight:950;">${h.weekLabel}</div>
-        <div style="opacity:.75;">Buy ${h.buy ?? "-"}, Best ${h.best ?? "-"} (${h.bestTime ?? "-"})</div>
-      </div>`;
-    }).join("");
+    statBestTime.textContent = "-";
+  }
+
+  if(profit != null){
+    const sign = profit > 0 ? "+" : "";
+    statProfit.textContent = `${sign}${profit}`;
+  }else{
+    statProfit.textContent = "-";
+  }
+
+  statPattern.textContent = pattern || "-";
+}
+
+function renderHistory(){
+  if(!history.length){
+    historyList.textContent = "No saved weeks yet.";
+    return;
+  }
+
+  historyList.innerHTML = "";
+  history
+    .slice()
+    .sort((a,b) => (a.weekId < b.weekId ? 1 : -1))
+    .forEach(item => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      const when = item.weekId;
+      const buy = item.buyPrice ? item.buyPrice : "-";
+      const best = item.best != null ? item.best : "-";
+      const bestTime = item.bestTime || "-";
+      div.textContent = `${when}  |  Buy ${buy}  |  Best ${best} (${bestTime})`;
+      historyList.appendChild(div);
+    });
+}
+
+function renderInsights(){
+  renderChart();
+  renderStats();
+  renderHistory();
+}
+
+function applySettings(){
+  // Pattern strength: 0..100 -> opacity 0..0.65 (keeps it subtle)
+  const s = Number(settings.patternStrength ?? 35);
+  const op = Math.min(0.65, Math.max(0, s / 100 * 0.65));
+  document.documentElement.style.setProperty("--pattern-opacity", String(op));
+  patternStrength.value = String(s);
+}
+
+function go(page){
+  pages.forEach(p => {
+    const isTarget = p.dataset.page === page;
+    p.hidden = !isTarget;
+  });
+
+  navButtons.forEach(b => {
+    b.classList.toggle("is-active", b.dataset.go === page);
+  });
+
+  // quick refresh to avoid stale sections
+  if(page === "insights"){
+    renderInsights();
   }
 }
 
-function setBuyDateLabel(state){
-  const d = new Date(state.weekStartISO + "T00:00:00");
-  $("buy-date-label").textContent = formatMonthDay(d);
-}
+function saveWeekToHistory(){
+  const { buy, best, bestSlot } = computeInsights();
+  const sunday = getMostRecentSunday();
+  const weekId = isoDate(sunday);
 
-function applyPatternStrengthFromStorage(){
-  const raw = localStorage.getItem(LS_PATTERN);
-  const val = raw ? clamp(parseInt(raw,10) || 35, 0, 100) : 35;
-  $("patternStrength").value = String(val);
-  // Map 0..100 -> 0.05..0.35
-  const alpha = 0.05 + (val/100) * 0.30;
-  document.documentElement.style.setProperty("--patternAlpha", alpha.toFixed(3));
-}
+  const bestTime = bestSlot ? `${bestSlot.day.slice(0,3)} ${bestSlot.slot}` : "-";
 
-function wireSettings(state){
-  const slider = $("patternStrength");
-  slider.addEventListener("input", () => {
-    const val = clamp(parseInt(slider.value,10) || 35, 0, 100);
-    localStorage.setItem(LS_PATTERN, String(val));
-    const alpha = 0.05 + (val/100) * 0.30;
-    document.documentElement.style.setProperty("--patternAlpha", alpha.toFixed(3));
-  });
-
-  $("resetWeekBtn").addEventListener("click", () => {
-    const fresh = defaultState();
-    // keep same weekStart as current sunday
-    state.weekStartISO = fresh.weekStartISO;
-    state.buyPrice = "";
-    state.prices = fresh.prices;
-    saveState(state);
-    setBuyDateLabel(state);
-    $("buyPrice").value = "";
-    buildEntryUI(state);
-    renderInsights(state);
-  });
-
-  $("clearHistoryBtn").addEventListener("click", () => {
-    saveHistory([]);
-    renderInsights(state);
-  });
-}
-
-function wireBottomNav(){
-  const pages = {
-    entry: $("page-entry"),
-    insights: $("page-insights"),
-    settings: $("page-settings")
+  const snapshot = {
+    weekId,
+    buyPrice: buy != null ? String(buy) : "",
+    best,
+    bestTime,
+    prices: state.prices
   };
 
-  const btns = Array.from(document.querySelectorAll(".nav-btn"));
-  function go(which){
-    Object.values(pages).forEach(p => p.classList.remove("is-active"));
-    pages[which].classList.add("is-active");
+  // Replace if already exists
+  history = history.filter(h => h.weekId !== weekId);
+  history.push(snapshot);
+  persistHistory();
 
-    btns.forEach(b => b.classList.toggle("is-active", b.dataset.go === which));
-    // scroll to top when switching pages (keeps it feeling stable)
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }
+  // Clear entry for same week (but keep the weekId)
+  const fresh = defaultState();
+  fresh.weekId = state.weekId;
+  state = fresh;
+  persistState();
 
-  btns.forEach(b => {
-    b.addEventListener("click", () => go(b.dataset.go));
-  });
-
-  return { go };
+  // Rebuild UI
+  buildEntry();
+  renderInsights();
 }
 
-function wireBuyInput(state){
-  const input = $("buyPrice");
-  input.value = state.buyPrice ?? "";
-  input.addEventListener("input", () => {
-    input.value = input.value.replace(/[^\d]/g,"").slice(0,3);
-    state.buyPrice = input.value;
-    saveState(state);
-    renderInsights(state);
-  });
+function resetThisWeek(){
+  const fresh = defaultState();
+  fresh.weekId = state.weekId;
+  state = fresh;
+  persistState();
+  buildEntry();
+  renderInsights();
 }
 
-function wireSaveWeek(state){
-  $("saveWeekBtn").addEventListener("click", () => {
-    const ins = computeInsights(state);
-    const d = new Date(state.weekStartISO + "T00:00:00");
-    const weekLabel = `Week of ${formatMonthDay(d)}`;
-
-    const history = loadHistory();
-    history.unshift({
-      weekStartISO: state.weekStartISO,
-      weekLabel,
-      buy: ins.buy,
-      best: ins.bestPrice,
-      bestTime: ins.bestTime,
-      profit: ins.profit,
-      pattern: ins.pattern,
-      savedAt: new Date().toISOString()
-    });
-    saveHistory(history);
-
-    // clear entry but keep same week
-    const fresh = defaultState();
-    fresh.weekStartISO = state.weekStartISO;
-    state.buyPrice = "";
-    state.prices = fresh.prices;
-    saveState(state);
-
-    $("buyPrice").value = "";
-    buildEntryUI(state);
-    renderInsights(state);
-  });
-}
-
+// Init
 (function init(){
-  let state = ensureThisWeek(loadState());
-  saveState(state);
+  // Force current week check on load
+  state = ensureCurrentWeek(state);
+  persistState();
 
-  // Entry header date
-  setBuyDateLabel(state);
+  buildEntry();
+  applySettings();
+  renderInsights();
 
-  // Build UI
-  buildEntryUI(state);
-  buildChart();
-  wireBuyInput(state);
-  wireSaveWeek(state);
+  // Nav wiring
+  navButtons.forEach(btn => {
+    btn.addEventListener("click", () => go(btn.dataset.go));
+  });
+
+  // Buttons
+  saveWeekBtn.addEventListener("click", saveWeekToHistory);
+  resetWeekBtn.addEventListener("click", resetThisWeek);
+
+  clearHistoryBtn.addEventListener("click", () => {
+    history = [];
+    persistHistory();
+    renderHistory();
+  });
 
   // Settings
-  applyPatternStrengthFromStorage();
-  wireSettings(state);
+  patternStrength.addEventListener("input", () => {
+    settings.patternStrength = Number(patternStrength.value);
+    persistSettings();
+    applySettings();
+  });
 
-  // Nav
-  const nav = wireBottomNav();
-
-  // Initial insights
-  renderInsights(state);
-
-  // If user opens app and it's a new Sunday, auto refresh week label + clear entry
-  setInterval(() => {
-    const nowSundayISO = getLastSunday(new Date()).toISOString().slice(0,10);
-    if(state.weekStartISO !== nowSundayISO){
-      state = ensureThisWeek(state); // rolls
-      saveState(state);
-      setBuyDateLabel(state);
-      $("buyPrice").value = state.buyPrice ?? "";
-      buildEntryUI(state);
-      renderInsights(state);
-      nav.go("entry");
-    }
-  }, 60 * 1000);
+  // Default page
+  go("entry");
 })();

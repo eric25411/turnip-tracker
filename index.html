@@ -8,7 +8,7 @@
 
   <link rel="apple-touch-icon" href="icon-1024.png.PNG">
   <link rel="icon" href="icon-1024.png.PNG">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style-v11.css" />
 </head>
 
 <body>
@@ -43,7 +43,7 @@
 
         <div class="card save-card">
           <button id="saveWeekBtn" class="btn-primary">Save week to History</button>
-          <div class="muted small" style="margin-top:10px;">Saves your week, then clears Entry.</div>
+          <div class="muted small" style="margin-top:0.7rem;">Saves your week, then clears Entry.</div>
         </div>
 
       </div>
@@ -107,13 +107,13 @@
           <div class="settings-row">
             <div class="settings-left">
               <div class="settings-name">Text size</div>
-              <div class="settings-desc">Switch sizes without breaking layout.</div>
+              <div class="settings-desc">Actually scales the UI now.</div>
             </div>
             <div class="settings-right">
               <select id="fontSizeSelect" class="select">
-                <option value="0.88">Small</option>
-                <option value="0.92" selected>Cozy</option>
-                <option value="0.98">Large</option>
+                <option value="0.90">Small</option>
+                <option value="1.00" selected>Cozy</option>
+                <option value="1.10">Large</option>
               </select>
             </div>
           </div>
@@ -124,7 +124,7 @@
               <div class="settings-desc">Make the pattern easier to see.</div>
             </div>
             <div class="settings-right">
-              <input id="patternSlider" class="slider" type="range" min="0.10" max="0.40" step="0.01" value="0.22" />
+              <input id="patternSlider" class="slider" type="range" min="0.12" max="0.40" step="0.01" value="0.22" />
             </div>
           </div>
 

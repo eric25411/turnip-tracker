@@ -1,191 +1,312 @@
-:root {
-  --bg: #dbe7f3;
-  --card: #eaf1fb;
-  --card-soft: #f4f8ff;
-  --text: #111;
-  --muted: #6b6b6b;
-  --accent: #4f8f6f;
-}
+/* ======================
+   ROOT / RESET
+====================== */
 
 * {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-main: linear-gradient(180deg, #dbe9f6 0%, #eef4fb 100%);
+  --card-bg: #eaf2fb;
+  --card-inner: #f7faff;
+  --text-main: #111;
+  --text-muted: #6b6b6b;
+  --accent: #4b7f5a;
+  --border-soft: rgba(255,255,255,0.7);
+  --turnip-opacity: 0.12;
 }
 
 body {
-  margin: 0;
-  background: linear-gradient(#e4eef9, #cfddec);
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-main);
+  padding-bottom: 96px; /* space for bottom nav */
 }
 
-/* HEADER */
-.header-card {
-  margin: 12px;
-  border-radius: 22px;
-  overflow: hidden;
+/* ======================
+   APP LAYOUT
+====================== */
+
+#app {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 16px;
 }
 
-.banner {
-  width: 100%;
-  display: block;
-}
-
-/* PAGES */
 .page {
   display: none;
-  padding: 12px;
 }
 
 .page.active {
   display: block;
 }
 
-/* TITLES */
-.section-title {
-  font-size: 22px;
-  font-weight: 800;
-  background: var(--card);
-  padding: 14px;
-  border-radius: 18px;
-  margin-bottom: 12px;
+/* ======================
+   BANNER
+====================== */
+
+.banner img {
+  width: 100%;
+  border-radius: 20px;
+  margin-bottom: 16px;
 }
 
-/* CARDS */
+/* ======================
+   CARDS
+====================== */
+
 .card {
-  background: var(--card);
+  background: var(--card-bg);
   border-radius: 22px;
   padding: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  box-shadow: inset 0 0 0 2px var(--border-soft);
 }
 
-/* POSTCARD */
-.postcard-title {
+/* Headings */
+.card h2 {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.card h3 {
   font-size: 18px;
   font-weight: 700;
+  margin-bottom: 8px;
 }
 
-.legend {
-  text-align: right;
+/* ======================
+   BUY PRICE
+====================== */
+
+.buy-card input {
+  width: 100%;
+  font-size: 18px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: none;
+  background: var(--card-inner);
+}
+
+.subtext {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--text-muted);
+  margin-bottom: 6px;
 }
 
-.postcard-note {
-  font-size: 14px;
-  color: var(--muted);
-  margin-top: 12px;
+/* ======================
+   ENTRY DAYS
+====================== */
+
+#entry-days .card {
+  padding: 14px;
 }
 
-/* CHART */
-.chart {
-  background: var(--card-soft);
-  border-radius: 18px;
-  padding: 12px;
-  margin-top: 12px;
+#entry-days h4 {
+  font-size: 16px;
+  margin-bottom: 8px;
 }
 
-.chart-row {
+.day-row {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.chart-row .label {
-  width: 34px;
-  font-size: 13px;
-  color: var(--muted);
+.day-row span {
+  width: 36px;
 }
 
-.line {
+.day-row input {
   flex: 1;
-  height: 4px;
-  background: #ccc;
-  border-radius: 4px;
-  position: relative;
-}
-
-.line span {
-  position: absolute;
-  top: -5px;
-  width: 14px;
-  height: 14px;
-  background: #999;
-  border-radius: 50%;
-}
-
-.line span:nth-child(1) { left: 0%; }
-.line span:nth-child(2) { left: 20%; }
-.line span:nth-child(3) { left: 40%; }
-.line span:nth-child(4) { left: 60%; }
-.line span:nth-child(5) { left: 80%; }
-.line span:nth-child(6) { left: 100%; transform: translateX(-100%); }
-
-.days {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 6px;
-}
-
-/* STATS */
-.stat-row {
-  display: flex;
-  justify-content: space-between;
   font-size: 15px;
-  padding: 10px 0;
-  border-bottom: 1px solid #d0d8e6;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: none;
+  background: var(--card-inner);
 }
 
-.stat-row:last-child {
-  border-bottom: none;
-}
+/* ======================
+   BUTTONS
+====================== */
 
-/* BUY */
-.buy-card {
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+  width: 100%;
+  border-radius: 18px;
+  padding: 12px;
   font-size: 15px;
+  border: none;
+  margin-top: 8px;
 }
 
-.buy-header {
+.primary-btn {
+  background: var(--accent);
+  color: white;
+}
+
+.secondary-btn {
+  background: #fff;
+}
+
+.danger-btn {
+  background: #ffdddd;
+}
+
+/* ======================
+   POSTCARD / CHART
+====================== */
+
+.postcard {
+  background:
+    linear-gradient(
+      rgba(255,255,255,0.92),
+      rgba(255,255,255,0.92)
+    ),
+    url("isabelle.png.PNG");
+  background-repeat: repeat;
+  background-size: 140px;
+  background-position: center;
+}
+
+.postcard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.buy-header input {
-  width: 90px;
-  padding: 8px;
-  border-radius: 10px;
-  border: none;
+.legend span {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-.buy-date {
+/* Chart container */
+.chart {
+  background: var(--card-inner);
+  border-radius: 18px;
+  padding: 14px;
+  margin: 12px 0;
+}
+
+/* Rows */
+.chart-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.row-label {
+  width: 32px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--text-muted);
+}
+
+/* Dots */
+.dots {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  flex: 1;
+}
+
+.dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #b5b5b5;
+}
+
+/* Day labels */
+.chart-days {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* Caption */
+.caption {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ======================
+   STATS
+====================== */
+
+.stats .stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.stats .stat-row:last-child {
+  border-bottom: none;
+}
+
+/* ======================
+   HISTORY
+====================== */
+
+.history h3 {
+  font-size: 17px;
+  margin-bottom: 6px;
+}
+
+#history-list {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ======================
+   SETTINGS
+====================== */
+
+label {
+  font-size: 14px;
+  display: block;
+}
+
+input[type="range"] {
+  width: 100%;
   margin-top: 6px;
 }
 
-/* NAV */
+/* ======================
+   BOTTOM NAV
+====================== */
+
 .bottom-nav {
   position: fixed;
+  bottom: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  padding: 10px env(safe-area-inset-right) calc(10px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   display: flex;
-  gap: 10px;
+  justify-content: space-around;
+  padding: 10px 0 12px;
+  border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 .bottom-nav button {
-  flex: 1;
-  padding: 12px;
-  border-radius: 18px;
+  background: none;
   border: none;
-  font-size: 15px;
-  background: #fff;
+  font-size: 13px;
+  color: var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.bottom-nav button.active {
-  border: 2px solid var(--accent);
+.bottom-nav span {
+  font-size: 11px;
 }

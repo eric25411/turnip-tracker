@@ -1,155 +1,167 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#cfe0f3" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Turnip Tracker</title>
 
-  <link rel="apple-touch-icon" href="icon-1024.png.PNG">
-  <link rel="icon" href="icon-1024.png.PNG">
-  <link rel="stylesheet" href="style.css" />
+  <!-- App icon -->
+  <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
+  <link rel="icon" type="image/png" href="icon-1024.png.PNG" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style-v11.css?v=21" />
 </head>
 
 <body>
-  <div class="app">
+  <div id="app">
 
-    <!-- ENTRY -->
-    <section id="page-entry" class="page is-active" aria-label="Entry page">
-      <div class="container">
+    <!-- HEADER -->
+    <header class="banner">
+      <img src="banner.png.jpg" alt="Turnip Tracker" />
+    </header>
 
-        <div class="card hero">
-          <img class="banner" src="banner.png.jpg" alt="Turnip Tracker banner" />
+    <!-- MAIN CONTENT -->
+    <main class="content">
+
+      <!-- BUY PRICE -->
+      <section class="card buy-card">
+        <div class="buy-left">
+          <span class="emoji">💰</span>
+          <div>
+            <div class="label">Buy price</div>
+            <div class="sub">Jan 4</div>
+          </div>
+        </div>
+        <input type="number" placeholder="-" id="buyPrice" />
+      </section>
+
+      <!-- ENTRY DAYS -->
+      <section class="entry">
+
+        <div class="day-card">
+          <h2>Monday</h2>
+          <div class="row">
+            <span>☀️ AM</span>
+            <input type="number" placeholder="-" />
+          </div>
+          <div class="row">
+            <span>🌙 PM</span>
+            <input type="number" placeholder="-" />
+          </div>
         </div>
 
-        <div class="card buy-card">
-          <div class="buy-left">
-            <div class="buy-title">
-              <span class="emoji">💰</span>
-              <span>Buy price</span>
+        <div class="day-card">
+          <h2>Tuesday</h2>
+          <div class="row">
+            <span>☀️ AM</span>
+            <input type="number" placeholder="-" />
+          </div>
+          <div class="row">
+            <span>🌙 PM</span>
+            <input type="number" placeholder="-" />
+          </div>
+        </div>
+
+        <div class="day-card">
+          <h2>Wednesday</h2>
+          <div class="row">
+            <span>☀️ AM</span>
+            <input type="number" placeholder="-" />
+          </div>
+          <div class="row">
+            <span>🌙 PM</span>
+            <input type="number" placeholder="-" />
+          </div>
+        </div>
+
+        <div class="day-card">
+          <h2>Thursday</h2>
+          <div class="row">
+            <span>☀️ AM</span>
+            <input type="number" placeholder="-" />
+          </div>
+          <div class="row">
+            <span>🌙 PM</span>
+            <input type="number" placeholder="-" />
+          </div>
+        </div>
+
+        <div class="day-card">
+          <h2>Friday</h2>
+          <div class="row">
+            <span>☀️ AM</span>
+            <input type="number" placeholder="-" />
+          </div>
+          <div class="row">
+            <span>🌙 PM</span>
+            <input type="number" placeholder="-" />
+          </div>
+        </div>
+
+        <div class="day-card">
+          <h2>Saturday</h2>
+          <div class="row">
+            <span>☀️ AM</span>
+            <input type="number" placeholder="-" />
+          </div>
+          <div class="row">
+            <span>🌙 PM</span>
+            <input type="number" placeholder="-" />
+          </div>
+        </div>
+
+        <button class="save-btn">Save week to History</button>
+
+      </section>
+
+      <!-- INSIGHTS -->
+      <section class="card insights">
+        <h2>Insights</h2>
+
+        <div class="postcard">
+          <div class="postcard-header">
+            <span>This week’s bell postcard</span>
+            <span class="key">☀️ AM · 🌙 PM</span>
+          </div>
+
+          <div class="timeline">
+            <div class="line"></div>
+            <div class="dots">
+              <span>●</span><span>●</span><span>●</span><span>●</span><span>●</span><span>●</span>
+              <span>●</span><span>●</span><span>●</span><span>●</span><span>●</span><span>●</span>
             </div>
-            <div class="buy-caption">
-              <img class="isabelle" src="isabelle.png.PNG" alt="Isabelle" />
-              <span id="buyDateLabel">Jan 4</span>
+            <div class="labels">
+              <span>Mon</span><span>Tue</span><span>Wed</span>
+              <span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
           </div>
 
-          <div class="buy-right">
-            <input id="buyPriceInput" class="price-input" inputmode="numeric" placeholder="-" maxlength="3" />
-          </div>
+          <p class="caption">
+            Just a cozy snapshot. The more you log, the smarter it gets.
+          </p>
         </div>
 
-        <div id="daysWrap" class="days-wrap"></div>
-
-        <div class="card save-card">
-          <button id="saveWeekBtn" class="btn-primary">Save week to History</button>
-          <div class="muted small" style="margin-top:0.7rem;">Saves your week, then clears Entry.</div>
+        <div class="stats">
+          <div><span>Buy price</span><span>-</span></div>
+          <div><span>Best price seen</span><span>-</span></div>
+          <div><span>Best time so far</span><span>-</span></div>
+          <div><span>Profit vs buy</span><span>-</span></div>
         </div>
+      </section>
 
-      </div>
-    </section>
+    </main>
 
-    <!-- INSIGHTS -->
-    <section id="page-insights" class="page" aria-label="Insights page">
-      <div class="container">
-
-        <div class="card title-card">
-          <div class="page-title">Insights</div>
-        </div>
-
-        <div class="card postcard">
-          <div class="postcard-head">
-            <div class="postcard-title">This week’s bell postcard</div>
-            <div class="key">
-              <div class="key-row"><span class="kicon">☀️</span><span class="ktext">AM</span></div>
-              <div class="key-row"><span class="kicon">🌙</span><span class="ktext">PM</span></div>
-            </div>
-          </div>
-
-          <div class="chart">
-            <div id="chartDots" class="chart-dots"></div>
-            <div class="chart-days">
-              <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-            </div>
-          </div>
-
-          <div class="postcard-note">Just a cozy snapshot. The more you log, the smarter it gets.</div>
-        </div>
-
-        <div class="card stats-card">
-          <div class="stat-row"><div class="stat-label">Buy price</div><div id="statBuy" class="stat-value">-</div></div>
-          <div class="stat-row"><div class="stat-label">Best price seen</div><div id="statBest" class="stat-value">-</div></div>
-          <div class="stat-row"><div class="stat-label">Best time so far</div><div id="statBestTime" class="stat-value">-</div></div>
-          <div class="stat-row"><div class="stat-label">Profit vs buy</div><div id="statProfit" class="stat-value">-</div></div>
-          <div class="stat-row"><div class="stat-label">Likely pattern</div><div id="statPattern" class="stat-value">Mixed</div></div>
-        </div>
-
-        <div class="card history-card">
-          <div class="history-head">
-            <div class="history-title">History</div>
-            <button id="clearHistoryBtn" class="btn-ghost">Clear</button>
-          </div>
-          <div id="historyList" class="history-list"></div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section id="page-settings" class="page" aria-label="Settings page">
-      <div class="container">
-
-        <div class="card title-card">
-          <div class="page-title">Settings</div>
-        </div>
-
-        <div class="card settings-card">
-
-          <div class="settings-row">
-            <div class="settings-left">
-              <div class="settings-name">Postcard turnip strength</div>
-              <div class="settings-desc">Make the pattern easier to see.</div>
-            </div>
-            <div class="settings-right">
-              <input id="patternSlider" class="slider" type="range" min="0.12" max="0.40" step="0.01" value="0.22" />
-            </div>
-          </div>
-
-          <div class="settings-row">
-            <div class="settings-left">
-              <div class="settings-name">Reset this week</div>
-              <div class="settings-desc">Clears Entry only.</div>
-            </div>
-            <div class="settings-right">
-              <button id="resetWeekBtn" class="btn-ghost">Reset</button>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </section>
-
-    <!-- Bottom nav -->
-    <nav class="bottom-nav" aria-label="Bottom navigation">
-      <button class="nav-btn is-active" data-target="entry" type="button">
-        <div class="nav-icon">🧾</div>
-        <div class="nav-label">Entry</div>
-      </button>
-
-      <button class="nav-btn" data-target="insights" type="button">
-        <div class="nav-icon">🔮</div>
-        <div class="nav-label">Insights</div>
-      </button>
-
-      <button class="nav-btn" data-target="settings" type="button">
-        <div class="nav-icon">⚙️</div>
-        <div class="nav-label">Settings</div>
-      </button>
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="active">🧾 Entry</button>
+      <button>🔮 Insights</button>
+      <button>⚙️ Settings</button>
     </nav>
 
   </div>
 
+  <!-- JS -->
   <script src="app.js"></script>
 </body>
 </html>

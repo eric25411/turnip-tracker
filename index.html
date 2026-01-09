@@ -3,13 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>Turnip Tracker</title>
-  <link rel="stylesheet" href="style.css?v=100" />
+
+  <!-- App icon + PWA -->
+  <link rel="apple-touch-icon" href="icon-1024.png.PNG">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f9c6d">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css?v=30" />
 </head>
 
 <body>
   <div class="app">
 
+    <!-- HEADER -->
     <div class="header">
       <img
         src="banner.png.jpg"
@@ -17,169 +26,150 @@
         class="headerImage"
         onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
       />
-      <div id="headerFallback" class="headerFallback" style="display:none;">
+
+      <div
+        id="headerFallback"
+        style="display:none; font-size:22px; font-weight:700;"
+      >
         Turnip Tracker
       </div>
     </div>
 
-    <main id="mainView" class="mainView">
+    <!-- MAIN CONTENT -->
+    <main id="mainView">
 
       <!-- ENTRY VIEW -->
-      <section id="entryView" class="view">
+      <section id="predictView" class="view">
 
-        <div class="buySticky">
-          <div class="buyCard">
-            <div class="buyRow">
-              <div class="buyLeft">
-                <div class="buyTitle"><span class="emoji">💰</span> Buy price</div>
-                <div id="buyHint" class="buyHint">Sunday.</div>
-              </div>
-              <input
-                id="buy-price"
-                class="buyInput"
-                inputmode="numeric"
-                placeholder="-"
-                aria-label="Buy price"
-              />
+        <!-- BUY PRICE -->
+        <div class="buyCard">
+          <div class="buyRow">
+            <div class="buyLabel">
+              💰 <strong>Buy price</strong>
+              <div class="buyHint" id="buyDateText">Daisy Mae, Sunday</div>
             </div>
+            <input
+              id="buy-price"
+              class="priceInput"
+              inputmode="numeric"
+              placeholder="-"
+            />
           </div>
         </div>
 
+        <!-- DAYS -->
         <section class="days">
 
+          <!-- MONDAY -->
           <div class="dayCard">
             <h2 class="dayTitle">Monday</h2>
             <div class="row">
-              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-am" />
+              <div class="label">🌞 AM</div>
+              <input class="priceInput" inputmode="numeric" id="mon-am" placeholder="-" />
             </div>
             <div class="row">
-              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-pm" />
+              <div class="label">🌙 PM</div>
+              <input class="priceInput" inputmode="numeric" id="mon-pm" placeholder="-" />
             </div>
           </div>
 
+          <!-- TUESDAY -->
           <div class="dayCard">
             <h2 class="dayTitle">Tuesday</h2>
             <div class="row">
-              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-am" />
+              <div class="label">🌞 AM</div>
+              <input class="priceInput" inputmode="numeric" id="tue-am" placeholder="-" />
             </div>
             <div class="row">
-              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-pm" />
+              <div class="label">🌙 PM</div>
+              <input class="priceInput" inputmode="numeric" id="tue-pm" placeholder="-" />
             </div>
           </div>
 
+          <!-- WEDNESDAY -->
           <div class="dayCard">
             <h2 class="dayTitle">Wednesday</h2>
             <div class="row">
-              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-am" />
+              <div class="label">🌞 AM</div>
+              <input class="priceInput" inputmode="numeric" id="wed-am" placeholder="-" />
             </div>
             <div class="row">
-              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-pm" />
+              <div class="label">🌙 PM</div>
+              <input class="priceInput" inputmode="numeric" id="wed-pm" placeholder="-" />
             </div>
           </div>
 
+          <!-- THURSDAY -->
           <div class="dayCard">
             <h2 class="dayTitle">Thursday</h2>
             <div class="row">
-              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-am" />
+              <div class="label">🌞 AM</div>
+              <input class="priceInput" inputmode="numeric" id="thu-am" placeholder="-" />
             </div>
             <div class="row">
-              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-pm" />
+              <div class="label">🌙 PM</div>
+              <input class="priceInput" inputmode="numeric" id="thu-pm" placeholder="-" />
             </div>
           </div>
 
+          <!-- FRIDAY -->
           <div class="dayCard">
             <h2 class="dayTitle">Friday</h2>
             <div class="row">
-              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-am" />
+              <div class="label">🌞 AM</div>
+              <input class="priceInput" inputmode="numeric" id="fri-am" placeholder="-" />
             </div>
             <div class="row">
-              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-pm" />
+              <div class="label">🌙 PM</div>
+              <input class="priceInput" inputmode="numeric" id="fri-pm" placeholder="-" />
             </div>
           </div>
 
+          <!-- SATURDAY -->
           <div class="dayCard">
             <h2 class="dayTitle">Saturday</h2>
             <div class="row">
-              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-am" />
+              <div class="label">🌞 AM</div>
+              <input class="priceInput" inputmode="numeric" id="sat-am" placeholder="-" />
             </div>
             <div class="row">
-              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-              <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-pm" />
+              <div class="label">🌙 PM</div>
+              <input class="priceInput" inputmode="numeric" id="sat-pm" placeholder="-" />
             </div>
-          </div>
-
-          <div class="saveCard">
-            <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
-            <div class="saveHint">Saves the week, then clears your Entry screen.</div>
           </div>
 
         </section>
-      </section>
 
-      <!-- PREDICT VIEW -->
-      <section id="predictView" class="view hidden">
-        <div class="predictWrap">
-          <h2 class="predictTitle">Predictor</h2>
-
-          <div class="postcard">
-            <div class="postcardTop">
-              <div class="postcardTitle">This week’s bell postcard</div>
-
-              <div class="legendStack" aria-label="Legend">
-                <div class="legendRow"><span class="legendIcon">🔔</span><span class="legendText">AM</span></div>
-                <div class="legendRow"><span class="legendIcon">🛎️</span><span class="legendText">PM</span></div>
-              </div>
-            </div>
-
-            <div class="chartCard">
-              <canvas id="chartCanvas" width="680" height="260"></canvas>
-              <div class="chartCaption">A cozy snapshot of your week.</div>
-            </div>
-          </div>
-
-          <div class="statsCard">
-            <div class="statRow"><span>Daisy Mae buy price</span><strong id="statBuy">-</strong></div>
-            <div class="statRow"><span>Best price seen</span><strong id="statBest">-</strong></div>
-            <div class="statRow"><span>Best time so far</span><strong id="statBestTime">-</strong></div>
-            <div class="statRow"><span>Profit vs buy</span><strong id="statProfit">-</strong></div>
-            <div class="statRow"><span>Likely pattern</span><strong id="statPattern">-</strong></div>
-            <div class="statNote" id="statNote">Log a few more entries, and it’ll feel smarter.</div>
+        <!-- SAVE BUTTON -->
+        <div class="saveWrap">
+          <button id="saveWeekBtn" class="primaryBtn">
+            Save week to History
+          </button>
+          <div class="saveHint">
+            This saves the week and clears your Entry screen.
           </div>
         </div>
+
       </section>
 
       <!-- HISTORY VIEW -->
       <section id="historyView" class="view hidden">
         <div class="historyWrap">
           <div class="historyCard">
-            <h2 class="historyTitle">Past weeks</h2>
-            <p class="historyHint">Tap Expand to peek, Load to bring one back to Entry.</p>
-            <div id="historyList" class="historyList"></div>
-            <p class="historySmall" id="historyEmptyNote">
-              No saved weeks yet. Fill the week, then hit Save.
+            <h2>Past weeks</h2>
+            <div id="historyList"></div>
+            <p id="historyEmptyNote">
+              No saved weeks yet.
             </p>
           </div>
 
-          <div class="historyCard">
-            <h3 class="historySubtitle">Import, Export</h3>
-            <div class="historyActions">
-              <button id="exportBtn" class="chipBtn" type="button">Export</button>
-              <label class="chipBtn fileBtn">
-                Import
-                <input id="importFile" type="file" accept="application/json" />
-              </label>
-            </div>
+          <div class="historyActions">
+            <button id="exportBtn" class="chipBtn">Export</button>
+            <label class="chipBtn fileBtn">
+              Import
+              <input id="importFile" type="file" accept="application/json" />
+            </label>
+            <button id="goHomeBtn" class="chipBtn">Home</button>
           </div>
         </div>
       </section>
@@ -187,23 +177,42 @@
     </main>
   </div>
 
-  <nav class="bottomNav" aria-label="Bottom navigation">
-    <button id="navEntry" class="navBtn active" type="button">
+  <!-- BOTTOM NAV -->
+  <nav class="bottomNav">
+    <button id="navPredict" class="navBtn active">
       <span class="navIcon">🧾</span>
       <span class="navLabel">Entry</span>
     </button>
-
-    <button id="navPredict" class="navBtn" type="button">
+    <button id="navHistory" class="navBtn">
       <span class="navIcon">🔮</span>
       <span class="navLabel">Predict</span>
     </button>
-
-    <button id="navHistory" class="navBtn" type="button">
+    <button id="navStats" class="navBtn">
       <span class="navIcon">🕰️</span>
       <span class="navLabel">History</span>
     </button>
   </nav>
 
-  <script src="app.js?v=100"></script>
+  <!-- JS -->
+  <script src="app.js?v=30"></script>
+
+  <!-- Buy date helper -->
+  <script>
+    (function () {
+      const el = document.getElementById("buyDateText");
+      if (!el) return;
+
+      const now = new Date();
+      const sunday = new Date(now);
+      sunday.setDate(now.getDate() - now.getDay());
+
+      el.textContent =
+        "Daisy Mae, Sunday " +
+        sunday.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric"
+        });
+    })();
+  </script>
 </body>
 </html>

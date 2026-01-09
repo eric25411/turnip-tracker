@@ -6,117 +6,161 @@
   <title>Turnip Tracker</title>
 
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="icon-1024.png.PNG" />
-  <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
+
+  <!-- App icon -->
+  <link rel="apple-touch-icon" href="icon-1024.png.PNG">
+  <link rel="icon" href="icon-1024.png.PNG">
+  <meta name="theme-color" content="#dbe9fb" />
 </head>
 
 <body>
-  <div class="app">
-    <header class="top-banner">
-      <img class="banner-img" src="banner.png.jpg" alt="Turnip Tracker" />
-    </header>
-
-    <main class="main">
-      <!-- ENTRY -->
-      <section id="page-entry" class="page is-active">
-        <div class="buy-card card">
-          <div class="buy-left">
-            <div class="buy-title">💰 Buy price</div>
-            <div class="buy-sub">
-              <img class="isabelle-icon" src="isabelle.png.PNG" alt="Isabelle" />
-              <span id="buyDateLabel">Jan 1</span>
-            </div>
-          </div>
-
-          <input id="buyPrice" class="price-input" inputmode="numeric" placeholder="-" />
-        </div>
-
-        <div class="days" id="daysContainer"></div>
-
-        <button id="saveWeekBtn" class="save-btn">Save week to History</button>
-        <div class="save-help">Saves your week, then clears Entry.</div>
+  <div class="app-shell">
+    <!-- ENTRY -->
+    <main id="page-entry" class="page" data-page="entry">
+      <section class="banner-card">
+        <img class="banner-img" src="banner.png.jpg" alt="Turnip Tracker banner" />
       </section>
 
-      <!-- INSIGHTS -->
-      <section id="page-insights" class="page">
-        <div class="title-card card">
-          <h1>Insights</h1>
+      <section class="card buy-card">
+        <div class="buy-left">
+          <div class="buy-title">
+            <span class="emoji">💰</span>
+            <span>Buy price</span>
+          </div>
+
+          <div class="buy-sub">
+            <img id="isabelleMini" class="isabelle-mini" src="isabelle.png.PNG" alt="Isabelle"
+                 onerror="this.onerror=null;this.src='isabelle.png';" />
+            <span id="weekSundayLabel">Jan 4</span>
+          </div>
         </div>
 
-        <div class="postcard card">
-          <div class="postcard-head">
-            <div class="postcard-title">This week's bell postcard</div>
-            <div class="postcard-key">
-              <div class="key-row"><span class="kicon">☀️</span><span class="klabel">AM</span></div>
-              <div class="key-row"><span class="kicon">🌙</span><span class="klabel">PM</span></div>
-            </div>
-          </div>
-
-          <div class="chart-wrap">
-            <div id="chart" class="chart">
-              <div class="chart-line"></div>
-              <div id="chartDots" class="chart-dots"></div>
-              <div id="chartIcons" class="chart-icons"></div>
-              <div class="chart-labels">
-                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="postcard-caption">Just a cozy snapshot. The more you log, the smarter it gets.</div>
-        </div>
-
-        <div class="stats card" id="statsBlock"></div>
-
-        <div class="history-block card" style="padding: 16px;">
-          <div class="history-head">
-            <div class="history-title">History</div>
-            <button id="clearHistoryBtn" class="small-btn">Clear</button>
-          </div>
-          <div id="historyList" class="history-list">No saved weeks yet.</div>
+        <div class="buy-right">
+          <input id="buyPriceInput" class="price-input" inputmode="numeric" pattern="[0-9]*" placeholder="-" />
         </div>
       </section>
 
-      <!-- SETTINGS -->
-      <section id="page-settings" class="page">
-        <div class="title-card card">
-          <h1>Settings</h1>
+      <section id="daysWrap" class="days-wrap"></section>
+
+      <div class="save-row">
+        <button id="saveWeekBtn" class="btn primary">Save week to History</button>
+        <div class="hint">Saves your week, then clears Entry.</div>
+      </div>
+    </main>
+
+    <!-- INSIGHTS -->
+    <main id="page-insights" class="page hidden" data-page="insights">
+      <section class="card page-title">
+        <h1>Insights</h1>
+      </section>
+
+      <section class="card postcard-card">
+        <div class="postcard-head">
+          <div class="postcard-title">This week's bell postcard</div>
+          <div class="key">
+            <div class="key-row"><span class="key-ico">☀️</span><span class="key-text">AM</span></div>
+            <div class="key-row"><span class="key-ico">🌙</span><span class="key-text">PM</span></div>
+          </div>
         </div>
 
-        <div class="settings card">
-          <div class="setting-row">
-            <div class="setting-left">
-              <div class="setting-title">Postcard turnip strength</div>
-              <div class="setting-sub">Make the pattern easier to see.</div>
+        <!-- DESIGN D -->
+        <div class="postcard-graphic" id="postcardGraphic">
+          <div class="timeline-grid">
+            <div class="row-label">AM</div>
+            <div class="row-line">
+              <div class="slots" id="amSlots"></div>
             </div>
-            <input id="patternStrength" type="range" min="0" max="65" value="35" />
+
+            <div class="row-label">PM</div>
+            <div class="row-line">
+              <div class="slots" id="pmSlots"></div>
+            </div>
+
+            <div class="days-labels" id="dayLabels"></div>
           </div>
+        </div>
 
-          <div class="divider"></div>
+        <div class="postcard-caption">
+          Just a cozy snapshot. The more you log, the smarter it gets.
+        </div>
+      </section>
 
-          <div class="setting-row">
-            <div class="setting-left">
-              <div class="setting-title">Reset this week</div>
-              <div class="setting-sub">Clears Entry only.</div>
-            </div>
-            <button id="resetWeekBtn" class="small-btn">Reset</button>
+      <section class="card stats-card">
+        <div class="stat-row">
+          <div class="stat-label">Buy price</div>
+          <div id="statBuy" class="stat-value">-</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Best price seen</div>
+          <div id="statBestPrice" class="stat-value">-</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Best time so far</div>
+          <div id="statBestTime" class="stat-value">-</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Profit vs buy</div>
+          <div id="statProfit" class="stat-value">-</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Likely pattern</div>
+          <div id="statPattern" class="stat-value">-</div>
+        </div>
+      </section>
+
+      <section class="card history-card">
+        <div class="history-head">
+          <h2>History</h2>
+          <button id="clearHistoryBtn" class="btn subtle">Clear</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <!-- SETTINGS -->
+    <main id="page-settings" class="page hidden" data-page="settings">
+      <section class="card page-title">
+        <h1>Settings</h1>
+      </section>
+
+      <section class="card settings-card">
+        <div class="setting-row">
+          <div class="setting-left">
+            <div class="setting-title">Postcard turnip strength</div>
+            <div class="setting-sub">Make the pattern easier to see.</div>
+          </div>
+          <div class="setting-right">
+            <input id="patternStrength" type="range" min="0" max="100" step="1" />
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="setting-row">
+          <div class="setting-left">
+            <div class="setting-title">Reset this week</div>
+            <div class="setting-sub">Clears Entry only.</div>
+          </div>
+          <div class="setting-right">
+            <button id="resetWeekBtn" class="btn subtle">Reset</button>
           </div>
         </div>
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Navigation">
-      <button class="nav-btn is-active" data-go="entry">
-        <div class="nav-icon">🧾</div>
-        <div class="nav-label">Entry</div>
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav" aria-label="Primary">
+      <button class="nav-btn active" data-nav="entry" id="navEntry" type="button">
+        <div class="nav-ico">🧾</div>
+        <div class="nav-text">Entry</div>
       </button>
-      <button class="nav-btn" data-go="insights">
-        <div class="nav-icon">🔮</div>
-        <div class="nav-label">Insights</div>
+      <button class="nav-btn" data-nav="insights" id="navInsights" type="button">
+        <div class="nav-ico">🔮</div>
+        <div class="nav-text">Insights</div>
       </button>
-      <button class="nav-btn" data-go="settings">
-        <div class="nav-icon">⚙️</div>
-        <div class="nav-label">Settings</div>
+      <button class="nav-btn" data-nav="settings" id="navSettings" type="button">
+        <div class="nav-ico">⚙️</div>
+        <div class="nav-text">Settings</div>
       </button>
     </nav>
   </div>

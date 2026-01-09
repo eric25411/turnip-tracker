@@ -1,12 +1,5 @@
-/* =========================
-   Turnip Tracker - app.js
-   Full, stable version
-========================= */
-
 (() => {
   "use strict";
-
-  /* ---------- Constants ---------- */
 
   const DAYS = [
     { key: "mon", label: "Mon" },
@@ -26,17 +19,11 @@
     TURNIP_OPACITY: "tt_turnip_opacity",
   };
 
-  /* ---------- Helpers ---------- */
-
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
   const safeJsonParse = (str, fallback) => {
-    try {
-      return JSON.parse(str);
-    } catch {
-      return fallback;
-    }
+    try { return JSON.parse(str); } catch { return fallback; }
   };
 
   const pad2 = (n) => String(n).padStart(2, "0");
@@ -46,24 +33,17 @@
     return `${months[date.getMonth()]} ${date.getDate()}`;
   };
 
-  const isoDate = (date) => {
-    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-  };
+  const isoDate = (date) => `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`;
 
   const startOfTurnipWeek = (now = new Date()) => {
-    // Turnip week for this app is Monday-Saturday.
-    // If it's Sunday, show the week that just ended (previous Monday).
     const d = new Date(now);
-    d.setHours(0, 0, 0, 0);
+    d.setHours(0,0,0,0);
 
-    const day = d.getDay(); // 0 Sun, 1 Mon, ... 6 Sat
+    const day = d.getDay(); // 0 Sun
     if (day === 0) {
-      // Sunday -> go back 6 days to previous Monday
-      d.setDate(d.getDate() - 6);
+      d.setDate(d.getDate() - 6); // Sunday -> previous Monday
       return d;
     }
-
-    // otherwise go back to Monday
     const diffToMonday = day - 1;
     d.setDate(d.getDate() - diffToMonday);
     return d;
@@ -83,22 +63,15 @@
       fri: { am: "", pm: "" },
       sat: { am: "", pm: "" },
     },
-    savedAtISO: null,
   });
 
-  const loadHistory = () => {
-    return safeJsonParse(localStorage.getItem(LS.HISTORY), []);
-  };
-
-  const saveHistory = (arr) => {
-    localStorage.setItem(LS.HISTORY, JSON.stringify(arr));
-  };
+  const loadHistory = () => safeJsonParse(localStorage.getItem(LS.HISTORY), []);
+  const saveHistory = (arr) => localStorage.setItem(LS.HISTORY, JSON.stringify(arr));
 
   const loadCurrentWeekData = () => {
     const weekKey = getWeekKey();
-
-    // if stored week key differs, reset to correct current week
     const storedKey = localStorage.getItem(LS.CURRENT_WEEK);
+
     if (storedKey !== weekKey) {
       localStorage.setItem(LS.CURRENT_WEEK, weekKey);
       const fresh = defaultWeekData(weekKey);
@@ -114,11 +87,9 @@
       return fresh;
     }
 
-    // ensure shape
     const fixed = defaultWeekData(weekKey);
     fixed.buyPrice = parsed.buyPrice ?? "";
     fixed.entries = parsed.entries ?? fixed.entries;
-    fixed.savedAtISO = parsed.savedAtISO ?? null;
     localStorage.setItem(LS.CURRENT_DATA, JSON.stringify(fixed));
     return fixed;
   };
@@ -128,132 +99,48 @@
     localStorage.setItem(LS.CURRENT_DATA, JSON.stringify(data));
   };
 
-  /* ---------- DOM hooks (IDs are optional; we support multiple patterns) ---------- */
-
-  const getBuyPriceInput = () =>
-    $("#buy-price") || $("#buyPrice") || $("#buy-price-input") || $("#buy_price");
-
-  const getWeekDateLabel = () =>
-    $("#week-date") || $("#buy-date") || $("#weekDate") || $("#buyDate");
-
-  const getSaveWeekButton = () =>
-    $("#save-week-btn") || $("#saveWeekBtn") || $("#save-week") || $("#saveWeek");
-
-  const getHistoryContainer = () =>
-    $("#history-list") || $("#historyList") || $("#history");
-
-  const getClearHistoryButton = () =>
-    $("#clear-history-btn") || $("#clearHistoryBtn") || $("#clear-history") || $("#clearHistory");
-
-  const getResetWeekButton = () =>
-    $("#reset-week-btn") || $("#resetWeekBtn") || $("#reset-week") || $("#resetWeek");
-
-  const getBackupButton = () =>
-    $("#backup-btn") || $("#backupBtn") || $("#backup");
-
-  const getRestoreButton = () =>
-    $("#restore-btn") || $("#restoreBtn") || $("#restore");
-
-  const getTurnipStrengthSlider = () =>
-    $("#turnip-strength") || $("#turnipStrength") || $("#turnip-opacity") || $("#turnipOpacity");
-
-  const getChartHost = () =>
-    $("#postcard-chart") || $("#chart") || $(".chart");
-
-  const getStatsTargets = () => ({
-    buy: $("#stat-buy") || $("#statBuy"),
-    best: $("#stat-best") || $("#statBest"),
-    bestTime: $("#stat-besttime") || $("#statBestTime"),
-    profit: $("#stat-profit") || $("#statProfit"),
-    pattern: $("#stat-pattern") || $("#statPattern"),
-  });
-
-  const getDayInput = (dayKey, timeKey) => {
-    // Preferred: data attributes
-    const byData = document.querySelector(
-      `input[data-day="${dayKey}"][data-time="${timeKey}"]`
-    );
-    if (byData) return byData;
-
-    // Common id patterns
-    const candidates = [
-      `#${dayKey}-${timeKey}`,
-      `#${dayKey}_${timeKey}`,
-      `#${dayKey}${timeKey.toUpperCase()}`,
-      `#${dayKey}${timeKey}`,
-      `#${dayKey}-${timeKey}-input`,
-      `#${dayKey}-${timeKey}-price`,
-    ];
-    for (const sel of candidates) {
-      const el = $(sel);
-      if (el) return el;
-    }
-    return null;
-  };
-
-  /* ---------- UI: Navigation ---------- */
+  let state = { current: null };
 
   const showPage = (pageName) => {
-    const pages = {
-      entry: $("#entry-page") || $("#entryPage") || $("#entry"),
-      insights: $("#insights-page") || $("#insightsPage") || $("#insights"),
-      settings: $("#settings-page") || $("#settingsPage") || $("#settings"),
-    };
+    const entry = $("#entry-page");
+    const insights = $("#insights-page");
+    const settings = $("#settings-page");
 
-    Object.values(pages).forEach((p) => {
-      if (!p) return;
-      p.classList.remove("active");
-    });
+    [entry, insights, settings].forEach((p) => p && p.classList.remove("active"));
 
-    const target = pages[pageName];
-    if (target) target.classList.add("active");
+    if (pageName === "entry" && entry) entry.classList.add("active");
+    if (pageName === "insights" && insights) insights.classList.add("active");
+    if (pageName === "settings" && settings) settings.classList.add("active");
 
-    // Re-render when switching
+    if (pageName === "entry") renderEntry();
     if (pageName === "insights") renderInsights();
     if (pageName === "settings") renderSettings();
-    if (pageName === "entry") renderEntry();
   };
 
   const wireNav = () => {
-    const btnEntry = $("#nav-entry") || $("#navEntry");
-    const btnInsights = $("#nav-insights") || $("#navInsights");
-    const btnSettings = $("#nav-settings") || $("#navSettings");
-
-    if (btnEntry) btnEntry.addEventListener("click", () => showPage("entry"));
-    if (btnInsights) btnInsights.addEventListener("click", () => showPage("insights"));
-    if (btnSettings) btnSettings.addEventListener("click", () => showPage("settings"));
-  };
-
-  /* ---------- Rendering ---------- */
-
-  let state = {
-    current: null,
+    const b1 = $("#nav-entry");
+    const b2 = $("#nav-insights");
+    const b3 = $("#nav-settings");
+    if (b1) b1.addEventListener("click", () => showPage("entry"));
+    if (b2) b2.addEventListener("click", () => showPage("insights"));
+    if (b3) b3.addEventListener("click", () => showPage("settings"));
   };
 
   const renderEntry = () => {
     if (!state.current) return;
+    const weekLabel = $("#week-date");
+    if (weekLabel) weekLabel.textContent = formatMonthDay(startOfTurnipWeek(new Date()));
 
-    // Week date display
-    const label = getWeekDateLabel();
-    if (label) {
-      const monday = startOfTurnipWeek(new Date());
-      label.textContent = formatMonthDay(monday);
-    }
+    const buy = $("#buy-price");
+    if (buy) buy.value = state.current.buyPrice || "";
 
-    // Buy price
-    const buyInput = getBuyPriceInput();
-    if (buyInput) buyInput.value = state.current.buyPrice || "";
-
-    // Day inputs
+    // Inputs populate (not required for visibility, but keeps state correct)
     for (const d of DAYS) {
       for (const t of TIMES) {
-        const el = getDayInput(d.key, t);
-        if (!el) continue;
-        el.value = state.current.entries?.[d.key]?.[t] ?? "";
+        const el = document.querySelector(`input[data-day="${d.key}"][data-time="${t}"]`);
+        if (el) el.value = state.current.entries?.[d.key]?.[t] ?? "";
       }
     }
-
-    renderHistoryList();
   };
 
   const computeStats = () => {
@@ -275,7 +162,6 @@
 
     const bestValid = Number.isFinite(best) && best !== -Infinity;
     const buyValid = Number.isFinite(buy) && buy > 0;
-
     const profit = buyValid && bestValid ? best - buy : null;
 
     return {
@@ -283,33 +169,13 @@
       best: bestValid ? best : null,
       bestTime: bestValid ? `${bestDay} ${bestTime}` : null,
       profit: profit !== null ? profit : null,
-      pattern: bestValid ? "Mixed" : null, // placeholder simple label
     };
   };
 
-  const renderInsights = () => {
-    if (!state.current) return;
-
-    // Stats
-    const stats = computeStats();
-    const targets = getStatsTargets();
-
-    if (targets.buy) targets.buy.textContent = stats.buy ?? "-";
-    if (targets.best) targets.best.textContent = stats.best ?? "-";
-    if (targets.bestTime) targets.bestTime.textContent = stats.bestTime ?? "-";
-    if (targets.profit) targets.profit.textContent = stats.profit ?? "-";
-    if (targets.pattern) targets.pattern.textContent = stats.pattern ?? "-";
-
-    // Chart
-    renderChart();
-  };
-
   const renderChart = () => {
-    const host = getChartHost();
+    const host = $("#postcard-chart");
     if (!host) return;
 
-    // If host is the .chart box itself, we can safely rebuild its inner HTML.
-    // This keeps layout stable and prevents the "line and dots in the middle" mess.
     host.innerHTML = "";
 
     const makeRow = (labelText, timeKey) => {
@@ -319,27 +185,18 @@
       const lab = document.createElement("div");
       lab.className = "row-label";
       lab.textContent = labelText;
-      row.appendChild(lab);
 
       const dots = document.createElement("div");
       dots.className = "dots";
 
-      // 6 days shown (Mon-Sat)
       for (const d of DAYS) {
-        const span = document.createElement("span");
-        const val = state.current.entries[d.key][timeKey];
-
-        // If user entered a number, darken slightly, otherwise keep light
-        const num = Number(val);
-        if (Number.isFinite(num) && num > 0) {
-          span.style.background = "#6f6f6f";
-        } else {
-          span.style.background = "#b5b5b5";
-        }
-
-        dots.appendChild(span);
+        const dot = document.createElement("span");
+        const val = Number(state.current.entries[d.key][timeKey]);
+        dot.style.background = Number.isFinite(val) && val > 0 ? "#6f6f6f" : "#b5b5b5";
+        dots.appendChild(dot);
       }
 
+      row.appendChild(lab);
       row.appendChild(dots);
       return row;
     };
@@ -357,97 +214,70 @@
     host.appendChild(days);
   };
 
-  const renderSettings = () => {
-    // Turnip strength slider
-    const slider = getTurnipStrengthSlider();
-    if (slider) {
-      const stored = localStorage.getItem(LS.TURNIP_OPACITY);
-      const value = stored ? Number(stored) : 0.12;
+  const renderInsights = () => {
+    if (!state.current) return;
+    const s = computeStats();
 
-      // slider expects 0-1 or 0-100 depending on your HTML
-      // We support both:
-      if (Number(slider.max) > 1) {
-        slider.value = Math.round(value * 100);
-      } else {
-        slider.value = value;
-      }
+    const set = (id, value) => {
+      const el = $(id);
+      if (el) el.textContent = value ?? "-";
+    };
 
-      applyTurnipOpacity(value);
-    }
+    set("#stat-buy", s.buy);
+    set("#stat-best", s.best);
+    set("#stat-besttime", s.bestTime);
+    set("#stat-profit", s.profit);
 
-    renderHistoryList();
+    renderChart();
+    renderHistoryList(); // also updates Insights History
   };
-
-  /* ---------- Turnip background strength ---------- */
 
   const applyTurnipOpacity = (val) => {
     document.documentElement.style.setProperty("--turnip-opacity", String(val));
-
-    // Also apply directly to postcard background if desired
-    // (background uses the image; opacity is simulated by overlay in CSS)
-    // This is just a variable store for future upgrades.
   };
 
-  const wireTurnipSlider = () => {
-    const slider = getTurnipStrengthSlider();
-    if (!slider) return;
-
-    slider.addEventListener("input", () => {
-      let raw = Number(slider.value);
-      let opacity;
-
-      if (Number(slider.max) > 1) {
-        opacity = Math.min(1, Math.max(0, raw / 100));
-      } else {
-        opacity = Math.min(1, Math.max(0, raw));
-      }
-
-      // keep it subtle so it never destroys readability
-      const clamped = Math.min(0.35, Math.max(0.05, opacity));
-      localStorage.setItem(LS.TURNIP_OPACITY, String(clamped));
-      applyTurnipOpacity(clamped);
-    });
+  const renderSettings = () => {
+    const slider = $("#turnip-strength");
+    if (slider) {
+      const stored = localStorage.getItem(LS.TURNIP_OPACITY);
+      const value = stored ? Number(stored) : 0.12;
+      slider.value = Math.round(value * 100);
+      applyTurnipOpacity(value);
+    }
+    renderHistoryList(); // also updates Settings History
   };
-
-  /* ---------- History ---------- */
 
   const renderHistoryList = () => {
-    const box = getHistoryContainer();
-    if (!box) return;
-
     const history = loadHistory();
-    if (!history.length) {
-      box.innerHTML = `<div style="color:#6b6b6b;">No saved weeks yet.</div>`;
-      return;
-    }
 
-    const lines = history
-      .slice()
-      .sort((a, b) => (a.weekKey < b.weekKey ? 1 : -1))
-      .map((w) => {
-        const monday = new Date(w.weekStartISO + "T00:00:00");
-        const label = `${formatMonthDay(monday)} (week of ${w.weekKey})`;
-        return `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);">
-            <div style="font-size:14px;color:#444;">${label}</div>
-            <button data-load-week="${w.weekKey}" style="border:none;background:#fff;border-radius:12px;padding:8px 10px;">Load</button>
-          </div>
-        `;
-      })
-      .join("");
+    const boxes = [$("#history-list"), $("#history-list-2")].filter(Boolean);
+    if (!boxes.length) return;
 
-    box.innerHTML = lines;
+    const html = !history.length
+      ? `<div style="color:#6b6b6b;">No saved weeks yet.</div>`
+      : history
+          .slice()
+          .sort((a, b) => (a.weekKey < b.weekKey ? 1 : -1))
+          .map((w) => {
+            const monday = new Date(w.weekStartISO + "T00:00:00");
+            const label = `${formatMonthDay(monday)} (week of ${w.weekKey})`;
+            return `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
+                <div style="font-weight:800;color:#444;font-size:14px;">${label}</div>
+                <button class="btn-mini" data-load-week="${w.weekKey}">Load</button>
+              </div>
+            `;
+          })
+          .join("");
 
-    // Wire load buttons
+    boxes.forEach((b) => (b.innerHTML = html));
+
     $$("button[data-load-week]").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.onclick = () => {
         const key = btn.getAttribute("data-load-week");
-        const history2 = loadHistory();
-        const found = history2.find((x) => x.weekKey === key);
+        const found = loadHistory().find((x) => x.weekKey === key);
         if (!found) return;
 
-        // Load saved week into current view (read-only style), or overwrite current week.
-        // We will overwrite current week data in UI for now (simple and expected).
         state.current = {
           ...defaultWeekData(getWeekKey()),
           buyPrice: found.buyPrice ?? "",
@@ -458,34 +288,53 @@
         renderEntry();
         renderInsights();
         showPage("insights");
+      };
+    });
+  };
+
+  const wireInputs = () => {
+    const buy = $("#buy-price");
+    if (buy) {
+      buy.addEventListener("input", () => {
+        state.current.buyPrice = buy.value.trim();
+        saveCurrentWeekData(state.current);
+        renderInsights();
+      });
+    }
+
+    $$('input[data-day][data-time]').forEach((el) => {
+      el.addEventListener("input", () => {
+        const day = el.getAttribute("data-day");
+        const time = el.getAttribute("data-time");
+        state.current.entries[day][time] = el.value.trim();
+        saveCurrentWeekData(state.current);
+        renderInsights();
       });
     });
   };
 
-  const wireHistoryButtons = () => {
-    const saveBtn = getSaveWeekButton();
+  const wireButtons = () => {
+    const saveBtn = $("#save-week-btn");
     if (saveBtn) {
       saveBtn.addEventListener("click", () => {
-        if (!state.current) return;
-
         const history = loadHistory();
-        const weekKey = state.current.weekKey;
+        const wk = state.current.weekKey;
 
-        const existingIndex = history.findIndex((x) => x.weekKey === weekKey);
         const payload = {
-          weekKey,
-          weekStartISO: state.current.weekKey,
+          weekKey: wk,
+          weekStartISO: wk,
           buyPrice: state.current.buyPrice,
           entries: state.current.entries,
           savedAtISO: new Date().toISOString(),
         };
 
-        if (existingIndex >= 0) history[existingIndex] = payload;
+        const idx = history.findIndex((x) => x.weekKey === wk);
+        if (idx >= 0) history[idx] = payload;
         else history.push(payload);
 
         saveHistory(history);
 
-        // clear entry after save (optional behavior, but matches earlier intent)
+        // clear entry after saving
         state.current = defaultWeekData(getWeekKey());
         saveCurrentWeekData(state.current);
 
@@ -495,37 +344,28 @@
       });
     }
 
-    const clearBtn = getClearHistoryButton();
-    if (clearBtn) {
-      clearBtn.addEventListener("click", () => {
+    const clear1 = $("#clear-history-btn");
+    const clear2 = $("#clear-history-btn-2");
+    [clear1, clear2].filter(Boolean).forEach((b) => {
+      b.addEventListener("click", () => {
         saveHistory([]);
         renderHistoryList();
       });
+    });
+
+    const reset = $("#reset-week-btn");
+    if (reset) {
+      reset.addEventListener("click", () => {
+        state.current = defaultWeekData(getWeekKey());
+        saveCurrentWeekData(state.current);
+        renderEntry();
+        renderInsights();
+      });
     }
-  };
 
-  /* ---------- Backup / Restore ---------- */
-
-  const downloadTextFile = (filename, text) => {
-    const blob = new Blob([text], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    URL.revokeObjectURL(url);
-  };
-
-  const wireBackupRestore = () => {
-    const backupBtn = getBackupButton();
-    const restoreBtn = getRestoreButton();
-
-    if (backupBtn) {
-      backupBtn.addEventListener("click", () => {
+    const backup = $("#backup-btn");
+    if (backup) {
+      backup.addEventListener("click", () => {
         const payload = {
           version: 1,
           exportedAtISO: new Date().toISOString(),
@@ -535,12 +375,21 @@
           turnipOpacity: localStorage.getItem(LS.TURNIP_OPACITY),
         };
 
-        downloadTextFile("turnip-tracker-backup.json", JSON.stringify(payload, null, 2));
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "turnip-tracker-backup.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
       });
     }
 
-    if (restoreBtn) {
-      restoreBtn.addEventListener("click", () => {
+    const restore = $("#restore-btn");
+    if (restore) {
+      restore.addEventListener("click", () => {
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "application/json";
@@ -553,17 +402,14 @@
           const payload = safeJsonParse(text, null);
           if (!payload || !payload.history) return;
 
-          // restore history
           saveHistory(payload.history);
 
-          // restore settings
           if (payload.turnipOpacity) {
             localStorage.setItem(LS.TURNIP_OPACITY, String(payload.turnipOpacity));
+            applyTurnipOpacity(Number(payload.turnipOpacity));
           }
 
-          // keep current week logic correct (do not blindly restore old week key)
           state.current = loadCurrentWeekData();
-
           renderEntry();
           renderInsights();
           renderSettings();
@@ -572,63 +418,35 @@
         input.click();
       });
     }
-  };
 
-  /* ---------- Inputs wiring ---------- */
-
-  const wireInputs = () => {
-    const buyInput = getBuyPriceInput();
-    if (buyInput) {
-      buyInput.addEventListener("input", () => {
-        state.current.buyPrice = buyInput.value.trim();
-        saveCurrentWeekData(state.current);
-        renderInsights();
+    const slider = $("#turnip-strength");
+    if (slider) {
+      slider.addEventListener("input", () => {
+        const val = Math.min(0.35, Math.max(0.05, Number(slider.value) / 100));
+        localStorage.setItem(LS.TURNIP_OPACITY, String(val));
+        applyTurnipOpacity(val);
       });
     }
-
-    for (const d of DAYS) {
-      for (const t of TIMES) {
-        const el = getDayInput(d.key, t);
-        if (!el) continue;
-
-        el.addEventListener("input", () => {
-          state.current.entries[d.key][t] = el.value.trim();
-          saveCurrentWeekData(state.current);
-          renderInsights();
-        });
-      }
-    }
   };
-
-  const wireResetWeek = () => {
-    const btn = getResetWeekButton();
-    if (!btn) return;
-
-    btn.addEventListener("click", () => {
-      state.current = defaultWeekData(getWeekKey());
-      saveCurrentWeekData(state.current);
-      renderEntry();
-      renderInsights();
-    });
-  };
-
-  /* ---------- Boot ---------- */
 
   const boot = () => {
     state.current = loadCurrentWeekData();
 
-    // Apply saved opacity
     const storedOpacity = localStorage.getItem(LS.TURNIP_OPACITY);
     if (storedOpacity) applyTurnipOpacity(Number(storedOpacity));
 
+    // Set week label immediately
+    const weekLabel = $("#week-date");
+    if (weekLabel) weekLabel.textContent = formatMonthDay(startOfTurnipWeek(new Date()));
+
     wireNav();
     wireInputs();
-    wireHistoryButtons();
-    wireBackupRestore();
-    wireResetWeek();
-    wireTurnipSlider();
+    wireButtons();
 
-    // Default page
+    renderEntry();
+    renderInsights();
+    renderSettings();
+
     showPage("entry");
   };
 

@@ -3,27 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#cfe2f5" />
+
   <title>Turnip Tracker</title>
 
-  <!-- IMPORTANT: this must match your repo filename -->
-  <link rel="stylesheet" href="style-v11.css" />
-
-  <!-- App icon for Add to Home Screen (Safari uses this) -->
+  <!-- iOS Add to Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Turnip Tracker" />
   <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
+
+  <!-- PWA basics -->
   <link rel="icon" href="icon-1024.png.PNG" />
 
-  <meta name="theme-color" content="#dbe8f7" />
+  <!-- Main stylesheet (keep this file name stable) -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <div class="app">
-    <!-- ENTRY PAGE -->
-    <section class="page is-active" id="page-entry" aria-label="Entry">
-      <div class="shell">
-        <div class="banner-card">
-          <img class="banner" src="banner.png.jpg" alt="Turnip Tracker banner" />
-        </div>
+    <header class="top-banner">
+      <img class="banner-img" src="banner.png.jpg" alt="Turnip Tracker banner" />
+    </header>
 
+    <main class="main" id="main">
+      <!-- ENTRY -->
+      <section class="page" id="page-entry" data-page="entry">
         <div class="card buy-card">
           <div class="buy-left">
             <div class="buy-title">
@@ -32,26 +37,32 @@
             </div>
 
             <div class="buy-sub">
-              <img class="isabelle" src="isabelle.png.PNG" alt="" onerror="this.style.display='none'">
-              <span id="buy-date-label">Jan 1</span>
+              <img class="isabelle-icon" src="isabelle.png.PNG" alt="Isabelle" />
+              <span id="buyDateLabel">Jan 1</span>
             </div>
           </div>
 
-          <div class="buy-right">
-            <input id="buyPrice" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="-" />
-          </div>
+          <input
+            class="price-input"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="3"
+            id="buyPrice"
+            placeholder="-"
+            aria-label="Buy price"
+          />
         </div>
 
-        <div id="entry-days"></div>
+        <div class="days">
+          <!-- Days injected by JS -->
+        </div>
 
-        <button class="primary" id="saveWeekBtn">Save week to History</button>
-        <div class="helper">Saves your week, then clears Entry.</div>
-      </div>
-    </section>
+        <button class="save-btn" id="saveWeekBtn">Save week to History</button>
+        <div class="save-help">This saves the week, then clears Entry.</div>
+      </section>
 
-    <!-- INSIGHTS PAGE -->
-    <section class="page" id="page-insights" aria-label="Insights">
-      <div class="shell">
+      <!-- INSIGHTS -->
+      <section class="page" id="page-insights" data-page="insights" hidden>
         <div class="title-card">
           <h1>Insights</h1>
         </div>
@@ -59,31 +70,19 @@
         <div class="card postcard">
           <div class="postcard-head">
             <div class="postcard-title">This week’s bell postcard</div>
-
-            <div class="key">
-              <div class="key-row">
-                <span class="kicon">☀️</span><span class="ktext">AM</span>
-              </div>
-              <div class="key-row">
-                <span class="kicon">🌙</span><span class="ktext">PM</span>
-              </div>
+            <div class="postcard-key" aria-label="AM and PM key">
+              <div class="key-row"><span class="kicon">☀️</span><span class="klabel">AM</span></div>
+              <div class="key-row"><span class="kicon">🌙</span><span class="klabel">PM</span></div>
             </div>
           </div>
 
-          <div class="chart-wrap" id="chartWrap">
-            <!-- turnip pattern is a CSS ::before layer -->
-            <div class="chart">
+          <div class="chart-wrap">
+            <div class="chart" id="chart">
               <div class="chart-line"></div>
-
-              <!-- icons (AM/PM) -->
-              <div class="markers" id="chartMarkers"></div>
-
-              <!-- dots -->
-              <div class="dots" id="chartDots"></div>
-
-              <!-- day labels -->
-              <div class="days" id="chartDays">
-                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+              <div class="chart-dots" id="chartDots"></div>
+              <div class="chart-icons" id="chartIcons"></div>
+              <div class="chart-labels" id="chartLabels">
+                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
               </div>
             </div>
           </div>
@@ -93,85 +92,95 @@
           </div>
         </div>
 
-        <div class="card list-card">
-          <div class="row">
-            <div class="label">Buy price</div>
-            <div class="value" id="i-buy">-</div>
+        <div class="card stats">
+          <div class="stat-row">
+            <div class="stat-label">Buy price</div>
+            <div class="stat-val" id="statBuy">-</div>
           </div>
-          <div class="row">
-            <div class="label">Best price seen</div>
-            <div class="value" id="i-best">-</div>
+          <div class="divider"></div>
+
+          <div class="stat-row">
+            <div class="stat-label">Best price seen</div>
+            <div class="stat-val" id="statBest">-</div>
           </div>
-          <div class="row">
-            <div class="label">Best time so far</div>
-            <div class="value" id="i-besttime">-</div>
+          <div class="divider"></div>
+
+          <div class="stat-row">
+            <div class="stat-label">Best time so far</div>
+            <div class="stat-val" id="statBestTime">-</div>
           </div>
-          <div class="row">
-            <div class="label">Profit vs buy</div>
-            <div class="value" id="i-profit">-</div>
+          <div class="divider"></div>
+
+          <div class="stat-row">
+            <div class="stat-label">Profit vs buy</div>
+            <div class="stat-val" id="statProfit">-</div>
           </div>
-          <div class="row">
-            <div class="label">Likely pattern</div>
-            <div class="value" id="i-pattern">Mixed</div>
+          <div class="divider"></div>
+
+          <div class="stat-row">
+            <div class="stat-label">Likely pattern</div>
+            <div class="stat-val" id="statPattern">-</div>
+          </div>
+
+          <div class="history-block">
+            <div class="history-head">
+              <div class="history-title">History</div>
+              <button class="small-btn" id="clearHistoryBtn">Clear</button>
+            </div>
+            <div class="history-list" id="historyList">No saved weeks yet.</div>
           </div>
         </div>
+      </section>
 
-        <div class="card list-card">
-          <div class="row">
-            <div class="label">History</div>
-            <div class="value"></div>
-          </div>
-          <div id="historyList" class="history"></div>
-          <button class="ghost" id="clearHistoryBtn">Clear</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- SETTINGS PAGE -->
-    <section class="page" id="page-settings" aria-label="Settings">
-      <div class="shell">
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings" data-page="settings" hidden>
         <div class="title-card">
           <h1>Settings</h1>
         </div>
 
-        <div class="card list-card">
-          <div class="row top">
-            <div>
-              <div class="label big">Postcard turnip strength</div>
-              <div class="subtle">Make the pattern easier to see.</div>
+        <div class="card settings">
+          <div class="setting-row">
+            <div class="setting-left">
+              <div class="setting-title">Postcard turnip strength</div>
+              <div class="setting-sub">Make the pattern easier to see.</div>
             </div>
+            <input
+              type="range"
+              id="patternStrength"
+              min="0"
+              max="100"
+              value="35"
+              aria-label="Postcard turnip strength"
+            />
           </div>
 
-          <div class="slider-row">
-            <input id="patternStrength" type="range" min="0" max="100" value="35" />
-          </div>
+          <div class="divider"></div>
 
-          <div class="row top">
-            <div>
-              <div class="label big">Reset this week</div>
-              <div class="subtle">Clears Entry only.</div>
+          <div class="setting-row">
+            <div class="setting-left">
+              <div class="setting-title">Reset this week</div>
+              <div class="setting-sub">Clears Entry only.</div>
             </div>
-            <button class="ghost" id="resetWeekBtn">Reset</button>
+            <button class="small-btn" id="resetWeekBtn">Reset</button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </main>
 
-    <!-- BOTTOM NAV -->
     <nav class="bottom-nav" aria-label="Bottom navigation">
-      <button class="nav-btn is-active" data-go="entry" type="button">
+      <button class="nav-btn is-active" data-go="entry" id="navEntry">
         <div class="nav-icon">🧾</div>
-        <div class="nav-text">Entry</div>
+        <div class="nav-label">Entry</div>
       </button>
 
-      <button class="nav-btn" data-go="insights" type="button">
+      <button class="nav-btn" data-go="insights" id="navInsights">
         <div class="nav-icon">🔮</div>
-        <div class="nav-text">Insights</div>
+        <div class="nav-label">Insights</div>
       </button>
 
-      <button class="nav-btn" data-go="settings" type="button">
+      <button class="nav-btn" data-go="settings" id="navSettings">
         <div class="nav-icon">⚙️</div>
-        <div class="nav-text">Settings</div>
+        <div class="nav-label">Settings</div>
       </button>
     </nav>
   </div>

@@ -2,58 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+
   <title>Turnip Tracker</title>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- App icons (iOS + PWA) -->
+  <link rel="icon" href="icon-1024.png.PNG" sizes="1024x1024" type="image/png" />
+  <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png.PNG" />
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#cfe0f4" />
 </head>
+
 <body>
   <div class="app" id="app">
+    <!-- HEADER -->
     <header class="hero">
-      <img class="heroBanner" src="banner.png.jpg" alt="Turnip Tracker banner" />
+      <img
+        class="heroBanner"
+        src="banner.png.jpg"
+        alt="Turnip Tracker banner"
+      />
     </header>
 
+    <!-- MAIN CONTENT -->
     <main class="content" id="content">
-      <!-- ENTRY -->
-      <section class="screen is-active" id="screen-entry" aria-label="Entry">
+
+      <!-- ENTRY SCREEN -->
+      <section class="screen is-active" id="screen-entry">
         <div class="card buyCard">
           <div class="buyLeft">
             <div class="buyTitleRow">
               <div class="emoji">💰</div>
               <div class="buyTitle">Buy price</div>
             </div>
-            <div class="buyDate" id="buyDateLabel">Jan 4</div>
+            <div class="buyDate" id="buyDateLabel">—</div>
           </div>
 
           <div class="buyRight">
-            <input id="buyPrice" class="input bigInput" inputmode="numeric" placeholder="-" />
+            <input
+              id="buyPrice"
+              class="input bigInput"
+              inputmode="numeric"
+              placeholder="-"
+            />
           </div>
         </div>
 
+        <!-- Days injected by app.js -->
         <div id="daysWrap"></div>
 
         <div class="bottomActions">
-          <button class="btnPrimary" id="saveWeekBtn">Save week to History</button>
+          <button class="btnPrimary" id="saveWeekBtn">
+            Save week to History
+          </button>
         </div>
       </section>
 
-      <!-- INSIGHTS -->
-      <section class="screen" id="screen-insights" aria-label="Insights">
+      <!-- INSIGHTS SCREEN -->
+      <section class="screen" id="screen-insights">
         <div class="titleCard">
           <h1 class="title">Insights</h1>
         </div>
 
         <div class="card insightsCard">
           <div class="insightsHead">
-            <div>
-              <div class="insightsTitle">This week’s bell postcard</div>
+            <div class="insightsTitle">
+              This week’s bell postcard
             </div>
+
             <div class="legend">
-              <div class="legendRow"><span class="legendIcon">🌞</span><span class="legendText">AM</span></div>
-              <div class="legendRow"><span class="legendIcon">🌙</span><span class="legendText">PM</span></div>
+              <div class="legendRow">
+                <span class="legendIcon">🌞</span>
+                <span class="legendText">AM</span>
+              </div>
+              <div class="legendRow">
+                <span class="legendIcon">🌙</span>
+                <span class="legendText">PM</span>
+              </div>
             </div>
           </div>
 
-          <div class="chartCard" id="chartCard">
+          <div class="chartCard">
             <div class="chartGrid">
               <div class="chartRowLabel">AM</div>
               <div class="chartRow" id="chartAM"></div>
@@ -66,7 +104,7 @@
           </div>
 
           <div class="insightsBlurb">
-            Just a cozy snapshot. The more you log, the smarter it gets.
+            A cozy snapshot of your island’s prices so far.
           </div>
         </div>
 
@@ -101,8 +139,8 @@
         </div>
       </section>
 
-      <!-- SETTINGS -->
-      <section class="screen" id="screen-settings" aria-label="Settings">
+      <!-- SETTINGS SCREEN -->
+      <section class="screen" id="screen-settings">
         <div class="titleCard">
           <h1 class="title">Settings</h1>
         </div>
@@ -110,11 +148,21 @@
         <div class="card settingsCard">
           <div class="settingRow">
             <div class="settingLeft">
-              <div class="settingTitle">Turnip background strength</div>
-              <div class="settingSub">Make the pattern easier to see.</div>
+              <div class="settingTitle">
+                Turnip background strength
+              </div>
+              <div class="settingSub">
+                Adjust how visible the pattern is.
+              </div>
             </div>
             <div class="settingRight">
-              <input id="bgStrength" type="range" min="0" max="100" value="35" />
+              <input
+                id="bgStrength"
+                type="range"
+                min="0"
+                max="100"
+                value="35"
+              />
             </div>
           </div>
 
@@ -122,32 +170,44 @@
 
           <div class="settingsButtons">
             <button class="btnSoft" id="backupBtn">Backup</button>
+
             <label class="btnSoft fileBtn">
               Restore
-              <input id="restoreFile" type="file" accept="application/json" />
+              <input
+                id="restoreFile"
+                type="file"
+                accept="application/json"
+              />
             </label>
-            <button class="btnSoft danger" id="resetWeekBtn">Reset week</button>
+
+            <button class="btnSoft danger" id="resetWeekBtn">
+              Reset week
+            </button>
           </div>
         </div>
       </section>
     </main>
 
-    <nav class="bottomNav" aria-label="Bottom navigation">
-      <button class="navItem is-active" id="navEntry" data-target="entry">
+    <!-- BOTTOM NAV -->
+    <nav class="bottomNav">
+      <button class="navItem is-active" id="navEntry">
         <span class="navIcon">🧾</span>
         <span class="navText">Entry</span>
       </button>
-      <button class="navItem" id="navInsights" data-target="insights">
+
+      <button class="navItem" id="navInsights">
         <span class="navIcon">🔮</span>
         <span class="navText">Insights</span>
       </button>
-      <button class="navItem" id="navSettings" data-target="settings">
+
+      <button class="navItem" id="navSettings">
         <span class="navIcon">⚙️</span>
         <span class="navText">Settings</span>
       </button>
     </nav>
   </div>
 
+  <!-- Script -->
   <script src="app.js"></script>
 </body>
 </html>

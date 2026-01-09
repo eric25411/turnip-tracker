@@ -1,12 +1,11 @@
 const LS = {
-  week: "tt_week_v2",
-  history: "tt_history_v2",
-  fontScale: "tt_fontScale_v2",
-  patternOpacity: "tt_patternOpacity_v2"
+  week: "tt_week_v3",
+  history: "tt_history_v3",
+  uiScale: "tt_uiScale_v3",
+  patternOpacity: "tt_patternOpacity_v3"
 };
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-
 function $(id){ return document.getElementById(id); }
 
 function lastSundayDate(d = new Date()){
@@ -27,14 +26,8 @@ function sanitizePrice(v){
 
 function freshWeek(){
   const prices = {};
-  for(const day of DAYS){
-    prices[day] = { am: "", pm: "" };
-  }
-  return {
-    buyPrice: "",
-    prices,
-    weekSundayISO: lastSundayDate().toISOString()
-  };
+  for(const day of DAYS) prices[day] = { am: "", pm: "" };
+  return { buyPrice: "", prices, weekSundayISO: lastSundayDate().toISOString() };
 }
 
 function loadWeek(){
@@ -44,9 +37,7 @@ function loadWeek(){
     const w = JSON.parse(raw);
     if(!w || !w.prices) return freshWeek();
     return w;
-  }catch(e){
-    return freshWeek();
-  }
+  }catch{ return freshWeek(); }
 }
 
 function saveWeek(week){
@@ -56,7 +47,7 @@ function saveWeek(week){
 function loadHistory(){
   const raw = localStorage.getItem(LS.history);
   if(!raw) return [];
-  try{ return JSON.parse(raw) || []; }catch(e){ return []; }
+  try{ return JSON.parse(raw) || []; }catch{ return []; }
 }
 function saveHistory(arr){
   localStorage.setItem(LS.history, JSON.stringify(arr));
@@ -66,17 +57,15 @@ function ensureWeekSunday(week){
   const currentSunday = lastSundayDate();
   const stored = new Date(week.weekSundayISO);
   stored.setHours(0,0,0,0);
-
   if(stored.getTime() !== currentSunday.getTime()){
     week.weekSundayISO = currentSunday.toISOString();
     saveWeek(week);
   }
 }
 
-function applyFontScale(scale){
-  // Works reliably on iOS Safari: do BOTH
-  document.documentElement.style.setProperty("--fontScale", String(scale));
-  document.body.style.fontSize = `${16 * Number(scale)}px`;
+function applyUiScale(scale){
+  // This drives html{font-size: calc(16px * var(--uiScale))}
+  document.documentElement.style.setProperty("--uiScale", String(scale));
 }
 
 function applyPatternOpacity(op){
@@ -85,7 +74,6 @@ function applyPatternOpacity(op){
 
 function computeStats(week){
   const buy = week.buyPrice ? Number(week.buyPrice) : null;
-
   let best = null;
   let bestTime = null;
 
@@ -95,7 +83,6 @@ function computeStats(week){
       if(!val) continue;
       const num = Number(val);
       if(Number.isNaN(num)) continue;
-
       if(best === null || num > best){
         best = num;
         bestTime = `${day.slice(0,3)} ${part.toUpperCase()}`;
@@ -105,14 +92,12 @@ function computeStats(week){
 
   let profit = null;
   if(buy !== null && best !== null) profit = best - buy;
-
   return { buy, best, bestTime, profit };
 }
 
 function buildDaysUI(week){
   const wrap = $("daysWrap");
   wrap.innerHTML = "";
-
   for(const day of DAYS){
     const card = document.createElement("div");
     card.className = "day-card";
@@ -124,7 +109,6 @@ function buildDaysUI(week){
     card.appendChild(title);
     card.appendChild(makeSlot(day, "am", "☀️", "AM", week));
     card.appendChild(makeSlot(day, "pm", "🌙", "PM", week));
-
     wrap.appendChild(card);
   }
 }
@@ -147,7 +131,7 @@ function makeSlot(day, part, icon, label, week){
     week.prices[day][part] = sanitizePrice(input.value);
     input.value = week.prices[day][part];
     saveWeek(week);
-    renderInsights(); // live update
+    renderInsights();
   });
 
   row.appendChild(left);
@@ -198,7 +182,6 @@ function renderEntry(){
 function renderChartDots(week){
   const el = $("chartDots");
   if(!el) return;
-
   el.innerHTML = "";
 
   const slots = [];
@@ -222,7 +205,6 @@ function renderChartDots(week){
       mark.textContent = s.icon;
       dot.appendChild(mark);
     }
-
     el.appendChild(dot);
   }
 }
@@ -232,7 +214,6 @@ function renderHistory(){
   if(!list) return;
 
   const hist = loadHistory();
-
   if(!hist.length){
     list.innerHTML = `<div class="muted small">No saved weeks yet.</div>`;
     return;
@@ -243,30 +224,21 @@ function renderHistory(){
     const item = document.createElement("div");
     item.className = "history-item";
 
-    const top = document.createElement("div");
-    top.className = "h-top";
+    const title = document.createElement("div");
+    title.style.fontWeight = "1000";
+    title.textContent = h.title;
 
-    const left = document.createElement("div");
-    left.innerHTML = `
-      <div class="h-title">${h.title}</div>
-      <div class="h-sub">${[
-        h.buyPrice !== null ? `Buy ${h.buyPrice}` : null,
-        h.best !== null ? `Best ${h.best}` : null,
-        h.bestTime ? `Top ${h.bestTime}` : null
-      ].filter(Boolean).join(" • ") || "No prices logged"}</div>
-    `;
+    const sub = document.createElement("div");
+    sub.className = "muted small";
+    sub.style.marginTop = "0.3rem";
+    sub.textContent = [
+      h.buyPrice !== null ? `Buy ${h.buyPrice}` : null,
+      h.best !== null ? `Best ${h.best}` : null,
+      h.bestTime ? `Top ${h.bestTime}` : null
+    ].filter(Boolean).join(" • ") || "No prices logged";
 
-    const right = document.createElement("div");
-    right.className = "h-title";
-    if(h.profit === null || h.profit === undefined){
-      right.textContent = "";
-    }else{
-      right.textContent = h.profit >= 0 ? `+${h.profit}` : `${h.profit}`;
-    }
-
-    top.appendChild(left);
-    top.appendChild(right);
-    item.appendChild(top);
+    item.appendChild(title);
+    item.appendChild(sub);
 
     list.appendChild(item);
   }
@@ -279,7 +251,6 @@ function renderInsights(){
   renderChartDots(week);
 
   const stats = computeStats(week);
-
   $("statBuy").textContent = stats.buy === null ? "-" : String(stats.buy);
   $("statBest").textContent = stats.best === null ? "-" : String(stats.best);
   $("statBestTime").textContent = stats.bestTime === null ? "-" : stats.bestTime;
@@ -293,18 +264,17 @@ function initSettings(){
   const sel = $("fontSizeSelect");
   const slider = $("patternSlider");
 
-  // load saved
-  const savedScale = localStorage.getItem(LS.fontScale) || "0.92";
+  const savedScale = localStorage.getItem(LS.uiScale) || "1.00";
   const savedOp = localStorage.getItem(LS.patternOpacity) || "0.22";
 
-  applyFontScale(savedScale);
+  applyUiScale(savedScale);
   applyPatternOpacity(savedOp);
 
   if(sel){
     sel.value = savedScale;
     sel.onchange = () => {
-      localStorage.setItem(LS.fontScale, sel.value);
-      applyFontScale(sel.value);
+      localStorage.setItem(LS.uiScale, sel.value);
+      applyUiScale(sel.value);
     };
   }
 
@@ -326,9 +296,9 @@ function initSettings(){
     };
   }
 
-  const clearHistoryBtn = $("clearHistoryBtn");
-  if(clearHistoryBtn){
-    clearHistoryBtn.onclick = () => {
+  const clearBtn = $("clearHistoryBtn");
+  if(clearBtn){
+    clearBtn.onclick = () => {
       if(!confirm("Clear history?")) return;
       saveHistory([]);
       renderHistory();
@@ -359,8 +329,8 @@ function initNav(){
 
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
-  initSettings();     // run once so text changer works immediately
+  initSettings();      // makes text size work immediately
   renderEntry();
   renderInsights();
-  showPage("entry");  // start page
+  showPage("entry");
 });

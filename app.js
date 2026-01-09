@@ -1,403 +1,419 @@
-const STORAGE_WEEK = "tt_week_v1";
-const STORAGE_HISTORY = "tt_history_v1";
-const STORAGE_SETTINGS = "tt_settings_v1";
+/* Turnip Tracker - single file JS
+   Data persists via localStorage.
+*/
 
-function getSundayStart(date = new Date()) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay();
-  d.setDate(d.getDate() - day);
-  return d;
-}
+const LS_KEYS = {
+  week: "tt_week_v1",
+  history: "tt_history_v1",
+  settings: "tt_settings_v1",
+};
 
-function formatMonthDay(date) {
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const SLOTS = [
+  { key: "am", label: "AM", icon: "☀️" },
+  { key: "pm", label: "PM", icon: "🌙" },
+];
 
-function isoDate(d) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x.toISOString().slice(0, 10);
-}
+function $(id){ return document.getElementById(id); }
 
-function defaultWeek() {
-  const sunday = getSundayStart(new Date());
-  return {
-    weekStartISO: isoDate(sunday),
-    buyPrice: null,
-    prices: new Array(12).fill(null),
-  };
-}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-function defaultSettings() {
-  return { turnipStrength: 16 };
-}
-
-function loadJSON(key, fallback) {
-  try {
+function loadJSON(key, fallback){
+  try{
     const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
+    if(!raw) return fallback;
     return JSON.parse(raw);
-  } catch {
+  }catch{
     return fallback;
   }
 }
 
-function saveJSON(key, value) {
+function saveJSON(key, value){
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-let week = loadJSON(STORAGE_WEEK, null);
-let history = loadJSON(STORAGE_HISTORY, []);
-let settings = loadJSON(STORAGE_SETTINGS, defaultSettings());
-
-function ensureCurrentWeek() {
-  const currentSundayISO = isoDate(getSundayStart(new Date()));
-  if (!week || week.weekStartISO !== currentSundayISO) {
-    week = defaultWeek();
-    saveJSON(STORAGE_WEEK, week);
+function defaultWeek(){
+  const week = {
+    buyPrice: "",
+    buyDate: monthDayLabel(),
+    entries: {},
+  };
+  for(const d of DAYS){
+    week.entries[d] = { am: "", pm: "" };
   }
+  return week;
 }
 
-const pages = {
-  entry: document.getElementById("page-entry"),
-  insights: document.getElementById("page-insights"),
-  settings: document.getElementById("page-settings"),
-};
-
-const navButtons = {
-  entry: document.getElementById("navEntry"),
-  insights: document.getElementById("navInsights"),
-  settings: document.getElementById("navSettings"),
-};
-
-const weekSundayLabel = document.getElementById("weekSundayLabel");
-const buyPriceInput = document.getElementById("buyPriceInput");
-const daysWrap = document.getElementById("daysWrap");
-const saveWeekBtn = document.getElementById("saveWeekBtn");
-
-const amSlots = document.getElementById("amSlots");
-const pmSlots = document.getElementById("pmSlots");
-const dayLabels = document.getElementById("dayLabels");
-
-const statBuy = document.getElementById("statBuy");
-const statBestPrice = document.getElementById("statBestPrice");
-const statBestTime = document.getElementById("statBestTime");
-const statProfit = document.getElementById("statProfit");
-const statPattern = document.getElementById("statPattern");
-
-const historyList = document.getElementById("historyList");
-const clearHistoryBtn = document.getElementById("clearHistoryBtn");
-
-const patternStrength = document.getElementById("patternStrength");
-const resetWeekBtn = document.getElementById("resetWeekBtn");
-
-function showPage(name) {
-  Object.keys(pages).forEach(k => pages[k].classList.toggle("hidden", k !== name));
-  Object.keys(navButtons).forEach(k => navButtons[k].classList.toggle("active", k === name));
-
-  if (name === "entry") renderEntry();
-  if (name === "insights") renderInsights();
-  if (name === "settings") renderSettings();
+function defaultSettings(){
+  return {
+    patternStrength: 35, // 0-100
+  };
 }
 
-function initNav() {
-  document.querySelectorAll(".nav-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-nav");
-      location.hash = target;
+function monthDayLabel(date = new Date()){
+  const m = date.toLocaleString(undefined, { month:"short" });
+  const day = date.getDate();
+  return `${m} ${day}`;
+}
+
+/* --------- UI: NAV --------- */
+function setActivePage(which){
+  const pages = {
+    entry: $("page-entry"),
+    insights: $("page-insights"),
+    settings: $("page-settings"),
+  };
+
+  for(const k of Object.keys(pages)){
+    pages[k].classList.toggle("is-active", k === which);
+  }
+
+  $("navEntry").classList.toggle("is-active", which === "entry");
+  $("navInsights").classList.toggle("is-active", which === "insights");
+  $("navSettings").classList.toggle("is-active", which === "settings");
+
+  // keep scroll at top when switching pages
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function wireNav(){
+  const navButtons = document.querySelectorAll(".nav-btn");
+  navButtons.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const target = btn.dataset.target;
+      setActivePage(target);
+      if(target === "insights") refreshInsights();
+      if(target === "settings") refreshSettingsUI();
     });
   });
-
-  window.addEventListener("hashchange", () => {
-    const page = (location.hash || "#entry").replace("#", "");
-    showPage(["entry", "insights", "settings"].includes(page) ? page : "entry");
-  });
 }
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+/* --------- ENTRY RENDER --------- */
+function renderWeekGrid(week){
+  const grid = $("weekGrid");
+  grid.innerHTML = "";
 
-function slotIndex(dayIndex, isPM) {
-  return dayIndex * 2 + (isPM ? 1 : 0);
-}
-
-function renderEntry() {
-  ensureCurrentWeek();
-
-  const sunday = new Date(week.weekStartISO + "T00:00:00");
-  weekSundayLabel.textContent = formatMonthDay(sunday);
-
-  buyPriceInput.value = week.buyPrice ?? "";
-  buyPriceInput.oninput = () => {
-    const v = parseInt(buyPriceInput.value, 10);
-    week.buyPrice = Number.isFinite(v) ? v : null;
-    saveJSON(STORAGE_WEEK, week);
-  };
-
-  daysWrap.innerHTML = "";
-  DAYS.forEach((dayName, dIdx) => {
-    const card = document.createElement("section");
+  DAYS.forEach(day=>{
+    const card = document.createElement("div");
     card.className = "day-card";
 
-    const title = document.createElement("h2");
-    title.className = "day-title";
-    title.textContent = dayName;
+    const title = document.createElement("div");
+    title.className = "day-name";
+    title.textContent = day;
     card.appendChild(title);
 
-    card.appendChild(makeSlotRow(dIdx, false));
-    const hr = document.createElement("hr");
-    hr.className = "hr-soft";
-    card.appendChild(hr);
-    card.appendChild(makeSlotRow(dIdx, true));
+    SLOTS.forEach(slot=>{
+      const row = document.createElement("div");
+      row.className = "slot";
 
-    daysWrap.appendChild(card);
+      const left = document.createElement("div");
+      left.className = "slot-left";
+      left.innerHTML = `<span class="ico">${slot.icon}</span><span>${slot.label}</span>`;
+
+      const right = document.createElement("div");
+      right.className = "slot-right";
+
+      const input = document.createElement("input");
+      input.className = "num-input";
+      input.inputMode = "numeric";
+      input.pattern = "[0-9]*";
+      input.placeholder = "-";
+      input.value = week.entries[day][slot.key] ?? "";
+
+      input.addEventListener("input", ()=>{
+        week.entries[day][slot.key] = sanitizeNum(input.value);
+        saveJSON(LS_KEYS.week, week);
+        // keep cursor natural, but normalize value when user leaves the field
+      });
+
+      input.addEventListener("blur", ()=>{
+        input.value = week.entries[day][slot.key] ?? "";
+      });
+
+      right.appendChild(input);
+
+      row.appendChild(left);
+      row.appendChild(right);
+      card.appendChild(row);
+    });
+
+    grid.appendChild(card);
   });
-
-  saveWeekBtn.onclick = () => {
-    const hasBuy = week.buyPrice != null;
-    const hasAny = week.prices.some(x => x != null);
-    if (!hasBuy && !hasAny) {
-      alert("Nothing to save yet.");
-      return;
-    }
-
-    const item = {
-      weekStartISO: week.weekStartISO,
-      buyPrice: week.buyPrice,
-      prices: week.prices.slice(),
-      savedAtISO: new Date().toISOString(),
-    };
-
-    history = [item, ...history].slice(0, 60);
-    saveJSON(STORAGE_HISTORY, history);
-
-    week = defaultWeek();
-    saveJSON(STORAGE_WEEK, week);
-
-    alert("Saved to History.");
-    renderEntry();
-  };
 }
 
-function makeSlotRow(dayIndex, isPM) {
-  const row = document.createElement("div");
-  row.className = "slot-row";
-
-  const left = document.createElement("div");
-  left.className = "slot-left";
-
-  const ico = document.createElement("div");
-  ico.className = "slot-ico";
-  ico.textContent = isPM ? "🌙" : "☀️";
-
-  const label = document.createElement("div");
-  label.className = "slot-label";
-  label.textContent = isPM ? "PM" : "AM";
-
-  left.appendChild(ico);
-  left.appendChild(label);
-
-  const input = document.createElement("input");
-  input.className = "slot-input";
-  input.inputMode = "numeric";
-  input.pattern = "[0-9]*";
-  input.placeholder = "-";
-
-  const idx = slotIndex(dayIndex, isPM);
-  input.value = week.prices[idx] ?? "";
-
-  input.oninput = () => {
-    const v = parseInt(input.value, 10);
-    week.prices[idx] = Number.isFinite(v) ? v : null;
-    saveJSON(STORAGE_WEEK, week);
-  };
-
-  row.appendChild(left);
-  row.appendChild(input);
-  return row;
+function sanitizeNum(v){
+  // keep digits only
+  const s = String(v ?? "").replace(/[^\d]/g, "");
+  return s;
 }
 
-function renderInsights() {
-  ensureCurrentWeek();
-  applyPatternStrengthToCSS();
+/* --------- INSIGHTS + CHART --------- */
+function buildDots(){
+  const dots = $("dots");
+  const markers = $("markers");
+  dots.innerHTML = "";
+  markers.innerHTML = "";
 
-  amSlots.innerHTML = "";
-  pmSlots.innerHTML = "";
-
-  for (let i = 0; i < 12; i++) {
-    const isPM = i % 2 === 1;
-    const price = week.prices[i];
-
+  // 12 points: Mon AM, Mon PM, ... Sat PM
+  for(let i=0;i<12;i++){
     const dot = document.createElement("div");
-    dot.className = "slot-dot" + (price != null ? " filled" : "");
+    dot.className = "dot empty";
+    dots.appendChild(dot);
 
-    if (price != null) {
-      const mini = document.createElement("div");
-      mini.className = "mini";
-      mini.textContent = isPM ? "🌙" : "☀️";
-      dot.appendChild(mini);
-      dot.title = `${slotLabelFromIndex(i)}: ${price}`;
-    } else {
-      dot.title = slotLabelFromIndex(i) + ": -";
-    }
+    const marker = document.createElement("div");
+    marker.className = "marker";
+    marker.textContent = (i % 2 === 0) ? "☀️" : "🌙";
+    markers.appendChild(marker);
+  }
+}
 
-    (isPM ? pmSlots : amSlots).appendChild(dot);
+function refreshInsights(){
+  const week = loadJSON(LS_KEYS.week, defaultWeek());
+
+  // Buy
+  const buy = toNum(week.buyPrice);
+  $("statBuy").textContent = buy ? String(buy) : "-";
+
+  // Flatten list in order
+  const ordered = [];
+  for(const day of DAYS){
+    ordered.push(toNum(week.entries[day].am));
+    ordered.push(toNum(week.entries[day].pm));
   }
 
-  dayLabels.innerHTML = "";
-  const spacer = document.createElement("div");
-  spacer.className = "spacer";
-  dayLabels.appendChild(spacer);
-
-  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(d => {
-    const el = document.createElement("div");
-    el.className = "day-label";
-    el.textContent = d;
-    dayLabels.appendChild(el);
+  // Best
+  let best = null;
+  let bestIdx = -1;
+  ordered.forEach((n, idx)=>{
+    if(!n) return;
+    if(best === null || n > best){
+      best = n;
+      bestIdx = idx;
+    }
   });
 
-  const buy = week.buyPrice;
-  statBuy.textContent = buy != null ? String(buy) : "-";
+  $("statBest").textContent = best !== null ? String(best) : "-";
+  $("statBestTime").textContent = bestIdx >= 0 ? idxToLabel(bestIdx) : "-";
 
-  const allPrices = week.prices
-    .map((p, idx) => (p == null ? null : { p, idx }))
-    .filter(Boolean);
-
-  if (allPrices.length === 0) {
-    statBestPrice.textContent = "-";
-    statBestTime.textContent = "-";
-    statProfit.textContent = "-";
-    statPattern.textContent = "-";
-  } else {
-    allPrices.sort((a, b) => b.p - a.p);
-    const best = allPrices[0];
-    statBestPrice.textContent = String(best.p);
-    statBestTime.textContent = slotLabelFromIndex(best.idx);
-
-    if (buy != null) {
-      const profit = best.p - buy;
-      statProfit.textContent = (profit >= 0 ? "+" : "") + String(profit);
-    } else {
-      statProfit.textContent = "-";
-    }
-
-    statPattern.textContent = estimatePattern(week.prices);
+  // Profit vs buy (best - buy)
+  const profitEl = $("statProfit");
+  profitEl.classList.remove("positive","negative");
+  if(best !== null && buy){
+    const diff = best - buy;
+    profitEl.textContent = (diff >= 0 ? `+${diff}` : String(diff));
+    profitEl.classList.add(diff >= 0 ? "positive" : "negative");
+  }else{
+    profitEl.textContent = "-";
   }
 
-  renderHistoryList();
+  // Pattern guess
+  $("statPattern").textContent = guessPattern(ordered);
+
+  // Chart dots: filled where value exists
+  const dotEls = Array.from($("dots").children);
+  dotEls.forEach((el, idx)=>{
+    const v = ordered[idx];
+    el.classList.toggle("empty", !v);
+  });
+
+  applyPatternStrength();
 }
 
-function slotLabelFromIndex(i) {
-  const day = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][Math.floor(i / 2)];
-  const ap = i % 2 === 0 ? "AM" : "PM";
-  return `${day} ${ap}`;
+function idxToLabel(idx){
+  const day = DAYS[Math.floor(idx / 2)];
+  const slot = (idx % 2 === 0) ? "AM" : "PM";
+  // "Thu PM" style
+  const short = day.slice(0,3);
+  return `${short} ${slot}`;
 }
 
-function estimatePattern(prices) {
-  const filled = prices.filter(v => v != null).length;
-  if (filled < 4) return "Need more data";
+function toNum(s){
+  const n = parseInt(String(s ?? "").replace(/[^\d]/g,""), 10);
+  return Number.isFinite(n) ? n : 0;
+}
 
-  const seq = prices.filter(v => v != null);
-  let drops = 0;
-  for (let i = 1; i < seq.length; i++) if (seq[i] < seq[i - 1]) drops++;
+function guessPattern(arr){
+  const vals = arr.filter(Boolean);
+  if(vals.length < 3) return "Not enough data";
 
-  const peak = Math.max(...seq);
-  const low = Math.min(...seq);
+  const diffs = [];
+  for(let i=1;i<vals.length;i++){
+    diffs.push(vals[i] - vals[i-1]);
+  }
 
-  if (peak >= 180) return "Big spike";
-  if (drops >= Math.floor(seq.length * 0.6)) return "Decreasing";
-  if ((peak - low) <= 30) return "Flat";
+  const up = diffs.filter(d=>d>0).length;
+  const down = diffs.filter(d=>d<0).length;
+
+  const max = Math.max(...vals);
+  const min = Math.min(...vals);
+  const spread = max - min;
+
+  // simple heuristics
+  if(up > down * 2) return "Increasing";
+  if(down > up * 2) return "Decreasing";
+
+  // spike: one big max compared to median-ish
+  const sorted = [...vals].sort((a,b)=>a-b);
+  const med = sorted[Math.floor(sorted.length/2)];
+  if(max >= med + Math.max(30, spread*0.45)) return "Spike";
+
   return "Mixed";
 }
 
-function renderHistoryList() {
-  historyList.innerHTML = "";
+/* --------- HISTORY --------- */
+function loadHistory(){
+  return loadJSON(LS_KEYS.history, []);
+}
 
-  if (!Array.isArray(history) || history.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "hint";
-    empty.textContent = "No saved weeks yet.";
-    historyList.appendChild(empty);
-    return;
-  }
+function saveHistory(list){
+  saveJSON(LS_KEYS.history, list);
+}
 
-  history.slice(0, 20).forEach(item => {
-    const wrap = document.createElement("div");
-    wrap.className = "history-item";
+function renderHistory(){
+  const list = loadHistory();
+  const host = $("historyList");
+  const empty = $("historyEmpty");
+  host.innerHTML = "";
+
+  empty.style.display = list.length ? "none" : "block";
+
+  list.slice().reverse().forEach(item=>{
+    const div = document.createElement("div");
+    div.className = "history-item";
 
     const top = document.createElement("div");
-    top.className = "top";
-
-    const left = document.createElement("div");
-    const sunday = new Date(item.weekStartISO + "T00:00:00");
-    left.textContent = formatMonthDay(sunday);
-
-    const right = document.createElement("div");
-    right.textContent = item.buyPrice != null ? `Buy ${item.buyPrice}` : "Buy -";
-
-    top.appendChild(left);
-    top.appendChild(right);
+    top.className = "topline";
+    top.innerHTML = `<span>${item.label}</span><span>Best: ${item.best ?? "-"}</span>`;
 
     const sub = document.createElement("div");
-    sub.className = "sub";
-    const best = bestFromPrices(item.prices);
-    sub.textContent = best ? `Best ${best.price} at ${best.label}` : "No prices logged";
+    sub.className = "subline";
+    sub.textContent = `Buy: ${item.buy ?? "-"} • Best time: ${item.bestTime ?? "-"} • Pattern: ${item.pattern ?? "-"}`;
 
-    wrap.appendChild(top);
-    wrap.appendChild(sub);
-    historyList.appendChild(wrap);
+    div.appendChild(top);
+    div.appendChild(sub);
+    host.appendChild(div);
+  });
+}
+
+/* --------- SETTINGS --------- */
+function applyPatternStrength(){
+  const settings = loadJSON(LS_KEYS.settings, defaultSettings());
+  const v = clamp(settings.patternStrength ?? 35, 0, 100);
+  const opacity = (v / 100) * 0.55; // 0 to 0.55
+  $("chartPattern").style.opacity = String(opacity);
+}
+
+function refreshSettingsUI(){
+  const settings = loadJSON(LS_KEYS.settings, defaultSettings());
+  $("patternStrength").value = String(clamp(settings.patternStrength ?? 35, 0, 100));
+}
+
+function wireSettings(){
+  $("patternStrength").addEventListener("input", (e)=>{
+    const settings = loadJSON(LS_KEYS.settings, defaultSettings());
+    settings.patternStrength = clamp(parseInt(e.target.value,10) || 0, 0, 100);
+    saveJSON(LS_KEYS.settings, settings);
+    applyPatternStrength();
   });
 
-  clearHistoryBtn.onclick = () => {
-    const ok = confirm("Clear all history?");
-    if (!ok) return;
-    history = [];
-    saveJSON(STORAGE_HISTORY, history);
-    renderHistoryList();
-  };
+  $("resetWeekBtn").addEventListener("click", ()=>{
+    const fresh = defaultWeek();
+    // keep today's date label fresh
+    fresh.buyDate = monthDayLabel();
+    saveJSON(LS_KEYS.week, fresh);
+    hydrate();
+  });
+
+  $("clearHistoryBtn").addEventListener("click", ()=>{
+    saveHistory([]);
+    renderHistory();
+  });
 }
 
-function bestFromPrices(prices) {
-  let best = null;
-  for (let i = 0; i < prices.length; i++) {
-    const p = prices[i];
-    if (p == null) continue;
-    if (!best || p > best.price) best = { price: p, label: slotLabelFromIndex(i) };
-  }
-  return best;
+/* --------- SAVE WEEK --------- */
+function wireSaveWeek(){
+  $("saveWeekBtn").addEventListener("click", ()=>{
+    const week = loadJSON(LS_KEYS.week, defaultWeek());
+
+    const ordered = [];
+    for(const day of DAYS){
+      ordered.push(toNum(week.entries[day].am));
+      ordered.push(toNum(week.entries[day].pm));
+    }
+
+    let best = null;
+    let bestIdx = -1;
+    ordered.forEach((n, idx)=>{
+      if(!n) return;
+      if(best === null || n > best){
+        best = n;
+        bestIdx = idx;
+      }
+    });
+
+    const item = {
+      label: week.buyDate || monthDayLabel(),
+      buy: toNum(week.buyPrice) || null,
+      best: best,
+      bestTime: bestIdx >= 0 ? idxToLabel(bestIdx) : null,
+      pattern: guessPattern(ordered),
+      ts: Date.now(),
+    };
+
+    const history = loadHistory();
+    history.push(item);
+    saveHistory(history);
+
+    // Clear Entry after saving
+    const fresh = defaultWeek();
+    fresh.buyDate = monthDayLabel();
+    saveJSON(LS_KEYS.week, fresh);
+
+    hydrate();
+    setActivePage("insights");
+    refreshInsights();
+  });
 }
 
-function renderSettings() {
-  ensureCurrentWeek();
+/* --------- HYDRATE --------- */
+function hydrate(){
+  // week
+  const week = loadJSON(LS_KEYS.week, defaultWeek());
 
-  patternStrength.value = String(settings.turnipStrength ?? 16);
-  patternStrength.oninput = () => {
-    settings.turnipStrength = parseInt(patternStrength.value, 10);
-    saveJSON(STORAGE_SETTINGS, settings);
-    applyPatternStrengthToCSS();
-  };
+  $("buyDateLabel").textContent = week.buyDate || monthDayLabel();
+  $("buyPrice").value = week.buyPrice ?? "";
 
-  resetWeekBtn.onclick = () => {
-    const ok = confirm("Reset Entry for this week?");
-    if (!ok) return;
-    week = defaultWeek();
-    saveJSON(STORAGE_WEEK, week);
-    alert("Entry reset.");
-  };
+  $("buyPrice").addEventListener("input", ()=>{
+    const w = loadJSON(LS_KEYS.week, defaultWeek());
+    w.buyPrice = sanitizeNum($("buyPrice").value);
+    saveJSON(LS_KEYS.week, w);
+  });
+  $("buyPrice").addEventListener("blur", ()=>{
+    const w = loadJSON(LS_KEYS.week, defaultWeek());
+    $("buyPrice").value = w.buyPrice ?? "";
+  });
+
+  renderWeekGrid(week);
+
+  // chart scaffolding
+  buildDots();
+
+  // history
+  renderHistory();
+
+  // settings
+  applyPatternStrength();
+  refreshSettingsUI();
 }
 
-function applyPatternStrengthToCSS() {
-  const v = Math.max(0, Math.min(100, settings.turnipStrength ?? 16));
-  const alpha = (v / 100) * 0.30;
-  document.documentElement.style.setProperty("--turnip-alpha", alpha.toFixed(3));
+function init(){
+  wireNav();
+  wireSettings();
+  wireSaveWeek();
+
+  hydrate();
+  setActivePage("entry");
+  refreshInsights();
 }
 
-function boot() {
-  ensureCurrentWeek();
-  initNav();
-
-  const page = (location.hash || "#entry").replace("#", "");
-  showPage(["entry", "insights", "settings"].includes(page) ? page : "entry");
-}
-
-boot();
+document.addEventListener("DOMContentLoaded", init);

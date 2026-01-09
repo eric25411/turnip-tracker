@@ -4,206 +4,131 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Turnip Tracker</title>
-
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <main class="app">
-    <header class="banner">
-      <img src="banner.png.jpg" alt="Turnip Tracker banner" />
-    </header>
+  <div class="app-bg"></div>
 
-    <!-- ENTRY PAGE -->
-    <section id="entry-page" class="page active">
+  <main class="app" id="app">
+    <!-- Banner -->
+    <section class="banner-wrap">
+      <img class="banner" src="banner.png.jpg" alt="Turnip Tracker" />
+    </section>
+
+    <!-- ENTRY -->
+    <section class="page active" id="page-entry" aria-label="Entry">
       <div class="card buy-card">
-        <div class="buy-top">
-          <div class="buy-title">
-            <div class="buy-title-line">
-              <span class="emoji">💰</span>
-              <span class="label">Buy price</span>
-            </div>
-            <div id="week-date" class="sub">Jan 1</div>
+        <div class="buy-left">
+          <div class="buy-title-row">
+            <span class="emoji">💰</span>
+            <h2 class="buy-title">Buy price</h2>
           </div>
+          <div class="buy-date" id="weekLabel">Week</div>
+        </div>
 
-          <input id="buy-price" class="input input-wide" inputmode="numeric" placeholder="-" />
+        <div class="buy-right">
+          <input id="buyPrice" class="input buy-input" inputmode="numeric" placeholder="-" />
         </div>
       </div>
 
-      <button id="save-week-btn" class="btn-save">Save week to History</button>
+      <div class="days" id="daysWrap"></div>
 
-      <div class="days">
-        <!-- Monday -->
-        <div class="card day-card">
-          <div class="day-title">Monday</div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌞</span><span class="row-label">AM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="mon" data-time="am" />
-          </div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌙</span><span class="row-label">PM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="mon" data-time="pm" />
-          </div>
-        </div>
-
-        <!-- Tuesday -->
-        <div class="card day-card">
-          <div class="day-title">Tuesday</div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌞</span><span class="row-label">AM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="tue" data-time="am" />
-          </div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌙</span><span class="row-label">PM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="tue" data-time="pm" />
-          </div>
-        </div>
-
-        <!-- Wednesday -->
-        <div class="card day-card">
-          <div class="day-title">Wednesday</div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌞</span><span class="row-label">AM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="wed" data-time="am" />
-          </div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌙</span><span class="row-label">PM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="wed" data-time="pm" />
-          </div>
-        </div>
-
-        <!-- Thursday -->
-        <div class="card day-card">
-          <div class="day-title">Thursday</div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌞</span><span class="row-label">AM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="thu" data-time="am" />
-          </div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌙</span><span class="row-label">PM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="thu" data-time="pm" />
-          </div>
-        </div>
-
-        <!-- Friday -->
-        <div class="card day-card">
-          <div class="day-title">Friday</div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌞</span><span class="row-label">AM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="fri" data-time="am" />
-          </div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌙</span><span class="row-label">PM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="fri" data-time="pm" />
-          </div>
-        </div>
-
-        <!-- Saturday -->
-        <div class="card day-card">
-          <div class="day-title">Saturday</div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌞</span><span class="row-label">AM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="sat" data-time="am" />
-          </div>
-          <div class="row">
-            <div class="row-left"><span class="emoji">🌙</span><span class="row-label">PM</span></div>
-            <input class="input" inputmode="numeric" placeholder="-" data-day="sat" data-time="pm" />
-          </div>
-        </div>
+      <!-- Save button is at the bottom of Entry now -->
+      <div class="save-wrap">
+        <button class="btn primary" id="saveWeekBtn">Save week to History</button>
       </div>
     </section>
 
-    <!-- INSIGHTS PAGE -->
-    <section id="insights-page" class="page">
-      <div class="card title-card">
-        <div class="big-title">Insights</div>
+    <!-- INSIGHTS -->
+    <section class="page" id="page-insights" aria-label="Insights">
+      <div class="card header-card">
+        <h1 class="page-title">Insights</h1>
       </div>
 
       <div class="card postcard-card">
         <div class="postcard-header">
-          <div class="postcard-title">This week’s bell postcard</div>
+          <h2 class="postcard-title">This week’s bell postcard</h2>
           <div class="legend">
-            <div class="legend-row"><span class="emoji">🌞</span><span>AM</span></div>
-            <div class="legend-row"><span class="emoji">🌙</span><span>PM</span></div>
+            <div class="legend-row"><span class="legend-emoji">🌞</span><span class="legend-text">AM</span></div>
+            <div class="legend-row"><span class="legend-emoji">🌙</span><span class="legend-text">PM</span></div>
           </div>
         </div>
 
-        <div class="postcard-surface">
-          <div id="postcard-chart" class="postcard-chart"></div>
+        <div class="chart-shell">
+          <div class="turnip-watermark" aria-hidden="true"></div>
+          <svg id="postcardSvg" viewBox="0 0 340 150" role="img" aria-label="Postcard chart"></svg>
         </div>
 
-        <div class="postcard-caption">
-          Just a cozy snapshot. The more you log, the smarter it gets.
-        </div>
+        <p class="postcard-caption">Just a cozy snapshot. The more you log, the smarter it gets.</p>
       </div>
 
       <div class="card stats-card">
-        <div class="stat-row"><div class="k">Buy price</div><div id="stat-buy" class="v">-</div></div>
-        <div class="stat-row"><div class="k">Best price seen</div><div id="stat-best" class="v">-</div></div>
-        <div class="stat-row"><div class="k">Best time so far</div><div id="stat-besttime" class="v">-</div></div>
-        <div class="stat-row"><div class="k">Profit vs buy</div><div id="stat-profit" class="v">-</div></div>
+        <div class="stat-row">
+          <div class="stat-label">Buy price</div>
+          <div class="stat-value" id="statBuy">-</div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat-row">
+          <div class="stat-label">Best price seen</div>
+          <div class="stat-value" id="statBest">-</div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat-row">
+          <div class="stat-label">Best time so far</div>
+          <div class="stat-value" id="statBestTime">-</div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat-row">
+          <div class="stat-label">Profit vs buy</div>
+          <div class="stat-value" id="statProfit">-</div>
+        </div>
       </div>
 
+      <!-- History only lives on Insights -->
       <div class="card history-card">
         <div class="history-head">
-          <div class="h-title">History</div>
-          <button id="clear-history-btn" class="btn-mini">Clear</button>
+          <h2 class="history-title">History</h2>
+          <button class="btn ghost" id="clearHistoryBtn">Clear</button>
         </div>
-        <div id="history-list" class="history-list"></div>
+        <div class="history-list" id="historyList"></div>
+        <div class="history-empty" id="historyEmpty">No saved weeks yet.</div>
       </div>
     </section>
 
-    <!-- SETTINGS PAGE -->
-    <section id="settings-page" class="page">
-      <div class="card title-card">
-        <div class="big-title">Settings</div>
+    <!-- SETTINGS -->
+    <section class="page" id="page-settings" aria-label="Settings">
+      <div class="card header-card">
+        <h1 class="page-title">Settings</h1>
       </div>
 
       <div class="card settings-card">
-        <div class="setting-row">
-          <div>
-            <div class="setting-title">Turnip background strength</div>
-            <div class="setting-sub">Make the pattern easier to see.</div>
-          </div>
-          <input id="turnip-strength" type="range" min="5" max="35" value="12" />
+        <div class="settings-row">
+          <button class="btn soft" id="backupBtn">Backup</button>
+          <button class="btn soft" id="restoreBtn">Restore</button>
+          <button class="btn danger" id="resetWeekBtn">Reset week</button>
         </div>
 
-        <div class="divider"></div>
-
-        <div class="setting-actions">
-          <button id="backup-btn" class="btn-mini">Backup</button>
-          <button id="restore-btn" class="btn-mini">Restore</button>
-          <button id="reset-week-btn" class="btn-mini danger">Reset week</button>
-        </div>
-      </div>
-
-      <div class="card history-card">
-        <div class="history-head">
-          <div class="h-title">History</div>
-          <button id="clear-history-btn-2" class="btn-mini">Clear</button>
-        </div>
-        <div id="history-list-2" class="history-list"></div>
+        <input type="file" id="restoreFile" accept="application/json" style="display:none" />
       </div>
     </section>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav" aria-label="Bottom navigation">
+      <button class="nav-btn active" data-page="entry" id="navEntry" type="button">
+        <span class="nav-icon">🧾</span>
+        <span class="nav-text">Entry</span>
+      </button>
+      <button class="nav-btn" data-page="insights" id="navInsights" type="button">
+        <span class="nav-icon">🔮</span>
+        <span class="nav-text">Insights</span>
+      </button>
+      <button class="nav-btn" data-page="settings" id="navSettings" type="button">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-text">Settings</span>
+      </button>
+    </nav>
   </main>
-
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <button id="nav-entry" class="nav-btn">
-      <span class="nav-ico">🧾</span>
-      <span class="nav-txt">Entry</span>
-    </button>
-
-    <button id="nav-insights" class="nav-btn">
-      <span class="nav-ico">🔮</span>
-      <span class="nav-txt">Insights</span>
-    </button>
-
-    <button id="nav-settings" class="nav-btn">
-      <span class="nav-ico">⚙️</span>
-      <span class="nav-txt">Settings</span>
-    </button>
-  </nav>
 
   <script src="app.js"></script>
 </body>

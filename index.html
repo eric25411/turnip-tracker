@@ -5,23 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Turnip Tracker</title>
 
-  <!-- App icon -->
   <link rel="icon" href="icon-1024.png.PNG" />
   <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
 
-  <!-- Styles -->
+  <!-- IMPORTANT: only one stylesheet -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <div class="app">
 
-    <!-- HEADER / BANNER -->
     <header class="top">
       <img class="banner" src="banner.png.jpg" alt="Turnip Tracker" />
     </header>
 
-    <!-- MAIN -->
     <main class="main" id="main">
 
       <!-- ENTRY -->
@@ -34,7 +31,6 @@
             </div>
             <div class="buy-sub">
               <img
-                id="isabelleImg"
                 class="isabelle"
                 src="isabelle.png.PNG"
                 alt="Isabelle"
@@ -56,17 +52,11 @@
           </div>
         </div>
 
-        <div class="week" id="weekGrid">
-          <!-- JS injects day cards -->
-        </div>
+        <div class="week" id="weekGrid"></div>
 
         <div class="entry-actions">
-          <button class="btn primary" id="saveWeekBtn" type="button">
-            Save week to History
-          </button>
-          <div class="hint">
-            Saves your week, then clears Entry.
-          </div>
+          <button class="btn primary" id="saveWeekBtn" type="button">Save week to History</button>
+          <div class="hint">Saves your week, then clears Entry.</div>
         </div>
       </section>
 
@@ -88,21 +78,25 @@
           <div class="chart-shell">
             <div class="chart-pattern" id="chartPattern" aria-hidden="true"></div>
 
-            <div class="chart">
+            <div class="chart" aria-label="Prediction chart">
               <div class="chart-lines" aria-hidden="true">
                 <div class="line l1"></div>
                 <div class="line l2"></div>
                 <div class="line l3"></div>
               </div>
 
-              <div class="timeline">
-                <div class="track" aria-hidden="true"></div>
-                <div class="dots" id="dots"></div>
-                <div class="markers" id="markers"></div>
-              </div>
+              <!-- NEW: clean 3-row layout -->
+              <div class="chart-grid">
+                <div class="markers" id="markers" aria-hidden="true"></div>
 
-              <div class="days" id="dayLabels">
-                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                <div class="timeline">
+                  <div class="track" aria-hidden="true"></div>
+                  <div class="dots" id="dots"></div>
+                </div>
+
+                <div class="days" id="dayLabels">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
               </div>
             </div>
           </div>
@@ -178,7 +172,6 @@
 
     </main>
 
-    <!-- BOTTOM NAV -->
     <nav class="bottom-nav" aria-label="Bottom navigation">
       <button class="nav-btn is-active" id="navEntry" type="button" data-target="entry">
         <div class="nav-ico">🧾</div>

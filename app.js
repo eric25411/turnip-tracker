@@ -1,342 +1,403 @@
-(() => {
-  const LS_WEEK = "tt_week_v1";
-  const LS_HISTORY = "tt_history_v1";
-  const LS_PATTERN = "tt_pattern_opacity_v1";
+const STORAGE_WEEK = "tt_week_v1";
+const STORAGE_HISTORY = "tt_history_v1";
+const STORAGE_SETTINGS = "tt_settings_v1";
 
-  const PAGES = ["entry", "insights", "settings"];
-  const dayNames = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  const slots = ["AM", "PM"];
+function getSundayStart(date = new Date()) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay();
+  d.setDate(d.getDate() - day);
+  return d;
+}
 
-  const els = {
-    buyDateLabel: document.getElementById("buyDateLabel"),
-    buyPrice: document.getElementById("buyPrice"),
-    daysContainer: document.getElementById("daysContainer"),
-    saveWeekBtn: document.getElementById("saveWeekBtn"),
+function formatMonthDay(date) {
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
-    pageEntry: document.getElementById("page-entry"),
-    pageInsights: document.getElementById("page-insights"),
-    pageSettings: document.getElementById("page-settings"),
+function isoDate(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x.toISOString().slice(0, 10);
+}
 
-    chartDots: document.getElementById("chartDots"),
-    chartIcons: document.getElementById("chartIcons"),
-    statsBlock: document.getElementById("statsBlock"),
-    historyList: document.getElementById("historyList"),
+function defaultWeek() {
+  const sunday = getSundayStart(new Date());
+  return {
+    weekStartISO: isoDate(sunday),
+    buyPrice: null,
+    prices: new Array(12).fill(null),
+  };
+}
 
-    patternStrength: document.getElementById("patternStrength"),
-    resetWeekBtn: document.getElementById("resetWeekBtn"),
-    clearHistoryBtn: document.getElementById("clearHistoryBtn"),
+function defaultSettings() {
+  return { turnipStrength: 16 };
+}
+
+function loadJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+function saveJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+let week = loadJSON(STORAGE_WEEK, null);
+let history = loadJSON(STORAGE_HISTORY, []);
+let settings = loadJSON(STORAGE_SETTINGS, defaultSettings());
+
+function ensureCurrentWeek() {
+  const currentSundayISO = isoDate(getSundayStart(new Date()));
+  if (!week || week.weekStartISO !== currentSundayISO) {
+    week = defaultWeek();
+    saveJSON(STORAGE_WEEK, week);
+  }
+}
+
+const pages = {
+  entry: document.getElementById("page-entry"),
+  insights: document.getElementById("page-insights"),
+  settings: document.getElementById("page-settings"),
+};
+
+const navButtons = {
+  entry: document.getElementById("navEntry"),
+  insights: document.getElementById("navInsights"),
+  settings: document.getElementById("navSettings"),
+};
+
+const weekSundayLabel = document.getElementById("weekSundayLabel");
+const buyPriceInput = document.getElementById("buyPriceInput");
+const daysWrap = document.getElementById("daysWrap");
+const saveWeekBtn = document.getElementById("saveWeekBtn");
+
+const amSlots = document.getElementById("amSlots");
+const pmSlots = document.getElementById("pmSlots");
+const dayLabels = document.getElementById("dayLabels");
+
+const statBuy = document.getElementById("statBuy");
+const statBestPrice = document.getElementById("statBestPrice");
+const statBestTime = document.getElementById("statBestTime");
+const statProfit = document.getElementById("statProfit");
+const statPattern = document.getElementById("statPattern");
+
+const historyList = document.getElementById("historyList");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
+const patternStrength = document.getElementById("patternStrength");
+const resetWeekBtn = document.getElementById("resetWeekBtn");
+
+function showPage(name) {
+  Object.keys(pages).forEach(k => pages[k].classList.toggle("hidden", k !== name));
+  Object.keys(navButtons).forEach(k => navButtons[k].classList.toggle("active", k === name));
+
+  if (name === "entry") renderEntry();
+  if (name === "insights") renderInsights();
+  if (name === "settings") renderSettings();
+}
+
+function initNav() {
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-nav");
+      location.hash = target;
+    });
+  });
+
+  window.addEventListener("hashchange", () => {
+    const page = (location.hash || "#entry").replace("#", "");
+    showPage(["entry", "insights", "settings"].includes(page) ? page : "entry");
+  });
+}
+
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function slotIndex(dayIndex, isPM) {
+  return dayIndex * 2 + (isPM ? 1 : 0);
+}
+
+function renderEntry() {
+  ensureCurrentWeek();
+
+  const sunday = new Date(week.weekStartISO + "T00:00:00");
+  weekSundayLabel.textContent = formatMonthDay(sunday);
+
+  buyPriceInput.value = week.buyPrice ?? "";
+  buyPriceInput.oninput = () => {
+    const v = parseInt(buyPriceInput.value, 10);
+    week.buyPrice = Number.isFinite(v) ? v : null;
+    saveJSON(STORAGE_WEEK, week);
   };
 
-  function pad2(n){ return String(n).padStart(2,"0"); }
+  daysWrap.innerHTML = "";
+  DAYS.forEach((dayName, dIdx) => {
+    const card = document.createElement("section");
+    card.className = "day-card";
 
-  function getSundayDateLabel(d = new Date()){
-    // Sunday of THIS week in the device locale
-    const x = new Date(d);
-    const day = x.getDay(); // 0=Sun
-    x.setDate(x.getDate() - day); // back to Sunday
-    const opts = { month:"short", day:"numeric" };
-    return x.toLocaleDateString(undefined, opts);
-  }
+    const title = document.createElement("h2");
+    title.className = "day-title";
+    title.textContent = dayName;
+    card.appendChild(title);
 
-  function defaultWeek(){
-    // 12 slots: Mon AM..Sat PM
-    const data = {
-      buy: "",
-      values: Array.from({length: 12}, () => "")
-    };
-    return data;
-  }
+    card.appendChild(makeSlotRow(dIdx, false));
+    const hr = document.createElement("hr");
+    hr.className = "hr-soft";
+    card.appendChild(hr);
+    card.appendChild(makeSlotRow(dIdx, true));
 
-  function loadWeek(){
-    try{
-      const raw = localStorage.getItem(LS_WEEK);
-      if(!raw) return defaultWeek();
-      const parsed = JSON.parse(raw);
-      if(!parsed || !Array.isArray(parsed.values) || parsed.values.length !== 12) return defaultWeek();
-      return parsed;
-    } catch {
-      return defaultWeek();
-    }
-  }
+    daysWrap.appendChild(card);
+  });
 
-  function saveWeekData(week){
-    localStorage.setItem(LS_WEEK, JSON.stringify(week));
-  }
-
-  function clearEntry(){
-    const week = defaultWeek();
-    saveWeekData(week);
-    renderEntry();
-    renderInsights();
-  }
-
-  function loadHistory(){
-    try{
-      const raw = localStorage.getItem(LS_HISTORY);
-      if(!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function saveHistory(list){
-    localStorage.setItem(LS_HISTORY, JSON.stringify(list));
-  }
-
-  function setActivePage(name){
-    for(const p of PAGES){
-      document.getElementById(`page-${p}`).classList.toggle("is-active", p === name);
-    }
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.classList.toggle("is-active", btn.dataset.go === name);
-    });
-
-    if(name === "insights") renderInsights();
-    if(name === "settings") renderSettings();
-  }
-
-  function indexFor(dayIdx, slotIdx){
-    // dayIdx: 0..5, slotIdx: 0..1
-    return dayIdx*2 + slotIdx;
-  }
-
-  function renderEntry(){
-    els.buyDateLabel.textContent = getSundayDateLabel();
-    const week = loadWeek();
-    els.buyPrice.value = week.buy || "";
-
-    // build day cards
-    els.daysContainer.innerHTML = "";
-    dayNames.forEach((day, d) => {
-      const card = document.createElement("div");
-      card.className = "day-card";
-
-      const h = document.createElement("div");
-      h.className = "day-title";
-      h.textContent = day;
-      card.appendChild(h);
-
-      slots.forEach((s, si) => {
-        const row = document.createElement("div");
-        row.className = "slot";
-
-        const left = document.createElement("div");
-        left.className = "slot-left";
-
-        const icon = document.createElement("div");
-        icon.className = "slot-icon";
-        icon.textContent = (s === "AM") ? "☀️" : "🌙";
-
-        const label = document.createElement("div");
-        label.textContent = s;
-
-        left.appendChild(icon);
-        left.appendChild(label);
-
-        const input = document.createElement("input");
-        input.inputMode = "numeric";
-        input.placeholder = "-";
-        input.value = week.values[indexFor(d, si)] || "";
-
-        input.addEventListener("input", () => {
-          const w = loadWeek();
-          w.values[indexFor(d, si)] = input.value;
-          saveWeekData(w);
-          // Live update postcard while typing
-          renderInsights();
-        });
-
-        row.appendChild(left);
-        row.appendChild(input);
-        card.appendChild(row);
-      });
-
-      els.daysContainer.appendChild(card);
-    });
-  }
-
-  function renderChart(week){
-    // dots (always 12)
-    els.chartDots.innerHTML = "";
-    for(let i=0;i<12;i++){
-      const dot = document.createElement("div");
-      dot.className = "dot";
-      els.chartDots.appendChild(dot);
-    }
-
-    // icons based on entered values
-    els.chartIcons.innerHTML = "";
-    for(let i=0;i<12;i++){
-      const ico = document.createElement("div");
-      ico.className = "ico";
-
-      const v = (week.values[i] || "").trim();
-      if(v !== ""){
-        ico.textContent = (i % 2 === 0) ? "☀️" : "🌙";
-      } else {
-        ico.textContent = "";
-      }
-      els.chartIcons.appendChild(ico);
-    }
-  }
-
-  function bestSeen(week){
-    const nums = week.values
-      .map(v => Number(String(v).trim()))
-      .filter(n => Number.isFinite(n) && n > 0);
-
-    if(nums.length === 0) return null;
-    return Math.max(...nums);
-  }
-
-  function bestTime(week){
-    let best = -Infinity;
-    let bestIdx = -1;
-
-    for(let i=0;i<12;i++){
-      const n = Number(String(week.values[i]).trim());
-      if(Number.isFinite(n) && n > best){
-        best = n;
-        bestIdx = i;
-      }
-    }
-
-    if(bestIdx < 0) return null;
-
-    const dayIdx = Math.floor(bestIdx / 2); // 0..5
-    const slotIdx = bestIdx % 2; // 0 AM, 1 PM
-    const shortDay = ["Mon","Tue","Wed","Thu","Fri","Sat"][dayIdx];
-    const part = slotIdx === 0 ? "AM" : "PM";
-    return `${shortDay} ${part}`;
-  }
-
-  function renderStats(week){
-    const buy = Number(String(week.buy).trim());
-    const buyVal = Number.isFinite(buy) && buy > 0 ? buy : null;
-
-    const best = bestSeen(week);
-    const bestT = bestTime(week);
-
-    const rows = [];
-
-    rows.push({ label: "Buy price", val: buyVal ?? "-" });
-    rows.push({ label: "Best price seen", val: best ?? "-" });
-    rows.push({ label: "Best time so far", val: bestT ?? "-" });
-
-    // Profit vs buy (simple: best - buy)
-    let profit = "-";
-    if(buyVal != null && best != null){
-      profit = (best - buyVal) >= 0 ? `+${best - buyVal}` : String(best - buyVal);
-    }
-    rows.push({ label: "Profit vs buy", val: profit });
-
-    els.statsBlock.innerHTML = "";
-    rows.forEach((r, i) => {
-      const row = document.createElement("div");
-      row.className = "stat-row";
-
-      const left = document.createElement("div");
-      left.className = "stat-label";
-      left.textContent = r.label;
-
-      const right = document.createElement("div");
-      right.className = "stat-val";
-      right.textContent = String(r.val);
-
-      row.appendChild(left);
-      row.appendChild(right);
-      els.statsBlock.appendChild(row);
-
-      if(i !== rows.length - 1){
-        const div = document.createElement("div");
-        div.className = "divider";
-        els.statsBlock.appendChild(div);
-      }
-    });
-  }
-
-  function renderHistory(){
-    const history = loadHistory();
-    if(history.length === 0){
-      els.historyList.textContent = "No saved weeks yet.";
+  saveWeekBtn.onclick = () => {
+    const hasBuy = week.buyPrice != null;
+    const hasAny = week.prices.some(x => x != null);
+    if (!hasBuy && !hasAny) {
+      alert("Nothing to save yet.");
       return;
     }
 
-    els.historyList.innerHTML = "";
-    history.slice().reverse().forEach(item => {
-      const div = document.createElement("div");
-      div.className = "history-item";
-      div.textContent = `${item.label}  |  Buy ${item.buy || "-"}  |  Best ${item.best || "-"}`;
-      els.historyList.appendChild(div);
-    });
-  }
-
-  function renderInsights(){
-    const week = loadWeek();
-    renderChart(week);
-    renderStats(week);
-    renderHistory();
-  }
-
-  function renderSettings(){
-    // Slider controls the CSS variable used by the chart overlay
-    const saved = localStorage.getItem(LS_PATTERN);
-    const initial = saved != null ? Number(saved) : 35;
-    els.patternStrength.value = String(initial);
-
-    document.documentElement.style.setProperty("--pattern-opacity", String(initial / 100));
-
-    els.patternStrength.oninput = () => {
-      const v = Number(els.patternStrength.value);
-      localStorage.setItem(LS_PATTERN, String(v));
-      document.documentElement.style.setProperty("--pattern-opacity", String(v / 100));
+    const item = {
+      weekStartISO: week.weekStartISO,
+      buyPrice: week.buyPrice,
+      prices: week.prices.slice(),
+      savedAtISO: new Date().toISOString(),
     };
+
+    history = [item, ...history].slice(0, 60);
+    saveJSON(STORAGE_HISTORY, history);
+
+    week = defaultWeek();
+    saveJSON(STORAGE_WEEK, week);
+
+    alert("Saved to History.");
+    renderEntry();
+  };
+}
+
+function makeSlotRow(dayIndex, isPM) {
+  const row = document.createElement("div");
+  row.className = "slot-row";
+
+  const left = document.createElement("div");
+  left.className = "slot-left";
+
+  const ico = document.createElement("div");
+  ico.className = "slot-ico";
+  ico.textContent = isPM ? "🌙" : "☀️";
+
+  const label = document.createElement("div");
+  label.className = "slot-label";
+  label.textContent = isPM ? "PM" : "AM";
+
+  left.appendChild(ico);
+  left.appendChild(label);
+
+  const input = document.createElement("input");
+  input.className = "slot-input";
+  input.inputMode = "numeric";
+  input.pattern = "[0-9]*";
+  input.placeholder = "-";
+
+  const idx = slotIndex(dayIndex, isPM);
+  input.value = week.prices[idx] ?? "";
+
+  input.oninput = () => {
+    const v = parseInt(input.value, 10);
+    week.prices[idx] = Number.isFinite(v) ? v : null;
+    saveJSON(STORAGE_WEEK, week);
+  };
+
+  row.appendChild(left);
+  row.appendChild(input);
+  return row;
+}
+
+function renderInsights() {
+  ensureCurrentWeek();
+  applyPatternStrengthToCSS();
+
+  amSlots.innerHTML = "";
+  pmSlots.innerHTML = "";
+
+  for (let i = 0; i < 12; i++) {
+    const isPM = i % 2 === 1;
+    const price = week.prices[i];
+
+    const dot = document.createElement("div");
+    dot.className = "slot-dot" + (price != null ? " filled" : "");
+
+    if (price != null) {
+      const mini = document.createElement("div");
+      mini.className = "mini";
+      mini.textContent = isPM ? "🌙" : "☀️";
+      dot.appendChild(mini);
+      dot.title = `${slotLabelFromIndex(i)}: ${price}`;
+    } else {
+      dot.title = slotLabelFromIndex(i) + ": -";
+    }
+
+    (isPM ? pmSlots : amSlots).appendChild(dot);
   }
 
-  // Events
-  document.querySelectorAll(".nav-btn").forEach(btn => {
-    btn.addEventListener("click", () => setActivePage(btn.dataset.go));
+  dayLabels.innerHTML = "";
+  const spacer = document.createElement("div");
+  spacer.className = "spacer";
+  dayLabels.appendChild(spacer);
+
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(d => {
+    const el = document.createElement("div");
+    el.className = "day-label";
+    el.textContent = d;
+    dayLabels.appendChild(el);
   });
 
-  els.buyPrice.addEventListener("input", () => {
-    const week = loadWeek();
-    week.buy = els.buyPrice.value;
-    saveWeekData(week);
-    renderInsights();
+  const buy = week.buyPrice;
+  statBuy.textContent = buy != null ? String(buy) : "-";
+
+  const allPrices = week.prices
+    .map((p, idx) => (p == null ? null : { p, idx }))
+    .filter(Boolean);
+
+  if (allPrices.length === 0) {
+    statBestPrice.textContent = "-";
+    statBestTime.textContent = "-";
+    statProfit.textContent = "-";
+    statPattern.textContent = "-";
+  } else {
+    allPrices.sort((a, b) => b.p - a.p);
+    const best = allPrices[0];
+    statBestPrice.textContent = String(best.p);
+    statBestTime.textContent = slotLabelFromIndex(best.idx);
+
+    if (buy != null) {
+      const profit = best.p - buy;
+      statProfit.textContent = (profit >= 0 ? "+" : "") + String(profit);
+    } else {
+      statProfit.textContent = "-";
+    }
+
+    statPattern.textContent = estimatePattern(week.prices);
+  }
+
+  renderHistoryList();
+}
+
+function slotLabelFromIndex(i) {
+  const day = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][Math.floor(i / 2)];
+  const ap = i % 2 === 0 ? "AM" : "PM";
+  return `${day} ${ap}`;
+}
+
+function estimatePattern(prices) {
+  const filled = prices.filter(v => v != null).length;
+  if (filled < 4) return "Need more data";
+
+  const seq = prices.filter(v => v != null);
+  let drops = 0;
+  for (let i = 1; i < seq.length; i++) if (seq[i] < seq[i - 1]) drops++;
+
+  const peak = Math.max(...seq);
+  const low = Math.min(...seq);
+
+  if (peak >= 180) return "Big spike";
+  if (drops >= Math.floor(seq.length * 0.6)) return "Decreasing";
+  if ((peak - low) <= 30) return "Flat";
+  return "Mixed";
+}
+
+function renderHistoryList() {
+  historyList.innerHTML = "";
+
+  if (!Array.isArray(history) || history.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "hint";
+    empty.textContent = "No saved weeks yet.";
+    historyList.appendChild(empty);
+    return;
+  }
+
+  history.slice(0, 20).forEach(item => {
+    const wrap = document.createElement("div");
+    wrap.className = "history-item";
+
+    const top = document.createElement("div");
+    top.className = "top";
+
+    const left = document.createElement("div");
+    const sunday = new Date(item.weekStartISO + "T00:00:00");
+    left.textContent = formatMonthDay(sunday);
+
+    const right = document.createElement("div");
+    right.textContent = item.buyPrice != null ? `Buy ${item.buyPrice}` : "Buy -";
+
+    top.appendChild(left);
+    top.appendChild(right);
+
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    const best = bestFromPrices(item.prices);
+    sub.textContent = best ? `Best ${best.price} at ${best.label}` : "No prices logged";
+
+    wrap.appendChild(top);
+    wrap.appendChild(sub);
+    historyList.appendChild(wrap);
   });
 
-  els.saveWeekBtn.addEventListener("click", () => {
-    const week = loadWeek();
-    const label = getSundayDateLabel();
-    const best = bestSeen(week);
-    const history = loadHistory();
+  clearHistoryBtn.onclick = () => {
+    const ok = confirm("Clear all history?");
+    if (!ok) return;
+    history = [];
+    saveJSON(STORAGE_HISTORY, history);
+    renderHistoryList();
+  };
+}
 
-    history.push({
-      label,
-      buy: week.buy || "",
-      best: best != null ? String(best) : ""
-    });
+function bestFromPrices(prices) {
+  let best = null;
+  for (let i = 0; i < prices.length; i++) {
+    const p = prices[i];
+    if (p == null) continue;
+    if (!best || p > best.price) best = { price: p, label: slotLabelFromIndex(i) };
+  }
+  return best;
+}
 
-    saveHistory(history);
-    clearEntry();
-    setActivePage("insights");
-  });
+function renderSettings() {
+  ensureCurrentWeek();
 
-  els.resetWeekBtn.addEventListener("click", () => {
-    clearEntry();
-    setActivePage("entry");
-  });
+  patternStrength.value = String(settings.turnipStrength ?? 16);
+  patternStrength.oninput = () => {
+    settings.turnipStrength = parseInt(patternStrength.value, 10);
+    saveJSON(STORAGE_SETTINGS, settings);
+    applyPatternStrengthToCSS();
+  };
 
-  els.clearHistoryBtn.addEventListener("click", () => {
-    saveHistory([]);
-    renderHistory();
-  });
+  resetWeekBtn.onclick = () => {
+    const ok = confirm("Reset Entry for this week?");
+    if (!ok) return;
+    week = defaultWeek();
+    saveJSON(STORAGE_WEEK, week);
+    alert("Entry reset.");
+  };
+}
 
-  // Initial boot
-  renderEntry();
-  renderSettings();
-  renderInsights();
-  setActivePage("entry");
-})();
+function applyPatternStrengthToCSS() {
+  const v = Math.max(0, Math.min(100, settings.turnipStrength ?? 16));
+  const alpha = (v / 100) * 0.30;
+  document.documentElement.style.setProperty("--turnip-alpha", alpha.toFixed(3));
+}
+
+function boot() {
+  ensureCurrentWeek();
+  initNav();
+
+  const page = (location.hash || "#entry").replace("#", "");
+  showPage(["entry", "insights", "settings"].includes(page) ? page : "entry");
+}
+
+boot();

@@ -1,384 +1,344 @@
-const LS_KEYS = {
-  week: "tt_week_v1",
-  history: "tt_history_v1",
-  settings: "tt_settings_v1",
-};
-
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const SLOTS = [
-  { key: "am", label: "AM", icon: "☀️" },
-  { key: "pm", label: "PM", icon: "🌙" },
+  { key: "monAM", day:"Mon", label:"AM", icon:"☀️" },
+  { key: "monPM", day:"Mon", label:"PM", icon:"🌙" },
+  { key: "tueAM", day:"Tue", label:"AM", icon:"☀️" },
+  { key: "tuePM", day:"Tue", label:"PM", icon:"🌙" },
+  { key: "wedAM", day:"Wed", label:"AM", icon:"☀️" },
+  { key: "wedPM", day:"Wed", label:"PM", icon:"🌙" },
+  { key: "thuAM", day:"Thu", label:"AM", icon:"☀️" },
+  { key: "thuPM", day:"Thu", label:"PM", icon:"🌙" },
+  { key: "friAM", day:"Fri", label:"AM", icon:"☀️" },
+  { key: "friPM", day:"Fri", label:"PM", icon:"🌙" },
+  { key: "satAM", day:"Sat", label:"AM", icon:"☀️" },
+  { key: "satPM", day:"Sat", label:"PM", icon:"🌙" },
 ];
 
-function $(id){ return document.getElementById(id); }
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+const STORAGE_KEY = "turnip_tracker_v1";
+const HISTORY_KEY = "turnip_tracker_history_v1";
+const WEEK_START_KEY = "turnip_tracker_weekStartISO";
 
-function loadJSON(key, fallback){
+function loadState(){
   try{
-    const raw = localStorage.getItem(key);
-    if(!raw) return fallback;
-    return JSON.parse(raw);
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   }catch{
-    return fallback;
+    return {};
   }
 }
-function saveJSON(key, value){
-  localStorage.setItem(key, JSON.stringify(value));
+function saveState(state){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
-
-function monthDayLabel(date = new Date()){
-  const m = date.toLocaleString(undefined, { month:"short" });
-  const day = date.getDate();
-  return `${m} ${day}`;
-}
-
-function defaultWeek(){
-  const week = {
-    buyPrice: "",
-    buyDate: monthDayLabel(),
-    entries: {},
-  };
-  for(const d of DAYS){
-    week.entries[d] = { am: "", pm: "" };
+function loadHistory(){
+  try{
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  }catch{
+    return [];
   }
-  return week;
+}
+function saveHistory(list){
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
 }
 
-function defaultSettings(){
-  return { patternStrength: 35 };
+function $(sel){ return document.querySelector(sel); }
+function clampNum(v){
+  const n = parseInt(String(v || "").replace(/[^\d]/g,""), 10);
+  return Number.isFinite(n) ? n : null;
 }
 
-function sanitizeNum(v){
-  return String(v ?? "").replace(/[^\d]/g, "");
-}
+function buildEntry(){
+  const daysEl = $("#days");
+  daysEl.innerHTML = "";
 
-function toNum(s){
-  const n = parseInt(String(s ?? "").replace(/[^\d]/g,""), 10);
-  return Number.isFinite(n) ? n : 0;
-}
+  const state = loadState();
 
-/* ---------- NAV ---------- */
-function setActivePage(which){
-  const pages = {
-    entry: $("page-entry"),
-    insights: $("page-insights"),
-    settings: $("page-settings"),
-  };
-  for(const k of Object.keys(pages)){
-    pages[k].classList.toggle("is-active", k === which);
-  }
-  $("navEntry").classList.toggle("is-active", which === "entry");
-  $("navInsights").classList.toggle("is-active", which === "insights");
-  $("navSettings").classList.toggle("is-active", which === "settings");
-
-  window.scrollTo({ top: 0, behavior: "instant" });
-}
-
-function wireNav(){
-  document.querySelectorAll(".nav-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const target = btn.dataset.target;
-      setActivePage(target);
-      if(target === "insights") refreshInsights();
-      if(target === "settings") refreshSettingsUI();
-    });
+  // Buy price wiring
+  const buyInput = $("#buyPrice");
+  buyInput.value = state.buyPrice ?? "";
+  buyInput.addEventListener("input", () => {
+    const v = clampNum(buyInput.value);
+    state.buyPrice = v;
+    saveState(state);
+    refreshInsights();
   });
-}
 
-/* ---------- ENTRY ---------- */
-function renderWeekGrid(week){
-  const grid = $("weekGrid");
-  grid.innerHTML = "";
+  // Date label (month + day, no year)
+  $("#buy-date-label").textContent = sundayLabel();
 
-  DAYS.forEach(day=>{
+  DAYS.forEach((dayName, idx) => {
     const card = document.createElement("div");
     card.className = "day-card";
 
-    const title = document.createElement("div");
-    title.className = "day-name";
-    title.textContent = day;
-    card.appendChild(title);
+    const h = document.createElement("div");
+    h.className = "day-title";
+    h.textContent = dayName;
+    card.appendChild(h);
 
-    SLOTS.forEach(slot=>{
-      const row = document.createElement("div");
-      row.className = "slot";
+    const amKey = slotKey(idx, true);
+    const pmKey = slotKey(idx, false);
 
-      const left = document.createElement("div");
-      left.className = "slot-left";
-      left.innerHTML = `<span class="ico">${slot.icon}</span><span>${slot.label}</span>`;
+    card.appendChild(buildSlot("☀️", "AM", amKey, state));
+    card.appendChild(buildSlot("🌙", "PM", pmKey, state));
 
-      const right = document.createElement("div");
-      right.className = "slot-right";
-
-      const input = document.createElement("input");
-      input.className = "num-input";
-      input.inputMode = "numeric";
-      input.pattern = "[0-9]*";
-      input.placeholder = "-";
-      input.value = week.entries[day][slot.key] ?? "";
-
-      input.addEventListener("input", ()=>{
-        week.entries[day][slot.key] = sanitizeNum(input.value);
-        saveJSON(LS_KEYS.week, week);
-      });
-
-      input.addEventListener("blur", ()=>{
-        input.value = week.entries[day][slot.key] ?? "";
-      });
-
-      right.appendChild(input);
-
-      row.appendChild(left);
-      row.appendChild(right);
-      card.appendChild(row);
-    });
-
-    grid.appendChild(card);
+    daysEl.appendChild(card);
   });
 }
 
-/* ---------- CHART BUILD ---------- */
+function buildSlot(icon, label, key, state){
+  const row = document.createElement("div");
+  row.className = "slot";
+
+  const left = document.createElement("div");
+  left.className = "slot-left";
+  left.innerHTML = `<span class="slot-ico">${icon}</span><span>${label}</span>`;
+
+  const input = document.createElement("input");
+  input.className = "pill-input slot-input";
+  input.inputMode = "numeric";
+  input.pattern = "[0-9]*";
+  input.placeholder = "-";
+  input.maxLength = 4;
+  input.value = state[key] ?? "";
+
+  input.addEventListener("input", () => {
+    const v = clampNum(input.value);
+    state[key] = v;
+    saveState(state);
+    refreshInsights();
+  });
+
+  row.appendChild(left);
+  row.appendChild(input);
+  return row;
+}
+
+function slotKey(dayIndex, isAM){
+  const map = ["mon","tue","wed","thu","fri","sat"][dayIndex];
+  return map + (isAM ? "AM" : "PM");
+}
+
+function sundayLabel() {
+  const iso = getWeekStartISO();
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  const month = dt.toLocaleString(undefined, { month: "short" });
+  return `${month} ${dt.getDate()}`;
+}
+
+function setPage(target){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("is-active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("is-active"));
+
+  $("#page-" + target).classList.add("is-active");
+  document.querySelector(`.nav-btn[data-target="${target}"]`).classList.add("is-active");
+
+  // keep scroll position sensible
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
 function buildChartScaffold(){
-  const dots = $("dots");
-  const markers = $("markers");
-  dots.innerHTML = "";
-  markers.innerHTML = "";
+  const slotRow = $("#slotRow");
+  slotRow.innerHTML = "";
+  SLOTS.forEach((s) => {
+    const span = document.createElement("div");
+    span.className = "slot-ico-small";
+    span.textContent = "•";
+    slotRow.appendChild(span);
+  });
 
-  // 12 points: Mon AM, Mon PM, ... Sat PM
-  for(let i=0;i<12;i++){
-    const marker = document.createElement("div");
-    marker.className = "marker";
-    marker.textContent = (i % 2 === 0) ? "☀️" : "🌙";
-    markers.appendChild(marker);
-
-    const dot = document.createElement("div");
-    dot.className = "dot empty";
-    dots.appendChild(dot);
-  }
-}
-
-/* ---------- INSIGHTS ---------- */
-function idxToLabel(idx){
-  const day = DAYS[Math.floor(idx / 2)];
-  const slot = (idx % 2 === 0) ? "AM" : "PM";
-  const short = day.slice(0,3);
-  return `${short} ${slot}`;
-}
-
-function guessPattern(arr){
-  const vals = arr.filter(Boolean);
-  if(vals.length < 3) return "Not enough data";
-
-  const diffs = [];
-  for(let i=1;i<vals.length;i++) diffs.push(vals[i] - vals[i-1]);
-
-  const up = diffs.filter(d=>d>0).length;
-  const down = diffs.filter(d=>d<0).length;
-
-  const max = Math.max(...vals);
-  const min = Math.min(...vals);
-  const spread = max - min;
-
-  if(up > down * 2) return "Increasing";
-  if(down > up * 2) return "Decreasing";
-
-  const sorted = [...vals].sort((a,b)=>a-b);
-  const med = sorted[Math.floor(sorted.length/2)];
-  if(max >= med + Math.max(30, spread*0.45)) return "Spike";
-
-  return "Mixed";
-}
-
-function applyPatternStrength(){
-  const settings = loadJSON(LS_KEYS.settings, defaultSettings());
-  const v = clamp(settings.patternStrength ?? 35, 0, 100);
-  const opacity = (v / 100) * 0.55;
-  $("chartPattern").style.opacity = String(opacity);
+  const dow = $("#dow");
+  dow.innerHTML = "";
+  ["Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => {
+    const sp = document.createElement("span");
+    sp.textContent = d;
+    dow.appendChild(sp);
+  });
 }
 
 function refreshInsights(){
-  const week = loadJSON(LS_KEYS.week, defaultWeek());
+  const state = loadState();
 
-  const buy = toNum(week.buyPrice);
-  $("statBuy").textContent = buy ? String(buy) : "-";
+  // Pattern strength controls chart background opacity
+  const strength = clampNum($("#patternStrength").value);
+  const opacity = Math.min(0.75, Math.max(0.12, (strength ?? 35) / 100));
+  document.documentElement.style.setProperty("--patternOpacity", String(opacity));
 
-  const ordered = [];
-  for(const day of DAYS){
-    ordered.push(toNum(week.entries[day].am));
-    ordered.push(toNum(week.entries[day].pm));
-  }
+  // Chart icons: show sun/moon if a value exists, dot otherwise
+  const slotRow = $("#slotRow");
+  if (slotRow.children.length !== SLOTS.length) buildChartScaffold();
 
+  SLOTS.forEach((s, i) => {
+    const v = state[s.key];
+    slotRow.children[i].textContent = (v == null) ? "•" : s.icon;
+  });
+
+  // Stats
+  const buy = state.buyPrice ?? null;
+  $("#statBuy").textContent = buy == null ? "-" : String(buy);
+
+  // best seen and best time
   let best = null;
-  let bestIdx = -1;
-  ordered.forEach((n, idx)=>{
-    if(!n) return;
-    if(best === null || n > best){
-      best = n;
-      bestIdx = idx;
+  let bestKey = null;
+  for (const s of SLOTS){
+    const v = state[s.key];
+    if (v == null) continue;
+    if (best == null || v > best){
+      best = v;
+      bestKey = s;
     }
-  });
+  }
+  $("#statBest").textContent = best == null ? "-" : String(best);
+  $("#statBestTime").textContent = bestKey ? `${bestKey.day} ${bestKey.label}` : "-";
 
-  $("statBest").textContent = best !== null ? String(best) : "-";
-  $("statBestTime").textContent = bestIdx >= 0 ? idxToLabel(bestIdx) : "-";
-
-  const profitEl = $("statProfit");
-  profitEl.classList.remove("positive","negative");
-  if(best !== null && buy){
+  // Profit vs buy
+  if (buy != null && best != null){
     const diff = best - buy;
-    profitEl.textContent = (diff >= 0 ? `+${diff}` : String(diff));
-    profitEl.classList.add(diff >= 0 ? "positive" : "negative");
-  }else{
-    profitEl.textContent = "-";
+    $("#statProfit").textContent = (diff >= 0 ? "+" : "") + diff;
+  } else {
+    $("#statProfit").textContent = "-";
   }
 
-  $("statPattern").textContent = guessPattern(ordered);
-
-  const dotEls = Array.from($("dots").children);
-  dotEls.forEach((el, idx)=>{
-    const v = ordered[idx];
-    el.classList.toggle("empty", !v);
-  });
-
-  applyPatternStrength();
+  renderHistory();
 }
 
-/* ---------- HISTORY ---------- */
-function loadHistory(){
-  return loadJSON(LS_KEYS.history, []);
-}
-function saveHistory(list){
-  saveJSON(LS_KEYS.history, list);
-}
 function renderHistory(){
-  const list = loadHistory();
-  const host = $("historyList");
-  const empty = $("historyEmpty");
-  host.innerHTML = "";
+  const listEl = $("#historyList");
+  const emptyEl = $("#historyEmpty");
+  const hist = loadHistory();
 
-  empty.style.display = list.length ? "none" : "block";
+  listEl.innerHTML = "";
+  if (!hist.length){
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
 
-  list.slice().reverse().forEach(item=>{
+  hist.slice().reverse().forEach(item => {
     const div = document.createElement("div");
     div.className = "history-item";
-
-    const top = document.createElement("div");
-    top.className = "topline";
-    top.innerHTML = `<span>${item.label}</span><span>Best: ${item.best ?? "-"}</span>`;
-
-    const sub = document.createElement("div");
-    sub.className = "subline";
-    sub.textContent = `Buy: ${item.buy ?? "-"} • Best time: ${item.bestTime ?? "-"} • Pattern: ${item.pattern ?? "-"}`;
-
-    div.appendChild(top);
-    div.appendChild(sub);
-    host.appendChild(div);
+    div.innerHTML = `
+      <div class="top">
+        <span>${item.label}</span>
+        <span>${item.best ?? "-"}</span>
+      </div>
+      <div class="sub">Best time: ${item.bestTime ?? "-" } · Buy: ${item.buy ?? "-"}</div>
+    `;
+    listEl.appendChild(div);
   });
 }
 
-/* ---------- SETTINGS ---------- */
-function refreshSettingsUI(){
-  const settings = loadJSON(LS_KEYS.settings, defaultSettings());
-  $("patternStrength").value = String(clamp(settings.patternStrength ?? 35, 0, 100));
-}
+function saveWeekToHistory(){
+  const state = loadState();
+  const buy = state.buyPrice ?? null;
 
-function wireSettings(){
-  $("patternStrength").addEventListener("input", (e)=>{
-    const settings = loadJSON(LS_KEYS.settings, defaultSettings());
-    settings.patternStrength = clamp(parseInt(e.target.value,10) || 0, 0, 100);
-    saveJSON(LS_KEYS.settings, settings);
-    applyPatternStrength();
-  });
-
-  $("resetWeekBtn").addEventListener("click", ()=>{
-    const fresh = defaultWeek();
-    fresh.buyDate = monthDayLabel();
-    saveJSON(LS_KEYS.week, fresh);
-    hydrate();
-  });
-
-  $("clearHistoryBtn").addEventListener("click", ()=>{
-    saveHistory([]);
-    renderHistory();
-  });
-}
-
-/* ---------- SAVE WEEK ---------- */
-function wireSaveWeek(){
-  $("saveWeekBtn").addEventListener("click", ()=>{
-    const week = loadJSON(LS_KEYS.week, defaultWeek());
-
-    const ordered = [];
-    for(const day of DAYS){
-      ordered.push(toNum(week.entries[day].am));
-      ordered.push(toNum(week.entries[day].pm));
+  let best = null;
+  let bestTime = null;
+  for (const s of SLOTS){
+    const v = state[s.key];
+    if (v == null) continue;
+    if (best == null || v > best){
+      best = v;
+      bestTime = `${s.day} ${s.label}`;
     }
+  }
 
-    let best = null;
-    let bestIdx = -1;
-    ordered.forEach((n, idx)=>{
-      if(!n) return;
-      if(best === null || n > best){
-        best = n;
-        bestIdx = idx;
-      }
-    });
-
-    const item = {
-      label: week.buyDate || monthDayLabel(),
-      buy: toNum(week.buyPrice) || null,
-      best: best,
-      bestTime: bestIdx >= 0 ? idxToLabel(bestIdx) : null,
-      pattern: guessPattern(ordered),
-      ts: Date.now(),
-    };
-
-    const history = loadHistory();
-    history.push(item);
-    saveHistory(history);
-
-    const fresh = defaultWeek();
-    fresh.buyDate = monthDayLabel();
-    saveJSON(LS_KEYS.week, fresh);
-
-    hydrate();
-    setActivePage("insights");
-    refreshInsights();
+  const hist = loadHistory();
+  hist.push({
+    label: sundayLabel(),
+    buy: buy,
+    best: best,
+    bestTime: bestTime,
+    snapshot: {
+      buyPrice: state.buyPrice ?? null,
+      monAM: state.monAM ?? null,
+      monPM: state.monPM ?? null,
+      tueAM: state.tueAM ?? null,
+      tuePM: state.tuePM ?? null,
+      wedAM: state.wedAM ?? null,
+      wedPM: state.wedPM ?? null,
+      thuAM: state.thuAM ?? null,
+      thuPM: state.thuPM ?? null,
+      friAM: state.friAM ?? null,
+      friPM: state.friPM ?? null,
+      satAM: state.satAM ?? null,
+      satPM: state.satPM ?? null,
+    }
   });
+  saveHistory(hist);
+
+  // Clear entry values only (keep settings)
+  const cleared = { };
+  saveState(cleared);
+  buildEntry();
+  refreshInsights();
+  alert("Saved to History.");
 }
 
-/* ---------- HYDRATE ---------- */
-function hydrate(){
-  const week = loadJSON(LS_KEYS.week, defaultWeek());
+function resetWeek(){
+  const ok = confirm("Reset Entry for this week?");
+  if (!ok) return;
+  saveState({});
+  buildEntry();
+  refreshInsights();
+}
 
-  $("buyDateLabel").textContent = week.buyDate || monthDayLabel();
-  $("buyPrice").value = week.buyPrice ?? "";
-
-  $("buyPrice").oninput = ()=>{
-    const w = loadJSON(LS_KEYS.week, defaultWeek());
-    w.buyPrice = sanitizeNum($("buyPrice").value);
-    saveJSON(LS_KEYS.week, w);
-  };
-  $("buyPrice").onblur = ()=>{
-    const w = loadJSON(LS_KEYS.week, defaultWeek());
-    $("buyPrice").value = w.buyPrice ?? "";
-  };
-
-  renderWeekGrid(week);
-
-  buildChartScaffold();
+function clearHistory(){
+  const ok = confirm("Clear History?");
+  if (!ok) return;
+  saveHistory([]);
   renderHistory();
-  applyPatternStrength();
-  refreshSettingsUI();
+}
+
+function initNav(){
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => setPage(btn.dataset.target));
+  });
 }
 
 function init(){
-  wireNav();
-  wireSettings();
-  wireSaveWeek();
+  // Defaults
+  buildEntry();
+  buildChartScaffold();
 
-  hydrate();
-  setActivePage("entry");
+  // Load pattern strength preference
+  const savedStrength = localStorage.getItem("turnip_pattern_strength");
+  const slider = $("#patternStrength");
+  if (savedStrength != null) slider.value = savedStrength;
+  slider.addEventListener("input", () => {
+    localStorage.setItem("turnip_pattern_strength", slider.value);
+    refreshInsights();
+  });
+
+  $("#saveWeekBtn").addEventListener("click", saveWeekToHistory);
+  $("#resetWeekBtn").addEventListener("click", resetWeek);
+  $("#clearHistoryBtn").addEventListener("click", clearHistory);
+
+  initNav();
   refreshInsights();
 }
 
 document.addEventListener("DOMContentLoaded", init);
+function mostRecentSundayISO(now = new Date()) {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay(); // 0 = Sunday
+  d.setDate(d.getDate() - day);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getWeekStartISO() {
+  let iso = localStorage.getItem(WEEK_START_KEY);
+  if (!iso) {
+    iso = mostRecentSundayISO();
+    localStorage.setItem(WEEK_START_KEY, iso);
+  }
+  return iso;
+}
+
+function setWeekStartToCurrent() {
+  const iso = mostRecentSundayISO();
+  localStorage.setItem(WEEK_START_KEY, iso);
+  return iso;
+}

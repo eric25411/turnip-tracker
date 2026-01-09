@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#1E7A5A" />
+  <meta name="theme-color" content="#dfe8f6" />
 
   <title>Turnip Tracker</title>
 
-  <!-- Home screen icon support (iOS + general) -->
+  <!-- iOS home screen icon -->
   <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
   <link rel="icon" type="image/png" href="icon-1024.png.PNG" />
 
@@ -17,174 +17,149 @@
 <body>
   <div class="app">
 
-    <!-- HEADER / BANNER -->
-    <header class="top">
-      <div class="bannerCard">
-        <img class="bannerImg" src="banner.png.jpg" alt="Turnip Tracker banner" />
-      </div>
-    </header>
+    <!-- ENTRY PAGE -->
+    <main id="page-entry" class="page is-active" aria-label="Entry page">
+      <section class="shell">
 
-    <!-- MAIN CONTENT (pages swap in here) -->
-    <main class="main" id="main">
+        <div class="card hero">
+          <img class="hero-img" src="banner.png.jpg" alt="Turnip Tracker banner" />
+        </div>
 
-      <!-- ENTRY PAGE -->
-      <section class="page page-active" id="page-entry" aria-label="Entry">
-
-        <div class="card buyCard">
-          <div class="buyLeft">
-            <div class="buyTitleRow">
-              <div class="buyIcon" aria-hidden="true">💰</div>
-              <div class="buyTitle">Buy price</div>
+        <div class="card buy-card">
+          <div class="buy-left">
+            <div class="buy-title">
+              <span class="emoji">💰</span>
+              <span>Buy price</span>
             </div>
 
-            <div class="buySubRow">
-              <!-- Isabelle image (your filename) -->
+            <div class="buy-sub">
               <img class="isabelle" src="isabelle.png.PNG" alt="Isabelle" />
-              <div class="buySub" id="sundayLabel">Jan 1</div>
+              <span id="buyDateLabel">Jan 1</span>
             </div>
           </div>
 
-          <div class="buyRight">
-            <input
-              id="buyPrice"
-              class="pillInput"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              placeholder="-"
-              aria-label="Daisy Mae buy price"
-            />
+          <div class="buy-right">
+            <input id="buyPriceInput" class="price-input" inputmode="numeric" placeholder="-" maxlength="3" />
           </div>
         </div>
 
-        <!-- Day cards -->
-        <div class="days" id="days"></div>
+        <section id="daysWrap" class="days-wrap" aria-label="Daily prices"></section>
 
-        <!-- Save week button goes at bottom of days (NOT at top) -->
-        <div class="card saveCard">
-          <button class="saveBtn" id="saveWeekBtn">Save week to History</button>
-          <div class="saveHint">Saves the week, then clears Entry for a fresh start.</div>
+        <div class="card save-card">
+          <button id="saveWeekBtn" class="btn-primary" type="button">Save week to History</button>
+          <div class="save-note">Saves this week, then clears Entry.</div>
         </div>
 
-        <!-- Spacer so bottom nav never covers content -->
-        <div class="bottomSpacer" aria-hidden="true"></div>
+        <div class="spacer"></div>
       </section>
+    </main>
 
-      <!-- INSIGHTS PAGE (Predict + History merged) -->
-      <section class="page" id="page-insights" aria-label="Insights">
+    <!-- INSIGHTS PAGE (Predictor + History combined) -->
+    <main id="page-insights" class="page" aria-label="Insights page">
+      <section class="shell">
 
-        <div class="card sectionTitle">
-          <div class="sectionTitleText">Insights</div>
+        <div class="card title-card">
+          <div class="title-big">Insights</div>
         </div>
 
-        <!-- Cozy postcard chart -->
-        <div class="card chartCard">
-          <div class="chartHeader">
-            <div class="chartTitle">This week’s bell postcard</div>
-
-            <!-- Key, stacked (and cozy) -->
-            <div class="chartKey" aria-label="AM and PM key">
-              <div class="keyRow"><span class="keyIcon">☀️</span><span class="keyText">AM</span></div>
-              <div class="keyRow"><span class="keyIcon">🌙</span><span class="keyText">PM</span></div>
+        <div class="card postcard">
+          <div class="postcard-head">
+            <div class="postcard-title">This week’s bell postcard</div>
+            <div class="key">
+              <div class="key-row"><span class="k-ico">☀️</span><span class="k-txt">AM</span></div>
+              <div class="key-row"><span class="k-ico">🌙</span><span class="k-txt">PM</span></div>
             </div>
           </div>
 
-          <div class="postcard">
-            <svg id="postcardSvg" viewBox="0 0 360 190" role="img" aria-label="Turnip price postcard chart">
-              <!-- light grid (no heavy middle line) -->
-              <g class="grid">
-                <line x1="24" y1="30" x2="336" y2="30"></line>
-                <line x1="24" y1="70" x2="336" y2="70"></line>
-                <line x1="24" y1="110" x2="336" y2="110"></line>
-                <line x1="24" y1="150" x2="336" y2="150"></line>
-              </g>
-
-              <!-- baseline -->
-              <line class="baseline" x1="24" y1="130" x2="336" y2="130"></line>
-
-              <!-- path + dots injected by JS -->
-              <path id="postcardPath" class="line" d=""></path>
-              <g id="postcardDots"></g>
-
-              <!-- day labels -->
-              <g class="labels" id="postcardLabels"></g>
-            </svg>
+          <div class="postcard-chart">
+            <svg id="postcardSvg" viewBox="0 0 360 200" role="img" aria-label="Turnip postcard chart"></svg>
           </div>
 
-          <div class="chartCaption">
-            Just a cozy snapshot. The more you log, the smarter it gets.
+          <div class="postcard-caption">Just a cozy snapshot. The more you log, the smarter it gets.</div>
+        </div>
+
+        <div class="card summary-card">
+          <div class="row">
+            <div class="label">Buy price</div>
+            <div id="sumBuy" class="value">-</div>
+          </div>
+          <div class="row">
+            <div class="label">Best price seen</div>
+            <div id="sumBest" class="value">-</div>
+          </div>
+          <div class="row">
+            <div class="label">Best time so far</div>
+            <div id="sumBestTime" class="value">-</div>
+          </div>
+          <div class="row">
+            <div class="label">Profit vs buy</div>
+            <div id="sumProfit" class="value">-</div>
+          </div>
+          <div class="row">
+            <div class="label">Likely pattern</div>
+            <div id="sumPattern" class="value">Mixed</div>
           </div>
         </div>
 
-        <!-- Metrics -->
-        <div class="card metricsCard">
-          <div class="metricRow"><span>Daisy Mae buy price</span><strong id="mBuy">-</strong></div>
-          <div class="metricRow"><span>Best price seen</span><strong id="mBest">-</strong></div>
-          <div class="metricRow"><span>Best time so far</span><strong id="mBestTime">-</strong></div>
-          <div class="metricRow"><span>Profit vs buy</span><strong id="mProfit">-</strong></div>
-          <div class="metricRow"><span>Likely pattern</span><strong id="mPattern">-</strong></div>
-        </div>
-
-        <!-- History list -->
-        <div class="card historyCard">
-          <div class="historyHeader">
-            <div class="historyTitle">History</div>
-            <button class="tinyBtn" id="clearHistoryBtn" type="button">Clear</button>
+        <div class="card history-card">
+          <div class="history-head">
+            <div class="history-title">History</div>
+            <button id="clearHistoryBtn" class="btn-ghost" type="button">Clear</button>
           </div>
-          <div class="historyList" id="historyList"></div>
+
+          <div id="historyList" class="history-list"></div>
         </div>
 
-        <div class="bottomSpacer" aria-hidden="true"></div>
+        <div class="spacer"></div>
       </section>
+    </main>
 
-      <!-- SETTINGS PAGE -->
-      <section class="page" id="page-settings" aria-label="Settings">
-        <div class="card sectionTitle">
-          <div class="sectionTitleText">Settings</div>
+    <!-- SETTINGS PAGE -->
+    <main id="page-settings" class="page" aria-label="Settings page">
+      <section class="shell">
+
+        <div class="card title-card">
+          <div class="title-big">Settings</div>
         </div>
 
-        <div class="card settingsCard">
-          <div class="settingRow">
-            <div>
-              <div class="settingTitle">Compact mode</div>
-              <div class="settingSub">Smaller boxes, less scrolling.</div>
+        <div class="card settings-card">
+          <div class="settings-row">
+            <div class="settings-left">
+              <div class="settings-name">Keep data after updates</div>
+              <div class="settings-desc">Prices are saved in your browser storage on this device.</div>
             </div>
-            <label class="switch">
-              <input type="checkbox" id="compactToggle" />
-              <span class="slider"></span>
-            </label>
+            <div class="settings-right">
+              <span class="pill">On</span>
+            </div>
           </div>
 
-          <div class="divider"></div>
-
-          <div class="settingRow">
-            <div>
-              <div class="settingTitle">Reset this week</div>
-              <div class="settingSub">Clears Entry values for the current week only.</div>
+          <div class="settings-row">
+            <div class="settings-left">
+              <div class="settings-name">Tip</div>
+              <div class="settings-desc">If the home screen icon doesn’t update, remove the shortcut and add it again.</div>
             </div>
-            <button class="tinyBtn" id="resetWeekBtn" type="button">Reset</button>
           </div>
         </div>
 
-        <div class="bottomSpacer" aria-hidden="true"></div>
+        <div class="spacer"></div>
       </section>
-
     </main>
 
     <!-- BOTTOM NAV -->
-    <nav class="bottomNav" aria-label="Bottom navigation">
-      <button class="navBtn navActive" id="navEntry" type="button">
-        <div class="navIcon" aria-hidden="true">🧾</div>
-        <div class="navLabel">Entry</div>
+    <nav class="bottom-nav" aria-label="Bottom navigation">
+      <button class="nav-item is-active" data-go="entry" type="button" aria-label="Entry">
+        <div class="nav-ico">🧾</div>
+        <div class="nav-lbl">Entry</div>
       </button>
 
-      <button class="navBtn" id="navInsights" type="button">
-        <div class="navIcon" aria-hidden="true">🔮</div>
-        <div class="navLabel">Insights</div>
+      <button class="nav-item" data-go="insights" type="button" aria-label="Insights">
+        <div class="nav-ico">🔮</div>
+        <div class="nav-lbl">Insights</div>
       </button>
 
-      <button class="navBtn" id="navSettings" type="button">
-        <div class="navIcon" aria-hidden="true">⚙️</div>
-        <div class="navLabel">Settings</div>
+      <button class="nav-item" data-go="settings" type="button" aria-label="Settings">
+        <div class="nav-ico">⚙️</div>
+        <div class="nav-lbl">Settings</div>
       </button>
     </nav>
 

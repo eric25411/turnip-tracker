@@ -1,7 +1,6 @@
 const LS = {
   week: "tt_week_v3",
   history: "tt_history_v3",
-  uiScale: "tt_uiScale_v3",
   patternOpacity: "tt_patternOpacity_v3"
 };
 
@@ -61,11 +60,6 @@ function ensureWeekSunday(week){
     week.weekSundayISO = currentSunday.toISOString();
     saveWeek(week);
   }
-}
-
-function applyUiScale(scale){
-  // This drives html{font-size: calc(16px * var(--uiScale))}
-  document.documentElement.style.setProperty("--uiScale", String(scale));
 }
 
 function applyPatternOpacity(op){
@@ -261,22 +255,9 @@ function renderInsights(){
 }
 
 function initSettings(){
-  const sel = $("fontSizeSelect");
   const slider = $("patternSlider");
-
-  const savedScale = localStorage.getItem(LS.uiScale) || "1.00";
   const savedOp = localStorage.getItem(LS.patternOpacity) || "0.22";
-
-  applyUiScale(savedScale);
   applyPatternOpacity(savedOp);
-
-  if(sel){
-    sel.value = savedScale;
-    sel.onchange = () => {
-      localStorage.setItem(LS.uiScale, sel.value);
-      applyUiScale(sel.value);
-    };
-  }
 
   if(slider){
     slider.value = savedOp;
@@ -327,10 +308,22 @@ function initNav(){
   });
 }
 
+/* ✅ Measure the real nav height and store it in --navH */
+function syncNavHeight(){
+  const nav = document.querySelector(".bottom-nav");
+  if(!nav) return;
+  const h = Math.ceil(nav.getBoundingClientRect().height);
+  document.documentElement.style.setProperty("--navH", `${h}px`);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
-  initSettings();      // makes text size work immediately
+  initSettings();
   renderEntry();
   renderInsights();
   showPage("entry");
+
+  syncNavHeight();
+  window.addEventListener("resize", syncNavHeight);
+  window.addEventListener("orientationchange", syncNavHeight);
 });

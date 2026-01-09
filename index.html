@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,13 +7,11 @@
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
   />
-
   <title>Turnip Tracker</title>
 
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- App icons (iOS + PWA) -->
+  <!-- Icons -->
   <link rel="icon" href="icon-1024.png.PNG" sizes="1024x1024" type="image/png" />
   <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png.PNG" />
@@ -26,17 +25,12 @@
   <div class="app" id="app">
     <!-- HEADER -->
     <header class="hero">
-      <img
-        class="heroBanner"
-        src="banner.png.jpg"
-        alt="Turnip Tracker banner"
-      />
+      <img class="heroBanner" src="banner.png.jpg" alt="Turnip Tracker banner" />
     </header>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN -->
     <main class="content" id="content">
-
-      <!-- ENTRY SCREEN -->
+      <!-- ENTRY -->
       <section class="screen is-active" id="screen-entry">
         <div class="card buyCard">
           <div class="buyLeft">
@@ -44,7 +38,8 @@
               <div class="emoji">💰</div>
               <div class="buyTitle">Buy price</div>
             </div>
-            <div class="buyDate" id="buyDateLabel">—</div>
+            <div class="buyDate" id="buyDateLabel">Sunday, Jan 1</div>
+            <div class="buyHint" id="buyHintLabel">This Sunday’s price</div>
           </div>
 
           <div class="buyRight">
@@ -61,13 +56,11 @@
         <div id="daysWrap"></div>
 
         <div class="bottomActions">
-          <button class="btnPrimary" id="saveWeekBtn">
-            Save week to History
-          </button>
+          <button class="btnPrimary" id="saveWeekBtn">Save week to History</button>
         </div>
       </section>
 
-      <!-- INSIGHTS SCREEN -->
+      <!-- INSIGHTS -->
       <section class="screen" id="screen-insights">
         <div class="titleCard">
           <h1 class="title">Insights</h1>
@@ -75,9 +68,7 @@
 
         <div class="card insightsCard">
           <div class="insightsHead">
-            <div class="insightsTitle">
-              This week’s bell postcard
-            </div>
+            <div class="insightsTitle">This week’s bell postcard</div>
 
             <div class="legend">
               <div class="legendRow">
@@ -87,6 +78,14 @@
               <div class="legendRow">
                 <span class="legendIcon">🌙</span>
                 <span class="legendText">PM</span>
+              </div>
+              <div class="legendRow">
+                <span class="legendIcon">💰</span>
+                <span class="legendText">Sold</span>
+              </div>
+              <div class="legendRow">
+                <span class="legendIcon">✨</span>
+                <span class="legendText">Best</span>
               </div>
             </div>
           </div>
@@ -103,7 +102,7 @@
             </div>
           </div>
 
-          <div class="insightsBlurb">
+          <div class="insightsBlurb" id="insightsBlurb">
             A cozy snapshot of your island’s prices so far.
           </div>
         </div>
@@ -125,89 +124,72 @@
           </div>
           <div class="divider"></div>
           <div class="statRow">
+            <div class="statLabel">Sold</div>
+            <div class="statValue" id="statSold">-</div>
+          </div>
+          <div class="divider"></div>
+          <div class="statRow">
             <div class="statLabel">Profit vs buy</div>
             <div class="statValue" id="statProfit">-</div>
           </div>
         </div>
 
+        <!-- History only on Insights -->
         <div class="card historyCard">
           <div class="historyHead">
             <div class="historyTitle">History</div>
-            <button class="btnGhost" id="clearHistoryBtn">Clear</button>
           </div>
           <div id="historyList" class="historyList"></div>
+          <p class="historySmall" id="historyEmptyNote">
+            No saved weeks yet. Fill the week, then hit Save week.
+          </p>
         </div>
       </section>
 
-      <!-- SETTINGS SCREEN -->
+      <!-- SETTINGS -->
       <section class="screen" id="screen-settings">
         <div class="titleCard">
           <h1 class="title">Settings</h1>
         </div>
 
         <div class="card settingsCard">
-          <div class="settingRow">
-            <div class="settingLeft">
-              <div class="settingTitle">
-                Turnip background strength
-              </div>
-              <div class="settingSub">
-                Adjust how visible the pattern is.
-              </div>
-            </div>
-            <div class="settingRight">
-              <input
-                id="bgStrength"
-                type="range"
-                min="0"
-                max="100"
-                value="35"
-              />
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
           <div class="settingsButtons">
             <button class="btnSoft" id="backupBtn">Backup</button>
 
             <label class="btnSoft fileBtn">
               Restore
-              <input
-                id="restoreFile"
-                type="file"
-                accept="application/json"
-              />
+              <input id="restoreFile" type="file" accept="application/json" />
             </label>
 
-            <button class="btnSoft danger" id="resetWeekBtn">
-              Reset week
-            </button>
+            <button class="btnSoft danger" id="resetAllBtn">Reset</button>
           </div>
+
+          <p class="historySmall">
+            Backup saves your weeks to a file. Restore loads them back in.
+          </p>
         </div>
       </section>
     </main>
 
     <!-- BOTTOM NAV -->
-    <nav class="bottomNav">
-      <button class="navItem is-active" id="navEntry">
+    <nav class="bottomNav" id="bottomNav">
+      <button class="navItem is-active" id="navEntry" type="button">
         <span class="navIcon">🧾</span>
         <span class="navText">Entry</span>
       </button>
 
-      <button class="navItem" id="navInsights">
-        <span class="navIcon">🔮</span>
+      <button class="navItem" id="navInsights" type="button">
+        <span class="navIcon">✨</span>
         <span class="navText">Insights</span>
       </button>
 
-      <button class="navItem" id="navSettings">
+      <button class="navItem" id="navSettings" type="button">
         <span class="navIcon">⚙️</span>
         <span class="navText">Settings</span>
       </button>
     </nav>
   </div>
 
-  <!-- Script -->
   <script src="app.js"></script>
 </body>
 </html>

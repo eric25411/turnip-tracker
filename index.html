@@ -5,209 +5,209 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Turnip Tracker</title>
 
-  <!-- App icon for iOS (Add to Home Screen) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-1024.png.PNG" />
-  <!-- Fallback icon -->
+  <!-- iOS Home Screen icon support (also helps Safari tab icon) -->
+  <!-- Use EXACTLY the filename GitHub gave you -->
+  <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
   <link rel="icon" type="image/png" href="icon-1024.png.PNG" />
 
   <!-- Cache bust -->
-  <link rel="stylesheet" href="style.css?v=99" />
+  <link rel="stylesheet" href="style.css?v=999" />
 </head>
 
 <body>
   <div class="app">
 
-    <!-- ENTRY VIEW -->
-    <main id="entryView" class="view">
-      <div class="headerCard">
-        <img
-          src="banner.png.jpg"
-          alt="Turnip Tracker"
-          class="headerImage"
-          onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
-        />
-        <div id="headerFallback" class="headerFallback" style="display:none;">
-          Turnip Tracker
-        </div>
+    <!-- HEADER -->
+    <div class="headerCard">
+      <img
+        src="banner.png.jpg"
+        alt="Turnip Tracker"
+        class="headerImage"
+        onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
+      />
+      <div id="headerFallback" class="headerFallback" style="display:none;">
+        Turnip Tracker
       </div>
+    </div>
 
-      <!-- Buy price (compact, locked layout) -->
-      <section class="buyCard">
-        <div class="buyLeft">
-          <div class="buyTitle">
-            <span class="emoji">💰</span>
-            <span>Buy price</span>
+    <!-- MAIN -->
+    <main id="mainView" class="mainView">
+
+      <!-- ENTRY VIEW -->
+      <section id="predictView" class="view">
+
+        <!-- Buy price bar (smaller than day cards) -->
+        <section class="buyCard">
+          <div class="buyLeft">
+            <div class="buyTitle"><span class="emoji">💰</span><span>Buy price</span></div>
+            <div class="buySub" id="buySubLabel">Daisy Mae, Sunday</div>
           </div>
-          <div id="buyCaption" class="buyCaption">Daisy Mae, Sunday</div>
-        </div>
 
-        <input
-          id="buyPrice"
-          class="buyInput"
-          inputmode="numeric"
-          placeholder="-"
-          aria-label="Daisy Mae buy price"
-        />
+          <input
+            class="buyInput priceInput"
+            inputmode="numeric"
+            placeholder="-"
+            id="buy-price"
+            aria-label="Buy price"
+          />
+        </section>
+
+        <!-- Days -->
+        <section class="days">
+
+          <div class="dayCard">
+            <h2 class="dayTitle">Monday</h2>
+            <div class="row">
+              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-am" />
+            </div>
+            <div class="row">
+              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-pm" />
+            </div>
+          </div>
+
+          <div class="dayCard">
+            <h2 class="dayTitle">Tuesday</h2>
+            <div class="row">
+              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-am" />
+            </div>
+            <div class="row">
+              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-pm" />
+            </div>
+          </div>
+
+          <div class="dayCard">
+            <h2 class="dayTitle">Wednesday</h2>
+            <div class="row">
+              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-am" />
+            </div>
+            <div class="row">
+              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-pm" />
+            </div>
+          </div>
+
+          <div class="dayCard">
+            <h2 class="dayTitle">Thursday</h2>
+            <div class="row">
+              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-am" />
+            </div>
+            <div class="row">
+              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-pm" />
+            </div>
+          </div>
+
+          <div class="dayCard">
+            <h2 class="dayTitle">Friday</h2>
+            <div class="row">
+              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-am" />
+            </div>
+            <div class="row">
+              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-pm" />
+            </div>
+          </div>
+
+          <div class="dayCard">
+            <h2 class="dayTitle">Saturday</h2>
+            <div class="row">
+              <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-am" />
+            </div>
+            <div class="row">
+              <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
+              <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-pm" />
+            </div>
+          </div>
+
+          <!-- Save button at bottom of days -->
+          <section class="saveCard">
+            <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
+            <div class="saveHint">Saves the week and clears your Entry screen.</div>
+          </section>
+
+        </section>
       </section>
 
-      <!-- Days -->
-      <section class="days">
+      <!-- PREDICTOR VIEW -->
+      <section id="historyView" class="view hidden">
+        <div class="predictWrap">
 
-        <div class="dayCard">
-          <h2 class="dayTitle">Monday</h2>
-          <div class="row">
-            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-am" />
+          <div class="predictHeader">
+            <h2 class="predictTitle">Predictor</h2>
           </div>
-          <div class="row">
-            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="mon-pm" />
+
+          <div class="postcardCard">
+            <div class="postcardTop">
+              <div class="postcardLabel">This week’s bell postcard</div>
+
+              <!-- Sun / Moon key (stacked) -->
+              <div class="keyStack" aria-label="AM PM key">
+                <div class="keyRow"><span class="emoji">🌞</span><span class="keyText">AM</span></div>
+                <div class="keyRow"><span class="emoji">🌙</span><span class="keyText">PM</span></div>
+              </div>
+            </div>
+
+            <div class="chartWrap">
+              <canvas id="trendChart" width="640" height="260"></canvas>
+            </div>
+
+            <div class="postcardNote">Just a cozy snapshot. The more you log, the smarter it gets.</div>
           </div>
+
+          <div class="statsCard" id="statsCard">
+            <div class="statRow"><div class="statLabel">Daisy Mae buy price</div><div class="statVal" id="statBuy">-</div></div>
+            <div class="statRow"><div class="statLabel">Best price seen</div><div class="statVal" id="statBest">-</div></div>
+            <div class="statRow"><div class="statLabel">Best time so far</div><div class="statVal" id="statBestTime">-</div></div>
+            <div class="statRow"><div class="statLabel">Profit vs buy</div><div class="statVal" id="statProfit">-</div></div>
+            <div class="statRow"><div class="statLabel">Likely pattern</div><div class="statVal" id="statPattern">-</div></div>
+            <div class="statNote" id="statNote">Save more weeks so pattern detection can learn your style.</div>
+          </div>
+
+          <div class="predictActions">
+            <button id="goHomeBtn" class="chipBtn" type="button">Back to Entry</button>
+            <button id="exportBtn" class="chipBtn" type="button">Export</button>
+            <label class="chipBtn fileBtn">
+              Import
+              <input id="importFile" type="file" accept="application/json" />
+            </label>
+          </div>
+
+          <div class="historyCard">
+            <h3 class="historySubtitle">Saved weeks</h3>
+            <p class="historyHint">Tap Expand to view a week. Use Load to edit an old one.</p>
+            <div id="historyList" class="historyList"></div>
+            <p class="historySmall" id="historyEmptyNote">No saved weeks yet. Fill the week, then save.</p>
+          </div>
+
         </div>
-
-        <div class="dayCard">
-          <h2 class="dayTitle">Tuesday</h2>
-          <div class="row">
-            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-am" />
-          </div>
-          <div class="row">
-            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="tue-pm" />
-          </div>
-        </div>
-
-        <div class="dayCard">
-          <h2 class="dayTitle">Wednesday</h2>
-          <div class="row">
-            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-am" />
-          </div>
-          <div class="row">
-            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="wed-pm" />
-          </div>
-        </div>
-
-        <div class="dayCard">
-          <h2 class="dayTitle">Thursday</h2>
-          <div class="row">
-            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-am" />
-          </div>
-          <div class="row">
-            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="thu-pm" />
-          </div>
-        </div>
-
-        <div class="dayCard">
-          <h2 class="dayTitle">Friday</h2>
-          <div class="row">
-            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-am" />
-          </div>
-          <div class="row">
-            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="fri-pm" />
-          </div>
-        </div>
-
-        <div class="dayCard">
-          <h2 class="dayTitle">Saturday</h2>
-          <div class="row">
-            <div class="label"><span class="emoji">🌞</span><span>AM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-am" />
-          </div>
-          <div class="row">
-            <div class="label"><span class="emoji">🌙</span><span>PM</span></div>
-            <input class="priceInput" inputmode="numeric" placeholder="-" id="sat-pm" />
-          </div>
-        </div>
-
       </section>
 
-      <!-- Save at bottom (never covered by nav) -->
-      <section class="saveWrap">
-        <button id="saveWeekBtn" class="primaryBtn" type="button">Save week to History</button>
-        <div class="saveHint">Saves this week, then clears your Entry screen.</div>
-      </section>
     </main>
-
-    <!-- PREDICT VIEW -->
-    <main id="predictView" class="view hidden">
-      <div class="headerCard compact">
-        <div class="headerTitle">Predictor</div>
-      </div>
-
-      <section class="predictCard">
-        <div class="predictTopRow">
-          <div class="predictTitle">This week’s bell postcard</div>
-          <div class="legendStack" aria-label="AM PM legend">
-            <div>🔔 AM</div>
-            <div>🔔 PM</div>
-          </div>
-        </div>
-
-        <div class="chartWrap">
-          <canvas id="chart" width="900" height="320"></canvas>
-          <img src="ac-chart.png.PNG" class="chartBg" alt="" />
-        </div>
-
-        <div class="predictNote">Just a cozy snapshot. The more you log, the smarter it gets.</div>
-      </section>
-
-      <section class="statsCard" id="statsCard">
-        <div class="statRow"><div>Daisy Mae buy price</div><div id="statBuy">-</div></div>
-        <div class="statRow"><div>Best price seen</div><div id="statBest">-</div></div>
-        <div class="statRow"><div>Best time so far</div><div id="statBestTime">-</div></div>
-        <div class="statRow"><div>Profit vs buy</div><div id="statProfit">-</div></div>
-      </section>
-    </main>
-
-    <!-- HISTORY VIEW -->
-    <main id="historyView" class="view hidden">
-      <div class="headerCard compact">
-        <div class="headerTitle">History</div>
-      </div>
-
-      <section class="historyCard">
-        <h2 class="historyTitle">Past weeks</h2>
-        <p class="historyHint">Tap Expand to peek. Use Load to bring an old week back to Entry.</p>
-        <div id="historyList" class="historyList"></div>
-        <p class="historySmall" id="historyEmptyNote">No saved weeks yet. Fill the week, then hit Save.</p>
-      </section>
-
-      <section class="historyCard">
-        <h3 class="historySubtitle">Import, Export</h3>
-        <div class="historyActions">
-          <button id="exportBtn" class="chipBtn" type="button">Export</button>
-          <label class="chipBtn fileBtn">
-            Import
-            <input id="importFile" type="file" accept="application/json" />
-          </label>
-        </div>
-      </section>
-    </main>
-
   </div>
 
   <!-- BOTTOM NAV -->
   <nav class="bottomNav" role="navigation" aria-label="Bottom navigation">
-    <button id="navEntry" class="navBtn active" type="button">
+    <button id="navPredict" class="navBtn active" type="button">
       <span class="navIcon">🧾</span>
       <span class="navLabel">Entry</span>
     </button>
-    <button id="navPredict" class="navBtn" type="button">
+
+    <button id="navHistory" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
       <span class="navLabel">Predict</span>
     </button>
-    <button id="navHistory" class="navBtn" type="button">
-      <span class="navIcon">🕰️</span>
-      <span class="navLabel">History</span>
-    </button>
+
+    <button id="navHistory2" class="navBtn" type="button" style="display:none;"></button>
   </nav>
 
-  <script src="app.js?v=99"></script>
+  <script src="app.js?v=999"></script>
 </body>
 </html>

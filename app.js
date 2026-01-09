@@ -1,444 +1,457 @@
-/* Turnip Tracker vFull
-   Entry + Insights + Settings
-   Data stored in localStorage
-*/
+(function(){
+  "use strict";
 
-const $ = (id) => document.getElementById(id);
+  const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const SLOTS = [
+    { key:"mon_am", day:"Monday", label:"AM", icon:"☀️" },
+    { key:"mon_pm", day:"Monday", label:"PM", icon:"🌙" },
 
-const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-const SLOTS = [
-  { key: "AM", label: "AM", icon: "☀️" },
-  { key: "PM", label: "PM", icon: "🌙" },
-];
+    { key:"tue_am", day:"Tuesday", label:"AM", icon:"☀️" },
+    { key:"tue_pm", day:"Tuesday", label:"PM", icon:"🌙" },
 
-// 12 points Mon AM..Sat PM
-function pointsOrder() {
-  const out = [];
-  for (const d of DAYS) {
-    for (const s of SLOTS) out.push(`${d}_${s.key}`);
-  }
-  return out;
-}
+    { key:"wed_am", day:"Wednesday", label:"AM", icon:"☀️" },
+    { key:"wed_pm", day:"Wednesday", label:"PM", icon:"🌙" },
 
-function pad2(n){ return String(n).padStart(2,"0"); }
+    { key:"thu_am", day:"Thursday", label:"AM", icon:"☀️" },
+    { key:"thu_pm", day:"Thursday", label:"PM", icon:"🌙" },
 
-function getLocalDate(){
-  return new Date();
-}
+    { key:"fri_am", day:"Friday", label:"AM", icon:"☀️" },
+    { key:"fri_pm", day:"Friday", label:"PM", icon:"🌙" },
 
-// Most recent Sunday (including today if Sunday)
-function getSunday(d = getLocalDate()){
-  const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const day = dt.getDay(); // Sun=0
-  const diff = day; // how many days since Sunday
-  dt.setDate(dt.getDate() - diff);
-  return dt;
-}
+    { key:"sat_am", day:"Saturday", label:"AM", icon:"☀️" },
+    { key:"sat_pm", day:"Saturday", label:"PM", icon:"🌙" },
+  ];
 
-function formatMonthDay(dt){
-  const m = dt.toLocaleString(undefined, { month: "short" });
-  return `${m} ${dt.getDate()}`;
-}
-
-function weekKeyForDate(dt){
-  // Use Sunday as week anchor
-  const s = getSunday(dt);
-  return `week_${s.getFullYear()}-${pad2(s.getMonth()+1)}-${pad2(s.getDate())}`;
-}
-
-function lsGet(key, fallback){
-  try{
-    const raw = localStorage.getItem(key);
-    if(raw === null) return fallback;
-    return JSON.parse(raw);
-  }catch{
-    return fallback;
-  }
-}
-
-function lsSet(key, val){
-  localStorage.setItem(key, JSON.stringify(val));
-}
-
-/* ---------- State ---------- */
-const STATE = {
-  weekKey: weekKeyForDate(getLocalDate()),
-  data: {
-    buyPrice: "",
-    prices: {}, // { Monday_AM: "102", ... }
-  },
-  history: [], // array of { weekKey, sundayLabel, buyPrice, best, bestTime, profit, pattern, prices }
-  compact: false,
-};
-
-/* ---------- UI: Pages ---------- */
-function setActiveNav(btnId){
-  ["navEntry","navInsights","navSettings"].forEach(id=>{
-    const el = $(id);
-    if(!el) return;
-    el.classList.toggle("navActive", id === btnId);
-  });
-}
-
-function showPage(pageId){
-  ["page-entry","page-insights","page-settings"].forEach(id=>{
-    const el = $(id);
-    if(!el) return;
-    el.classList.toggle("page-active", id === pageId);
-  });
-
-  if(pageId === "page-insights"){
-    renderInsights();
-  }
-}
-
-/* ---------- Build Entry Day Cards ---------- */
-function buildDays(){
-  const wrap = $("days");
-  wrap.innerHTML = "";
-
-  for (const day of DAYS){
-    const card = document.createElement("div");
-    card.className = "dayCard";
-
-    const title = document.createElement("div");
-    title.className = "dayTitle";
-    title.textContent = day;
-    card.appendChild(title);
-
-    for (const slot of SLOTS){
-      const row = document.createElement("div");
-      row.className = "slot";
-
-      const left = document.createElement("div");
-      left.className = "slotLeft";
-
-      const emoji = document.createElement("div");
-      emoji.className = "slotEmoji";
-      emoji.textContent = slot.icon;
-
-      const label = document.createElement("div");
-      label.textContent = slot.label;
-
-      left.appendChild(emoji);
-      left.appendChild(label);
-
-      const input = document.createElement("input");
-      input.className = "slotInput";
-      input.inputMode = "numeric";
-      input.pattern = "[0-9]*";
-      input.placeholder = "-";
-      input.setAttribute("aria-label", `${day} ${slot.label} price`);
-      input.dataset.key = `${day}_${slot.key}`;
-
-      input.addEventListener("input", () => {
-        // keep only digits
-        input.value = input.value.replace(/[^\d]/g, "");
-        STATE.data.prices[input.dataset.key] = input.value;
-        persistWeek();
-      });
-
-      row.appendChild(left);
-      row.appendChild(input);
-      card.appendChild(row);
-    }
-
-    wrap.appendChild(card);
-  }
-}
-
-function fillEntryFromState(){
-  $("buyPrice").value = STATE.data.buyPrice || "";
-  $("buyPrice").dispatchEvent(new Event("input"));
-
-  // fill day inputs
-  document.querySelectorAll(".slotInput").forEach(inp=>{
-    const k = inp.dataset.key;
-    inp.value = (STATE.data.prices && STATE.data.prices[k]) ? STATE.data.prices[k] : "";
-  });
-}
-
-/* ---------- Persistence ---------- */
-function loadAll(){
-  // compact
-  STATE.compact = !!lsGet("tt_compact", false);
-  document.body.classList.toggle("compact", STATE.compact);
-  $("compactToggle").checked = STATE.compact;
-
-  // week
-  const wk = STATE.weekKey;
-  const saved = lsGet(wk, null);
-  if(saved){
-    STATE.data = saved;
-  }
-
-  // history
-  STATE.history = lsGet("tt_history", []);
-
-  // sunday label
-  const sunday = getSunday(getLocalDate());
-  $("sundayLabel").textContent = formatMonthDay(sunday);
-}
-
-function persistWeek(){
-  lsSet(STATE.weekKey, STATE.data);
-}
-
-function persistHistory(){
-  lsSet("tt_history", STATE.history);
-}
-
-function clearCurrentWeek(){
-  STATE.data = { buyPrice: "", prices: {} };
-  persistWeek();
-  fillEntryFromState();
-}
-
-/* ---------- Metrics / Pattern (simple + cozy) ---------- */
-function toNum(v){
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function computeMetrics(){
-  const buy = toNum(STATE.data.buyPrice);
-  const order = pointsOrder();
-  const values = order
-    .map(k => ({ k, v: toNum(STATE.data.prices[k]) }))
-    .filter(x => x.v !== null);
-
-  const best = values.length ? Math.max(...values.map(x=>x.v)) : null;
-  const bestKV = best === null ? null : values.find(x => x.v === best);
-  const bestTime = bestKV ? bestKV.k.replace("_", " ") : null;
-
-  const profit = (buy !== null && best !== null) ? (best - buy) : null;
-
-  // very simple "pattern" vibe label
-  let pattern = "-";
-  if(values.length >= 3){
-    const first = values[0].v;
-    const last = values[values.length - 1].v;
-    if(last > first + 10) pattern = "Rising";
-    else if(last < first - 10) pattern = "Falling";
-    else pattern = "Mixed";
-  }
-
-  return { buy, best, bestTime, profit, pattern, valuesByOrder: order.map(k => toNum(STATE.data.prices[k])) };
-}
-
-/* ---------- Chart Rendering (SVG) ---------- */
-function renderPostcard(){
-  const svgPath = $("postcardPath");
-  const dotsG = $("postcardDots");
-  const labelsG = $("postcardLabels");
-
-  dotsG.innerHTML = "";
-  labelsG.innerHTML = "";
-
-  const { valuesByOrder } = computeMetrics();
-
-  // Chart area (inside viewBox)
-  const left = 24, right = 336;
-  const top = 26, bottom = 130; // baseline y is 130
-  const baselineY = 130;
-
-  // x positions for 12 points
-  const n = 12;
-  const xs = Array.from({length:n}, (_,i)=> left + ( (right-left) * (i/(n-1)) ));
-
-  // y mapping
-  const nums = valuesByOrder.filter(v => v !== null);
-  const minV = nums.length ? Math.min(...nums) : 90;
-  const maxV = nums.length ? Math.max(...nums) : 120;
-
-  // keep some breathing room
-  const span = Math.max(20, (maxV - minV));
-  const yFor = (v) => {
-    if(v === null) return baselineY;
-    const t = (v - minV) / span;
-    // invert so higher value is higher up
-    return baselineY - (t * (baselineY - top));
+  const LS = {
+    buy: "tt_buyPrice",
+    week: "tt_weekPrices",
+    history: "tt_historyWeeks",
   };
 
-  // Build path
-  let d = "";
-  xs.forEach((x,i)=>{
-    const y = yFor(valuesByOrder[i]);
-    d += (i===0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
-  });
-  svgPath.setAttribute("d", d);
+  const $ = (sel) => document.querySelector(sel);
 
-  // Dots + AM/PM icons above dots
-  xs.forEach((x,i)=>{
-    const y = yFor(valuesByOrder[i]);
+  const pages = {
+    entry: $("#page-entry"),
+    insights: $("#page-insights"),
+    settings: $("#page-settings"),
+  };
 
-    const dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    dot.setAttribute("cx", x);
-    dot.setAttribute("cy", y);
-    dot.setAttribute("r", "5");
-    dot.setAttribute("class", "dot");
-    dotsG.appendChild(dot);
+  const navButtons = Array.from(document.querySelectorAll(".nav-item"));
 
-    const isAM = (i % 2 === 0); // Mon AM is 0
-    const icon = document.createElementNS("http://www.w3.org/2000/svg","text");
-    icon.setAttribute("x", x);
-    icon.setAttribute("y", y - 14);
-    icon.setAttribute("text-anchor", "middle");
-    icon.setAttribute("font-size", "14");
-    icon.setAttribute("font-weight", "900");
-    icon.setAttribute("fill", "rgba(0,0,0,.55)");
-    icon.textContent = isAM ? "☀️" : "🌙";
-    dotsG.appendChild(icon);
-  });
-
-  // Day labels (bigger)
-  const dayXs = [0,2,4,6,8,10].map(i => xs[i]);
-  const dayNames = ["Mon","Tue","Wed","Thu","Fri","Sat"];
-  dayXs.forEach((x,idx)=>{
-    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-    t.setAttribute("x", x);
-    t.setAttribute("y", 182);
-    t.textContent = dayNames[idx];
-    labelsG.appendChild(t);
-  });
-}
-
-/* ---------- Insights Rendering ---------- */
-function renderInsights(){
-  const m = computeMetrics();
-
-  $("mBuy").textContent = (m.buy === null ? "-" : String(m.buy));
-  $("mBest").textContent = (m.best === null ? "-" : String(m.best));
-  $("mBestTime").textContent = (m.bestTime === null ? "-" : m.bestTime);
-  $("mProfit").textContent = (m.profit === null ? "-" : (m.profit >= 0 ? `+${m.profit}` : String(m.profit)));
-  $("mPattern").textContent = m.pattern;
-
-  renderPostcard();
-  renderHistory();
-}
-
-function renderHistory(){
-  const list = $("historyList");
-  list.innerHTML = "";
-
-  if(!STATE.history.length){
-    const empty = document.createElement("div");
-    empty.className = "historyMeta";
-    empty.textContent = "No saved weeks yet. When you save a week, it shows up here.";
-    list.appendChild(empty);
-    return;
+  function safeInt(v){
+    const n = parseInt(String(v || "").replace(/[^\d]/g,""), 10);
+    if (Number.isFinite(n)) return n;
+    return null;
   }
 
-  // newest first
-  const items = [...STATE.history].reverse();
+  function fmtMonthDay(d){
+    const opts = { month:"short", day:"numeric" };
+    return new Intl.DateTimeFormat(undefined, opts).format(d);
+  }
 
-  items.forEach(item=>{
-    const card = document.createElement("div");
-    card.className = "historyItem";
+  // Sunday for the current device locale
+  function getThisSunday(){
+    const now = new Date();
+    const day = now.getDay(); // 0 Sun
+    const diff = day; // days since Sunday
+    const sunday = new Date(now);
+    sunday.setHours(0,0,0,0);
+    sunday.setDate(now.getDate() - diff);
+    return sunday;
+  }
 
-    const top = document.createElement("div");
-    top.className = "historyTop";
+  function setBuyDateLabel(){
+    const sunday = getThisSunday();
+    $("#buyDateLabel").textContent = fmtMonthDay(sunday);
+  }
 
-    const left = document.createElement("div");
-    left.textContent = item.sundayLabel || item.weekKey;
+  function loadWeek(){
+    const raw = localStorage.getItem(LS.week);
+    if (!raw) return {};
+    try { return JSON.parse(raw) || {}; } catch { return {}; }
+  }
 
-    const right = document.createElement("div");
-    right.textContent = (item.best ?? "-");
+  function saveWeek(obj){
+    localStorage.setItem(LS.week, JSON.stringify(obj || {}));
+  }
 
-    top.appendChild(left);
-    top.appendChild(right);
+  function loadHistory(){
+    const raw = localStorage.getItem(LS.history);
+    if (!raw) return [];
+    try {
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
 
-    const meta = document.createElement("div");
-    meta.className = "historyMeta";
-    const bestTime = item.bestTime ? `Best time: ${item.bestTime.replace("_"," ")}` : "Best time: -";
-    const profit = (item.profit === null || item.profit === undefined) ? "-" : (item.profit >= 0 ? `+${item.profit}` : `${item.profit}`);
-    meta.textContent = `Buy: ${item.buyPrice ?? "-"} , ${bestTime} , Profit: ${profit}`;
+  function saveHistory(arr){
+    localStorage.setItem(LS.history, JSON.stringify(arr || []));
+  }
 
-    card.appendChild(top);
-    card.appendChild(meta);
-    list.appendChild(card);
-  });
-}
+  function setActivePage(name){
+    Object.values(pages).forEach(p => p.classList.remove("is-active"));
+    pages[name].classList.add("is-active");
 
-/* ---------- Events ---------- */
-function wireNav(){
-  $("navEntry").addEventListener("click", ()=>{
-    setActiveNav("navEntry");
-    showPage("page-entry");
-  });
+    navButtons.forEach(b => b.classList.remove("is-active"));
+    navButtons.forEach(b => {
+      if (b.dataset.go === name) b.classList.add("is-active");
+    });
 
-  $("navInsights").addEventListener("click", ()=>{
-    setActiveNav("navInsights");
-    showPage("page-insights");
-  });
+    if (name === "insights"){
+      renderInsights();
+    }
+  }
 
-  $("navSettings").addEventListener("click", ()=>{
-    setActiveNav("navSettings");
-    showPage("page-settings");
-  });
-}
+  function buildDayCards(){
+    const wrap = $("#daysWrap");
+    wrap.innerHTML = "";
 
-function wireInputs(){
-  $("buyPrice").addEventListener("input", ()=>{
-    const inp = $("buyPrice");
-    inp.value = inp.value.replace(/[^\d]/g, "");
-    STATE.data.buyPrice = inp.value;
-    persistWeek();
-  });
+    const week = loadWeek();
 
-  $("saveWeekBtn").addEventListener("click", ()=>{
-    const sunday = getSunday(getLocalDate());
-    const sundayLabel = formatMonthDay(sunday);
+    for (const day of DAYS){
+      const card = document.createElement("div");
+      card.className = "day-card";
 
-    const m = computeMetrics();
-    const entry = {
-      weekKey: STATE.weekKey,
-      sundayLabel,
-      buyPrice: (STATE.data.buyPrice || null),
-      best: (m.best ?? null),
-      bestTime: (m.bestTime ?? null),
-      profit: (m.profit ?? null),
-      pattern: (m.pattern ?? "-"),
-      prices: STATE.data.prices || {}
-    };
+      const title = document.createElement("div");
+      title.className = "day-title";
+      title.textContent = day;
+      card.appendChild(title);
 
-    STATE.history.push(entry);
-    persistHistory();
+      const daySlots = SLOTS.filter(s => s.day === day);
 
-    clearCurrentWeek();
-    // bounce to insights so you can see it saved
-    setActiveNav("navInsights");
-    showPage("page-insights");
-  });
+      for (const slot of daySlots){
+        const row = document.createElement("div");
+        row.className = "slot";
 
-  $("clearHistoryBtn").addEventListener("click", ()=>{
-    STATE.history = [];
-    persistHistory();
+        const left = document.createElement("div");
+        left.className = "slot-left";
+        left.innerHTML = `<span class="ico">${slot.icon}</span><span>${slot.label}</span>`;
+        row.appendChild(left);
+
+        const input = document.createElement("input");
+        input.className = "price-input";
+        input.setAttribute("inputmode","numeric");
+        input.setAttribute("maxlength","3");
+        input.placeholder = "-";
+        input.value = week[slot.key] ?? "";
+        input.addEventListener("input", () => {
+          const w = loadWeek();
+          const val = safeInt(input.value);
+          if (val === null){
+            delete w[slot.key];
+          } else {
+            w[slot.key] = val;
+          }
+          saveWeek(w);
+          // Keep insights fresh if user is currently there
+        });
+        row.appendChild(input);
+
+        card.appendChild(row);
+      }
+
+      wrap.appendChild(card);
+    }
+  }
+
+  function bindBuyPrice(){
+    const input = $("#buyPriceInput");
+    const stored = safeInt(localStorage.getItem(LS.buy));
+    input.value = stored === null ? "" : String(stored);
+
+    input.addEventListener("input", () => {
+      const v = safeInt(input.value);
+      if (v === null){
+        localStorage.removeItem(LS.buy);
+      } else {
+        localStorage.setItem(LS.buy, String(v));
+      }
+    });
+  }
+
+  function weekSnapshot(){
+    const buy = safeInt(localStorage.getItem(LS.buy));
+    const week = loadWeek();
+
+    const prices = SLOTS.map(s => {
+      const v = week[s.key];
+      return Number.isFinite(v) ? v : null;
+    });
+
+    return { buy, prices, week };
+  }
+
+  function bestPrice(prices){
+    let best = null;
+    let idx = -1;
+    prices.forEach((v,i) => {
+      if (v === null) return;
+      if (best === null || v > best){
+        best = v;
+        idx = i;
+      }
+    });
+    return { best, idx };
+  }
+
+  function slotNameFromIndex(i){
+    const s = SLOTS[i];
+    if (!s) return "-";
+    const dayShort = s.day.slice(0,3);
+    return `${dayShort} ${s.label}`;
+  }
+
+  function renderSummary(){
+    const { buy, prices } = weekSnapshot();
+    const { best, idx } = bestPrice(prices);
+
+    $("#sumBuy").textContent = buy === null ? "-" : String(buy);
+    $("#sumBest").textContent = best === null ? "-" : String(best);
+    $("#sumBestTime").textContent = best === null ? "-" : slotNameFromIndex(idx);
+
+    if (buy === null || best === null){
+      $("#sumProfit").textContent = "-";
+    } else {
+      const diff = best - buy;
+      const sign = diff > 0 ? "+" : "";
+      $("#sumProfit").textContent = `${sign}${diff}`;
+    }
+
+    // simple placeholder pattern text for now
+    $("#sumPattern").textContent = "Mixed";
+  }
+
+  function renderHistory(){
+    const list = $("#historyList");
+    const history = loadHistory();
+
+    if (history.length === 0){
+      list.innerHTML = `<div class="hist-item"><div class="hist-top"><div>No weeks saved yet</div><div> </div></div><div class="hist-sub">Save a week from Entry and it shows up here.</div></div>`;
+      return;
+    }
+
+    list.innerHTML = "";
+    history.slice().reverse().forEach(item => {
+      const div = document.createElement("div");
+      div.className = "hist-item";
+
+      const top = document.createElement("div");
+      top.className = "hist-top";
+
+      const left = document.createElement("div");
+      left.textContent = item.label || "Saved week";
+
+      const right = document.createElement("div");
+      right.textContent = item.best === null ? "-" : String(item.best);
+
+      top.appendChild(left);
+      top.appendChild(right);
+
+      const sub = document.createElement("div");
+      sub.className = "hist-sub";
+      sub.textContent = item.note || " ";
+
+      div.appendChild(top);
+      div.appendChild(sub);
+
+      list.appendChild(div);
+    });
+  }
+
+  function renderPostcard(){
+    const svg = $("#postcardSvg");
+    svg.innerHTML = "";
+
+    const W = 360;
+    const H = 200;
+
+    const padL = 20;
+    const padR = 20;
+    const topY = 30;
+    const bottomY = 138;
+
+    // grid lines (top + bottom only, no “mystery middle line”)
+    const grid = document.createElementNS("http://www.w3.org/2000/svg","g");
+    grid.setAttribute("opacity","0.18");
+
+    function line(y){
+      const l = document.createElementNS("http://www.w3.org/2000/svg","line");
+      l.setAttribute("x1", padL);
+      l.setAttribute("x2", W - padR);
+      l.setAttribute("y1", y);
+      l.setAttribute("y2", y);
+      l.setAttribute("stroke", "#000");
+      l.setAttribute("stroke-width", "2");
+      grid.appendChild(l);
+    }
+
+    line(topY);
+    line(bottomY);
+
+    svg.appendChild(grid);
+
+    const baseY = 120;
+
+    // x positions for 12 points
+    const xs = [];
+    const usable = (W - padL - padR);
+    for (let i = 0; i < 12; i++){
+      xs.push(padL + (usable * (i / 11)));
+    }
+
+    const { prices } = weekSnapshot();
+
+    const present = prices.filter(v => v !== null);
+    const min = present.length ? Math.min(...present) : 0;
+    const max = present.length ? Math.max(...present) : 100;
+    const span = Math.max(1, max - min);
+
+    function yForValue(v){
+      if (v === null) return baseY;
+      // map values to a tighter range
+      const t = (v - min) / span;
+      const top = 54;
+      const bottom = 116;
+      return bottom - (t * (bottom - top));
+    }
+
+    // line path
+    let d = "";
+    for (let i = 0; i < 12; i++){
+      const x = xs[i];
+      const y = yForValue(prices[i]);
+      d += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    }
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", d);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", "#111");
+    path.setAttribute("stroke-width", "3.5");
+    path.setAttribute("stroke-linecap","round");
+    path.setAttribute("stroke-linejoin","round");
+    svg.appendChild(path);
+
+    // dots
+    for (let i = 0; i < 12; i++){
+      const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      c.setAttribute("cx", xs[i]);
+      c.setAttribute("cy", yForValue(prices[i]));
+      c.setAttribute("r", "6.5");
+      c.setAttribute("fill", "rgba(0,0,0,.75)");
+      svg.appendChild(c);
+    }
+
+    // sun/moon markers above each dot
+    for (let i = 0; i < 12; i++){
+      const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", xs[i]);
+      t.setAttribute("y", 100);
+      t.setAttribute("text-anchor","middle");
+      t.setAttribute("font-size","16");
+      t.setAttribute("font-weight","900");
+      t.setAttribute("opacity","0.95");
+      t.textContent = (i % 2 === 0) ? "☀️" : "🌙";
+      svg.appendChild(t);
+    }
+
+    // day labels centered between AM and PM
+    const labelsG = document.createElementNS("http://www.w3.org/2000/svg","g");
+    labelsG.setAttribute("fill", "rgba(0,0,0,.48)");
+    labelsG.setAttribute("font-weight", "950");
+    labelsG.setAttribute("font-size", "22");
+    labelsG.setAttribute("text-anchor", "middle");
+
+    const dayNames = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+    for (let dIndex = 0; dIndex < 6; dIndex++){
+      const amIndex = dIndex * 2;
+      const pmIndex = amIndex + 1;
+      const x = (xs[amIndex] + xs[pmIndex]) / 2;
+
+      const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", x);
+      t.setAttribute("y", 186);
+      t.textContent = dayNames[dIndex];
+      labelsG.appendChild(t);
+    }
+
+    svg.appendChild(labelsG);
+  }
+
+  function renderInsights(){
+    renderPostcard();
+    renderSummary();
     renderHistory();
-  });
+  }
 
-  $("compactToggle").addEventListener("change", ()=>{
-    STATE.compact = $("compactToggle").checked;
-    document.body.classList.toggle("compact", STATE.compact);
-    lsSet("tt_compact", STATE.compact);
-  });
+  function bindNav(){
+    navButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        setActivePage(btn.dataset.go);
+      });
+    });
+  }
 
-  $("resetWeekBtn").addEventListener("click", ()=>{
-    clearCurrentWeek();
-  });
-}
+  function bindSaveWeek(){
+    $("#saveWeekBtn").addEventListener("click", () => {
+      const { buy, prices, week } = weekSnapshot();
+      const { best, idx } = bestPrice(prices);
 
-/* ---------- Boot ---------- */
-function init(){
-  buildDays();
-  loadAll();
-  fillEntryFromState();
-  wireNav();
-  wireInputs();
+      const sunday = getThisSunday();
+      const label = `Week of ${fmtMonthDay(sunday)}`;
 
-  // default page
-  setActiveNav("navEntry");
-  showPage("page-entry");
-}
+      const noteParts = [];
+      if (buy !== null) noteParts.push(`Buy ${buy}`);
+      if (best !== null) noteParts.push(`Best ${best} (${slotNameFromIndex(idx)})`);
 
-init();
+      const history = loadHistory();
+      history.push({
+        id: crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        savedAt: new Date().toISOString(),
+        label,
+        best,
+        note: noteParts.join(" , "),
+        buy,
+        week
+      });
+      saveHistory(history);
+
+      // clear entry
+      localStorage.removeItem(LS.buy);
+      saveWeek({});
+      $("#buyPriceInput").value = "";
+      buildDayCards();
+
+      // hop to insights
+      setActivePage("insights");
+    });
+  }
+
+  function bindClearHistory(){
+    $("#clearHistoryBtn").addEventListener("click", () => {
+      saveHistory([]);
+      renderHistory();
+    });
+  }
+
+  function init(){
+    setBuyDateLabel();
+    bindNav();
+    bindBuyPrice();
+    buildDayCards();
+    bindSaveWeek();
+    bindClearHistory();
+
+    // refresh buy date label each time page is shown
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) setBuyDateLabel();
+    });
+
+    // default page
+    setActivePage("entry");
+  }
+
+  init();
+})();

@@ -1,167 +1,190 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#d7e6f6" />
+
   <title>Turnip Tracker</title>
 
-  <!-- App icon -->
+  <!-- iOS Home Screen icon -->
   <link rel="apple-touch-icon" href="icon-1024.png.PNG" />
-  <link rel="icon" type="image/png" href="icon-1024.png.PNG" />
+  <link rel="icon" href="icon-1024.png.PNG" />
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="style-v11.css?v=21" />
+  <!-- App styles (single source of truth) -->
+  <link rel="stylesheet" href="style-v11.css" />
 </head>
 
 <body>
-  <div id="app">
+  <div class="app" id="app">
+    <!-- ENTRY -->
+    <main class="page page--active" id="page-entry" aria-label="Entry">
+      <header class="bannerCard">
+        <img class="bannerImg" src="banner.png.jpg" alt="Turnip Tracker" />
+      </header>
 
-    <!-- HEADER -->
-    <header class="banner">
-      <img src="banner.png.jpg" alt="Turnip Tracker" />
-    </header>
+      <section class="card buyCard">
+        <div class="buyLeft">
+          <div class="buyTitleRow">
+            <span class="emoji">💰</span>
+            <div class="buyTitle">Buy price</div>
+          </div>
 
-    <!-- MAIN CONTENT -->
-    <main class="content">
-
-      <!-- BUY PRICE -->
-      <section class="card buy-card">
-        <div class="buy-left">
-          <span class="emoji">💰</span>
-          <div>
-            <div class="label">Buy price</div>
-            <div class="sub">Jan 4</div>
+          <div class="buyMetaRow">
+            <img class="isabelle" src="isabelle.png.PNG" alt="Isabelle" />
+            <div class="buyMeta" id="buyDateLabel">Jan 4</div>
           </div>
         </div>
-        <input type="number" placeholder="-" id="buyPrice" />
+
+        <div class="buyRight">
+          <input
+            id="buyPrice"
+            class="priceInput"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="-"
+            aria-label="Buy price"
+          />
+        </div>
       </section>
 
-      <!-- ENTRY DAYS -->
-      <section class="entry">
+      <section class="dayStack" id="dayStack"></section>
 
-        <div class="day-card">
-          <h2>Monday</h2>
-          <div class="row">
-            <span>☀️ AM</span>
-            <input type="number" placeholder="-" />
-          </div>
-          <div class="row">
-            <span>🌙 PM</span>
-            <input type="number" placeholder="-" />
+      <div class="saveRow">
+        <button class="primaryBtn" id="saveWeekBtn" type="button">
+          Save week to History
+        </button>
+        <div class="helperText">Saves your week, then clears Entry.</div>
+      </div>
+    </main>
+
+    <!-- INSIGHTS -->
+    <main class="page" id="page-insights" aria-label="Insights">
+      <header class="titleCard">
+        <h1 class="pageTitle">Insights</h1>
+      </header>
+
+      <section class="card postcard" id="postcard">
+        <div class="postcardTop">
+          <div class="postcardTitle">This week’s bell postcard</div>
+
+          <div class="key">
+            <div class="keyRow">
+              <span class="keyIcon">☀️</span><span class="keyLabel">AM</span>
+            </div>
+            <div class="keyRow">
+              <span class="keyIcon">🌙</span><span class="keyLabel">PM</span>
+            </div>
           </div>
         </div>
 
-        <div class="day-card">
-          <h2>Tuesday</h2>
-          <div class="row">
-            <span>☀️ AM</span>
-            <input type="number" placeholder="-" />
-          </div>
-          <div class="row">
-            <span>🌙 PM</span>
-            <input type="number" placeholder="-" />
-          </div>
-        </div>
-
-        <div class="day-card">
-          <h2>Wednesday</h2>
-          <div class="row">
-            <span>☀️ AM</span>
-            <input type="number" placeholder="-" />
-          </div>
-          <div class="row">
-            <span>🌙 PM</span>
-            <input type="number" placeholder="-" />
-          </div>
-        </div>
-
-        <div class="day-card">
-          <h2>Thursday</h2>
-          <div class="row">
-            <span>☀️ AM</span>
-            <input type="number" placeholder="-" />
-          </div>
-          <div class="row">
-            <span>🌙 PM</span>
-            <input type="number" placeholder="-" />
-          </div>
-        </div>
-
-        <div class="day-card">
-          <h2>Friday</h2>
-          <div class="row">
-            <span>☀️ AM</span>
-            <input type="number" placeholder="-" />
-          </div>
-          <div class="row">
-            <span>🌙 PM</span>
-            <input type="number" placeholder="-" />
-          </div>
-        </div>
-
-        <div class="day-card">
-          <h2>Saturday</h2>
-          <div class="row">
-            <span>☀️ AM</span>
-            <input type="number" placeholder="-" />
-          </div>
-          <div class="row">
-            <span>🌙 PM</span>
-            <input type="number" placeholder="-" />
-          </div>
-        </div>
-
-        <button class="save-btn">Save week to History</button>
-
-      </section>
-
-      <!-- INSIGHTS -->
-      <section class="card insights">
-        <h2>Insights</h2>
-
-        <div class="postcard">
-          <div class="postcard-header">
-            <span>This week’s bell postcard</span>
-            <span class="key">☀️ AM · 🌙 PM</span>
-          </div>
+        <div class="chartFrame">
+          <div class="turnipPattern" id="turnipPattern"></div>
 
           <div class="timeline">
-            <div class="line"></div>
-            <div class="dots">
-              <span>●</span><span>●</span><span>●</span><span>●</span><span>●</span><span>●</span>
-              <span>●</span><span>●</span><span>●</span><span>●</span><span>●</span><span>●</span>
-            </div>
-            <div class="labels">
-              <span>Mon</span><span>Tue</span><span>Wed</span>
-              <span>Thu</span><span>Fri</span><span>Sat</span>
-            </div>
+            <div class="timelineLine"></div>
+            <div class="timelineDots" id="timelineDots"></div>
+            <div class="timelineDays" id="timelineDays"></div>
           </div>
-
-          <p class="caption">
-            Just a cozy snapshot. The more you log, the smarter it gets.
-          </p>
         </div>
 
-        <div class="stats">
-          <div><span>Buy price</span><span>-</span></div>
-          <div><span>Best price seen</span><span>-</span></div>
-          <div><span>Best time so far</span><span>-</span></div>
-          <div><span>Profit vs buy</span><span>-</span></div>
+        <div class="postcardCaption">
+          Just a cozy snapshot. The more you log, the smarter it gets.
         </div>
       </section>
 
+      <section class="card statsCard">
+        <div class="statRow">
+          <div class="statLabel">Buy price</div>
+          <div class="statValue" id="statBuy">-</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="statRow">
+          <div class="statLabel">Best price seen</div>
+          <div class="statValue" id="statBest">-</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="statRow">
+          <div class="statLabel">Best time so far</div>
+          <div class="statValue" id="statBestTime">-</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="statRow">
+          <div class="statLabel">Profit vs buy</div>
+          <div class="statValue" id="statProfit">-</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="statRow">
+          <div class="statLabel">Likely pattern</div>
+          <div class="statValue" id="statPattern">-</div>
+        </div>
+      </section>
+
+      <section class="card historyCard">
+        <div class="historyTop">
+          <div class="historyTitle">History</div>
+          <button class="ghostBtn" id="clearHistoryBtn" type="button">Clear</button>
+        </div>
+        <div class="historyList" id="historyList">
+          <div class="emptyNote">No saved weeks yet.</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SETTINGS -->
+    <main class="page" id="page-settings" aria-label="Settings">
+      <header class="titleCard">
+        <h1 class="pageTitle">Settings</h1>
+      </header>
+
+      <section class="card settingsCard">
+        <div class="settingRow">
+          <div>
+            <div class="settingTitle">Postcard turnip strength</div>
+            <div class="settingSub">Make the pattern easier to see.</div>
+          </div>
+          <div class="settingControl">
+            <input id="patternStrength" type="range" min="0" max="100" value="35" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="settingRow">
+          <div>
+            <div class="settingTitle">Reset this week</div>
+            <div class="settingSub">Clears Entry only.</div>
+          </div>
+          <div class="settingControl">
+            <button class="ghostBtn" id="resetWeekBtn" type="button">Reset</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- BOTTOM NAV -->
-    <nav class="bottom-nav">
-      <button class="active">🧾 Entry</button>
-      <button>🔮 Insights</button>
-      <button>⚙️ Settings</button>
-    </nav>
+    <nav class="bottomNav" aria-label="Navigation">
+      <button class="navBtn navBtn--active" data-go="entry" type="button" aria-label="Entry">
+        <div class="navIcon">🧾</div>
+        <div class="navLabel">Entry</div>
+      </button>
 
+      <button class="navBtn" data-go="insights" type="button" aria-label="Insights">
+        <div class="navIcon">🔮</div>
+        <div class="navLabel">Insights</div>
+      </button>
+
+      <button class="navBtn" data-go="settings" type="button" aria-label="Settings">
+        <div class="navIcon">⚙️</div>
+        <div class="navLabel">Settings</div>
+      </button>
+    </nav>
   </div>
 
-  <!-- JS -->
   <script src="app.js"></script>
 </body>
 </html>

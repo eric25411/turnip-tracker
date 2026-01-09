@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const insightsView = document.getElementById("insightsView");
   const settingsView = document.getElementById("settingsView");
 
-  // Nav buttons
+  // Nav
   const navEntry = document.getElementById("navEntry");
   const navInsights = document.getElementById("navInsights");
   const navSettings = document.getElementById("navSettings");
@@ -17,43 +17,129 @@ document.addEventListener("DOMContentLoaded", () => {
   // Entry
   const saveWeekBtn = document.getElementById("saveWeekBtn");
   const buyPriceInput = document.getElementById("buy-price");
-  const buySundayLabel = document.getElementById("buySundayLabel");
-  const isabelleIcon = document.getElementById("isabelleIcon");
+  const sundayLabel = document.getElementById("sundayLabel");
 
-  // Insights
+  // Insights chart + stats
+  const chartCanvas = document.getElementById("chartCanvas");
+  const statBuy = document.getElementById("statBuy");
+  const statBest = document.getElementById("statBest");
+  const statBestTime = document.getElementById("statBestTime");
+  const statProfit = document.getElementById("statProfit");
+  const statPattern = document.getElementById("statPattern");
+
+  // History UI
   const historyList = document.getElementById("historyList");
   const historyEmptyNote = document.getElementById("historyEmptyNote");
-  const statsList = document.getElementById("statsList");
-  const chartCanvas = document.getElementById("chartCanvas");
-
-  // Settings
   const exportBtn = document.getElementById("exportBtn");
   const importFile = document.getElementById("importFile");
-  const resetDraftBtn = document.getElementById("resetDraftBtn");
 
-  // Basic checks
-  if (!entryView || !insightsView || !settingsView) return;
-  if (!navEntry || !navInsights || !navSettings) return;
+  // Settings
+  const clearAllBtn = document.getElementById("clearAllBtn");
+
+  if (!entryView || !insightsView || !settingsView) {
+    console.log("Missing a view container in HTML.");
+    return;
+  }
+
+  // ---------- Helpers ----------
+  const IDS = [
+    "buy-price",
+    "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
+    "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
+  ];
+
+  const SLOT_LABELS = [
+    "Mon AM","Mon PM","Tue AM","Tue PM","Wed AM","Wed PM",
+    "Thu AM","Thu PM","Fri AM","Fri PM","Sat AM","Sat PM"
+  ];
 
   function setActiveTab(tab) {
     const isEntry = tab === "entry";
     const isInsights = tab === "insights";
-    const isSettings = tab === "settings";
 
     entryView.classList.toggle("hidden", !isEntry);
     insightsView.classList.toggle("hidden", !isInsights);
-    settingsView.classList.toggle("hidden", !isSettings);
+    settingsView.classList.toggle("hidden", tab !== "settings");
 
     navEntry.classList.toggle("active", isEntry);
     navInsights.classList.toggle("active", isInsights);
-    navSettings.classList.toggle("active", isSettings);
+    navSettings.classList.toggle("active", tab === "settings");
 
     if (isInsights) {
+      renderInsights();
       renderHistory();
-      renderStatsAndChart();
     }
   }
 
+  function getWeeks() {
+    try {
+      return JSON.parse(localStorage.getItem(KEYS.weeks) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function setWeeks(weeks) {
+    localStorage.setItem(KEYS.weeks, JSON.stringify(weeks));
+  }
+
+  function getCurrentData() {
+    const data = {};
+    IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      data[id] = ((el && el.value) || "").trim();
+    });
+    return data;
+  }
+
+  function loadData(data) {
+    Object.keys(data || {}).forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = data[id] ?? "";
+    });
+  }
+
+  function clearEntry() {
+    document.querySelectorAll(".priceInput").forEach((i) => (i.value = ""));
+    localStorage.removeItem(KEYS.current);
+  }
+
+  function saveDraft() {
+    localStorage.setItem(KEYS.current, JSON.stringify(getCurrentData()));
+  }
+
+  function loadDraft() {
+    try {
+      const raw = localStorage.getItem(KEYS.current);
+      if (!raw) return;
+      loadData(JSON.parse(raw));
+    } catch {}
+  }
+
+  function parseNum(x) {
+    const n = Number(String(x || "").replace(/[^\d.]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function lastSundayLocal() {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const day = d.getDay(); // 0 = Sun
+    const diff = day; // days since Sunday
+    d.setDate(d.getDate() - diff);
+    return d;
+  }
+
+  function formatMonthDay(d) {
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  function updateSundayLabel() {
+    if (!sundayLabel) return;
+    sundayLabel.textContent = formatMonthDay(lastSundayLocal());
+  }
+
+  // ---------- Nav events ----------
   navEntry.addEventListener("click", (e) => {
     e.preventDefault();
     setActiveTab("entry");
@@ -69,186 +155,37 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveTab("settings");
   });
 
-  // Sunday label: most recent Sunday, displayed as "Jan 4"
-  function getMostRecentSunday(d = new Date()) {
-    const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const day = copy.getDay(); // 0 Sunday
-    copy.setDate(copy.getDate() - day);
-    return copy;
-  }
-
-  function formatMonthDay(dateObj) {
-    try {
-      return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    } catch {
-      return "Sunday";
-    }
-  }
-
-  function updateSundayLabel() {
-    const sun = getMostRecentSunday(new Date());
-    if (buySundayLabel) buySundayLabel.textContent = formatMonthDay(sun);
-
-    // If Isabelle image fails both names, fall back to emoji by hiding img
-    if (isabelleIcon) {
-      isabelleIcon.addEventListener("error", () => {
-        // If it fails again after swapping to .PNG, hide it
-        if (isabelleIcon.src.includes(".PNG")) {
-          isabelleIcon.style.display = "none";
-        }
-      });
-    }
-  }
-
-  // Local storage helpers
-  function getWeeks() {
-    try {
-      return JSON.parse(localStorage.getItem(KEYS.weeks) || "[]");
-    } catch {
-      return [];
-    }
-  }
-
-  function setWeeks(weeks) {
-    localStorage.setItem(KEYS.weeks, JSON.stringify(weeks));
-  }
-
-  function getCurrentWeekData() {
-    const ids = [
-      "buy-price",
-      "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
-      "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
-    ];
-
-    const data = {};
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      data[id] = ((el && el.value) || "").trim();
+  // Auto-save draft
+  document.querySelectorAll(".priceInput").forEach((inp) => {
+    inp.addEventListener("input", () => {
+      // keep draft clean (no weird spaces)
+      inp.value = inp.value.replace(/[^\d]/g, "");
+      saveDraft();
     });
-
-    return data;
-  }
-
-  function loadWeekData(data) {
-    Object.keys(data || {}).forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) el.value = data[id] ?? "";
-    });
-  }
-
-  function clearWeek() {
-    document.querySelectorAll(".priceInput, .buyInput").forEach((i) => (i.value = ""));
-    localStorage.removeItem(KEYS.current);
-  }
-
-  function saveCurrentDraft() {
-    localStorage.setItem(KEYS.current, JSON.stringify(getCurrentWeekData()));
-  }
-
-  function loadCurrentDraft() {
-    try {
-      const raw = localStorage.getItem(KEYS.current);
-      if (!raw) return;
-      loadWeekData(JSON.parse(raw));
-    } catch {}
-  }
-
-  // Auto save on input
-  document.querySelectorAll(".priceInput, .buyInput").forEach((inp) => {
-    inp.addEventListener("input", saveCurrentDraft);
   });
 
   // Save week
-  if (saveWeekBtn) {
-    saveWeekBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+  saveWeekBtn.addEventListener("click", (e) => {
+    e.preventDefault();
 
-      const week = {
-        id: cryptoRandomId(),
-        savedAt: new Date().toISOString(),
-        data: getCurrentWeekData()
-      };
+    const week = {
+      id: cryptoRandomId(),
+      savedAt: new Date().toISOString(),
+      data: getCurrentData()
+    };
 
-      const weeks = getWeeks();
-      weeks.unshift(week);
-      setWeeks(weeks);
-
-      clearWeek();
-      setActiveTab("insights");
-    });
-  }
-
-  // History rendering
-  function renderHistory() {
     const weeks = getWeeks();
-    if (!historyList || !historyEmptyNote) return;
+    weeks.unshift(week);
+    setWeeks(weeks);
 
-    historyList.innerHTML = "";
-    historyEmptyNote.style.display = weeks.length ? "none" : "block";
-
-    weeks.forEach((w) => {
-      const row = document.createElement("div");
-      row.className = "weekRow";
-
-      const top = document.createElement("div");
-      top.className = "weekRowTop";
-
-      const label = document.createElement("div");
-      label.className = "weekLabel";
-      label.textContent = formatWeekLabel(w.savedAt);
-
-      const btnWrap = document.createElement("div");
-      btnWrap.className = "weekBtns";
-
-      const toggleBtn = document.createElement("button");
-      toggleBtn.className = "smallBtn";
-      toggleBtn.textContent = "Expand";
-      toggleBtn.addEventListener("click", () => {
-        const expanded = row.classList.toggle("expanded");
-        toggleBtn.textContent = expanded ? "Collapse" : "Expand";
-      });
-
-      const loadBtn = document.createElement("button");
-      loadBtn.className = "smallBtn";
-      loadBtn.textContent = "Load";
-      loadBtn.addEventListener("click", () => {
-        loadWeekData(w.data);
-        saveCurrentDraft();
-        setActiveTab("entry");
-      });
-
-      const delBtn = document.createElement("button");
-      delBtn.className = "smallBtn";
-      delBtn.textContent = "Delete";
-      delBtn.addEventListener("click", () => {
-        const next = getWeeks().filter((x) => x.id !== w.id);
-        setWeeks(next);
-        renderHistory();
-        renderStatsAndChart();
-      });
-
-      btnWrap.appendChild(toggleBtn);
-      btnWrap.appendChild(loadBtn);
-      btnWrap.appendChild(delBtn);
-
-      top.appendChild(label);
-      top.appendChild(btnWrap);
-
-      const details = document.createElement("div");
-      details.className = "weekDetails";
-      details.textContent = summarizeWeek(w.data);
-
-      row.appendChild(top);
-      row.appendChild(details);
-      historyList.appendChild(row);
-    });
-  }
+    clearEntry();
+    setActiveTab("insights");
+  });
 
   // Export / Import
   if (exportBtn) {
     exportBtn.addEventListener("click", (e) => {
       e.preventDefault();
-
       const payload = {
         exportedAt: new Date().toISOString(),
         weeks: getWeeks()
@@ -292,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         renderHistory();
-        renderStatsAndChart();
+        renderInsights();
       } catch {
         alert("Import failed. Make sure it is a valid exported JSON file.");
       } finally {
@@ -301,115 +238,236 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (resetDraftBtn) {
-    resetDraftBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      clearWeek();
-      loadCurrentDraft();
-      alert("Entry draft cleared.");
+  // Settings: Clear all
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener("click", () => {
+      const ok = confirm("Clear all Turnip Tracker data? This cannot be undone.");
+      if (!ok) return;
+      localStorage.removeItem(KEYS.weeks);
+      localStorage.removeItem(KEYS.current);
+      clearEntry();
+      renderHistory();
+      renderInsights();
+      alert("All data cleared.");
     });
   }
 
-  // Stats + simple cozy chart
-  function renderStatsAndChart() {
-    if (!statsList) return;
+  // ---------- History ----------
+  function renderHistory() {
+    const weeks = getWeeks();
+    historyList.innerHTML = "";
+    historyEmptyNote.style.display = weeks.length ? "none" : "block";
 
-    const d = getCurrentWeekData();
-    const buy = toNum(d["buy-price"]);
+    weeks.forEach((w) => {
+      const row = document.createElement("div");
+      row.className = "weekRow";
 
-    const points = [
-      toNum(d["mon-am"]), toNum(d["mon-pm"]),
-      toNum(d["tue-am"]), toNum(d["tue-pm"]),
-      toNum(d["wed-am"]), toNum(d["wed-pm"]),
-      toNum(d["thu-am"]), toNum(d["thu-pm"]),
-      toNum(d["fri-am"]), toNum(d["fri-pm"]),
-      toNum(d["sat-am"]), toNum(d["sat-pm"])
-    ];
+      const top = document.createElement("div");
+      top.className = "weekRowTop";
 
-    const filled = points.filter((n) => typeof n === "number");
-    const best = filled.length ? Math.max(...filled) : null;
-    const bestIdx = best !== null ? points.findIndex((n) => n === best) : -1;
+      const label = document.createElement("div");
+      label.className = "weekLabel";
+      label.textContent = formatWeekLabel(w.savedAt);
 
-    const labelForIndex = (i) => {
-      const map = [
-        "Mon AM","Mon PM","Tue AM","Tue PM","Wed AM","Wed PM",
-        "Thu AM","Thu PM","Fri AM","Fri PM","Sat AM","Sat PM"
-      ];
-      return map[i] || "-";
-    };
+      const btnWrap = document.createElement("div");
+      btnWrap.className = "weekBtns";
 
-    const profit = (buy && best !== null) ? (best - buy) : null;
+      const toggleBtn = document.createElement("button");
+      toggleBtn.className = "smallBtn";
+      toggleBtn.textContent = "Expand";
+      toggleBtn.addEventListener("click", () => {
+        const expanded = row.classList.toggle("expanded");
+        toggleBtn.textContent = expanded ? "Collapse" : "Expand";
+      });
 
-    const rows = [
-      ["Daisy Mae buy price", buy ? String(buy) : "-"],
-      ["Best price seen", best !== null ? String(best) : "-"],
-      ["Best time so far", bestIdx >= 0 ? labelForIndex(bestIdx) : "-"],
-      ["Profit vs buy", profit !== null ? (profit >= 0 ? `+${profit}` : `${profit}`) : "-"]
-    ];
+      const loadBtn = document.createElement("button");
+      loadBtn.className = "smallBtn";
+      loadBtn.textContent = "Load";
+      loadBtn.addEventListener("click", () => {
+        loadData(w.data);
+        saveDraft();
+        setActiveTab("entry");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
 
-    statsList.innerHTML = "";
-    rows.forEach(([k, v]) => {
-      const r = document.createElement("div");
-      r.className = "statRow";
-      const left = document.createElement("div");
-      left.textContent = k;
-      const right = document.createElement("div");
-      right.textContent = v;
-      r.appendChild(left);
-      r.appendChild(right);
-      statsList.appendChild(r);
+      const delBtn = document.createElement("button");
+      delBtn.className = "smallBtn";
+      delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", () => {
+        const next = getWeeks().filter((x) => x.id !== w.id);
+        setWeeks(next);
+        renderHistory();
+      });
+
+      btnWrap.appendChild(toggleBtn);
+      btnWrap.appendChild(loadBtn);
+      btnWrap.appendChild(delBtn);
+
+      top.appendChild(label);
+      top.appendChild(btnWrap);
+
+      const details = document.createElement("div");
+      details.className = "weekDetails";
+      details.textContent = summarizeWeek(w.data);
+
+      row.appendChild(top);
+      row.appendChild(details);
+      historyList.appendChild(row);
     });
-
-    drawCozyChart(points);
   }
 
-  function drawCozyChart(points) {
+  function summarizeWeek(data) {
+    const get = (k) => (data && data[k] ? data[k] : "-");
+    return [
+      `Buy ${get("buy-price")}`,
+      `Mon AM ${get("mon-am")} , Mon PM ${get("mon-pm")}`,
+      `Tue AM ${get("tue-am")} , Tue PM ${get("tue-pm")}`,
+      `Wed AM ${get("wed-am")} , Wed PM ${get("wed-pm")}`,
+      `Thu AM ${get("thu-am")} , Thu PM ${get("thu-pm")}`,
+      `Fri AM ${get("fri-am")} , Fri PM ${get("fri-pm")}`,
+      `Sat AM ${get("sat-am")} , Sat PM ${get("sat-pm")}`
+    ].join(" | ");
+  }
+
+  function formatWeekLabel(iso) {
+    try {
+      const d = new Date(iso);
+      return `Saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}`;
+    } catch {
+      return "Saved week";
+    }
+  }
+
+  // ---------- Insights ----------
+  function renderInsights() {
+    const data = getCurrentData();
+
+    const buy = parseNum(data["buy-price"]);
+    const series = [
+      parseNum(data["mon-am"]), parseNum(data["mon-pm"]),
+      parseNum(data["tue-am"]), parseNum(data["tue-pm"]),
+      parseNum(data["wed-am"]), parseNum(data["wed-pm"]),
+      parseNum(data["thu-am"]), parseNum(data["thu-pm"]),
+      parseNum(data["fri-am"]), parseNum(data["fri-pm"]),
+      parseNum(data["sat-am"]), parseNum(data["sat-pm"])
+    ];
+
+    // Best
+    let best = null;
+    let bestIdx = -1;
+    series.forEach((v, i) => {
+      if (v == null) return;
+      if (best == null || v > best) {
+        best = v;
+        bestIdx = i;
+      }
+    });
+
+    // Profit
+    let profit = null;
+    if (buy != null && best != null) profit = best - buy;
+
+    // Super light “pattern”
+    const pattern = guessPattern(series);
+
+    statBuy.textContent = buy == null ? "-" : String(buy);
+    statBest.textContent = best == null ? "-" : String(best);
+    statBestTime.textContent = bestIdx === -1 ? "-" : SLOT_LABELS[bestIdx];
+    statProfit.textContent = profit == null ? "-" : (profit >= 0 ? `+${profit}` : String(profit));
+    statPattern.textContent = pattern;
+
+    drawChart(series);
+  }
+
+  function guessPattern(series) {
+    const vals = series.filter((v) => v != null);
+    if (vals.length < 3) return "-";
+
+    // naive: mostly falling?
+    let down = 0;
+    let up = 0;
+    for (let i = 1; i < series.length; i++) {
+      if (series[i-1] == null || series[i] == null) continue;
+      if (series[i] > series[i-1]) up++;
+      if (series[i] < series[i-1]) down++;
+    }
+    if (down > up + 2) return "Falling";
+    if (up > down + 2) return "Rising";
+    return "Mixed";
+  }
+
+  function drawChart(series) {
     if (!chartCanvas) return;
     const ctx = chartCanvas.getContext("2d");
-    if (!ctx) return;
+    const W = chartCanvas.width;
+    const H = chartCanvas.height;
 
-    const w = chartCanvas.width;
-    const h = chartCanvas.height;
+    ctx.clearRect(0, 0, W, H);
 
-    ctx.clearRect(0, 0, w, h);
+    // padding inside canvas
+    const padL = 60;
+    const padR = 30;
+    const padT = 24;
+    const padB = 55;
 
-    // background lines
-    ctx.globalAlpha = 0.20;
-    ctx.lineWidth = 1;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    // pick min/max for scale
+    const vals = series.filter((v) => v != null);
+    const minV = vals.length ? Math.min(...vals) : 0;
+    const maxV = vals.length ? Math.max(...vals) : 100;
+
+    const range = Math.max(10, maxV - minV);
+    const yMin = minV - Math.ceil(range * 0.15);
+    const yMax = maxV + Math.ceil(range * 0.15);
+
+    function xAt(i) {
+      return padL + (plotW * (i / (series.length - 1)));
+    }
+    function yAt(v) {
+      const t = (v - yMin) / (yMax - yMin);
+      return padT + (plotH * (1 - t));
+    }
+
+    // soft grid lines
+    ctx.globalAlpha = 0.18;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = "#000";
-    for (let i = 1; i <= 4; i++) {
-      const y = (h * i) / 5;
+    for (let g = 0; g < 4; g++) {
+      const y = padT + (plotH * (g / 3));
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W - padR, y);
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
 
-    const nums = points.filter((n) => typeof n === "number");
-    const min = nums.length ? Math.min(...nums) : 0;
-    const max = nums.length ? Math.max(...nums) : 100;
-    const span = Math.max(1, max - min);
-
-    const padX = 14;
-    const padY = 18;
-
-    const xFor = (i) => padX + (i * (w - padX * 2)) / (points.length - 1);
-    const yFor = (val) => {
-      const t = (val - min) / span;
-      return (h - padY) - t * (h - padY * 2);
-    };
+    // axis labels (days only)
+    const dayLabels = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.font = "900 22px system-ui";
+    dayLabels.forEach((d, dayIdx) => {
+      const i = dayIdx * 2; // Mon AM, Tue AM...
+      const x = xAt(i);
+      ctx.textAlign = "center";
+      ctx.fillText(d, x, H - 18);
+    });
 
     // line
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#1f7a57";
-    ctx.beginPath();
-
     let started = false;
-    points.forEach((val, i) => {
-      if (typeof val !== "number") return;
-      const x = xFor(i);
-      const y = yFor(val);
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    series.forEach((v, i) => {
+      if (v == null) return;
+      const x = xAt(i);
+      const y = yAt(v);
       if (!started) {
         ctx.moveTo(x, y);
         started = true;
@@ -417,64 +475,28 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.lineTo(x, y);
       }
     });
-    ctx.stroke();
+    if (started) ctx.stroke();
 
-    // dots, bell for AM, bell for PM
-    points.forEach((val, i) => {
-      if (typeof val !== "number") return;
-      const x = xFor(i);
-      const y = yFor(val);
+    // dots: AM = sun, PM = moon (cozy key)
+    series.forEach((v, i) => {
+      const x = xAt(i);
+      const isPM = (i % 2 === 1);
 
-      ctx.fillStyle = "#1f7a57";
+      // draw dot even if missing value, keep the “postcard” feel
+      const y = v == null ? (padT + plotH * 0.78) : yAt(v);
+
       ctx.beginPath();
-      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
       ctx.fill();
 
-      // small emoji marker near dot
-      ctx.font = "12px system-ui";
-      ctx.fillStyle = "rgba(0,0,0,0.65)";
-      const isAM = i % 2 === 0;
-      ctx.fillText(isAM ? "🔔" : "🔔", x - 5, y - 10);
+      // emoji overlay (simple + cute)
+      ctx.font = "22px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#000";
+      ctx.fillText(isPM ? "🌙" : "🌞", x, y - 22);
     });
-
-    // bottom day labels
-    const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    ctx.font = "11px system-ui";
-    ctx.fillStyle = "rgba(0,0,0,0.65)";
-    dayLabels.forEach((d, idx) => {
-      const i = idx * 2; // use AM positions
-      const x = xFor(i);
-      ctx.fillText(d, x - 10, h - 4);
-    });
-  }
-
-  function toNum(v) {
-    const s = String(v || "").trim();
-    if (!s) return null;
-    const n = Number(s);
-    return Number.isFinite(n) ? n : null;
-  }
-
-  function summarizeWeek(data) {
-    const get = (k) => (data && data[k] ? data[k] : "-");
-    return [
-      `Buy ${get("buy-price")}`,
-      `Mon AM ${get("mon-am")}, Mon PM ${get("mon-pm")}`,
-      `Tue AM ${get("tue-am")}, Tue PM ${get("tue-pm")}`,
-      `Wed AM ${get("wed-am")}, Wed PM ${get("wed-pm")}`,
-      `Thu AM ${get("thu-am")}, Thu PM ${get("thu-pm")}`,
-      `Fri AM ${get("fri-am")}, Fri PM ${get("fri-pm")}`,
-      `Sat AM ${get("sat-am")}, Sat PM ${get("sat-pm")}`
-    ].join(" | ");
-  }
-
-  function formatWeekLabel(iso) {
-    try {
-      const d = new Date(iso);
-      return `Saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-    } catch {
-      return "Saved week";
-    }
   }
 
   function cryptoRandomId() {
@@ -482,8 +504,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return `w_${Date.now()}_${rnd}`;
   }
 
-  // Boot
+  // ---------- Boot ----------
   updateSundayLabel();
-  loadCurrentDraft();
+  loadDraft();
   setActiveTab("entry");
 });

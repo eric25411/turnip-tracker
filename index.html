@@ -5,22 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnip Tracker</title>
 
-  <!-- App icon (iOS home screen and browser tab) -->
-  <link rel="apple-touch-icon" href="icon-1024.png.PNG">
-  <link rel="icon" type="image/png" href="icon-1024.png.PNG">
-
-  <!-- Optional PWA basics -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#e8f0ff">
-
-  <!-- Cache bust -->
-  <link rel="stylesheet" href="style.css?v=40" />
+  <link rel="stylesheet" href="style.css?v=30" />
 </head>
 
 <body>
   <div class="app">
-
     <!-- HEADER -->
     <div class="header">
       <img
@@ -29,7 +18,7 @@
         class="headerImage"
         onerror="this.style.display='none'; document.getElementById('headerFallback').style.display='block';"
       />
-      <div id="headerFallback" class="headerFallback">
+      <div id="headerFallback" style="display:none; font-size:22px; font-weight:700;">
         Turnip Tracker
       </div>
     </div>
@@ -39,31 +28,35 @@
 
       <!-- ENTRY VIEW -->
       <section id="entryView" class="view">
-
         <!-- Buy price card -->
-        <div class="card buyCard">
+        <div class="buyCard">
           <div class="buyLeft">
             <div class="buyTitleRow">
               <span class="buyEmoji">💰</span>
-              <div class="buyTitles">
-                <div class="buyTitle">Buy price</div>
-                <div class="buySub" id="buySub">Daisy Mae, Sunday</div>
-              </div>
+              <div class="buyTitle">Buy price</div>
+            </div>
+
+            <div class="buyCaptionRow">
+              <img
+                id="isabelleIcon"
+                class="isabelleIcon"
+                src="isabelle.png"
+                alt=""
+                onerror="this.onerror=null; this.src='isabelle.png.PNG';"
+              />
+              <div id="buySundayLabel" class="buyCaption">Jan 4</div>
             </div>
           </div>
 
-          <div class="buyRight">
-            <input
-              id="buy-price"
-              class="buyInput"
-              inputmode="numeric"
-              placeholder="-"
-              aria-label="Turnip buy price"
-            />
-          </div>
+          <input
+            id="buy-price"
+            class="buyInput"
+            inputmode="numeric"
+            placeholder="-"
+          />
         </div>
 
-        <!-- Days -->
+        <!-- DAYS -->
         <section class="days">
 
           <div class="dayCard">
@@ -138,62 +131,32 @@
             </div>
           </div>
 
-        </section>
-
-        <!-- Save button at bottom of days -->
-        <div class="saveWrap">
+          <!-- Save button now at bottom of days -->
           <button id="saveWeekBtn" class="primaryBtn">Save week to History</button>
-          <div class="saveHint">Saves the week and clears your Entry screen.</div>
-        </div>
 
-      </section>
-
-      <!-- PREDICT VIEW -->
-      <section id="predictView" class="view hidden">
-
-        <div class="card">
-          <div class="predictHeader">
-            <div class="predictTitle">Predictor</div>
+          <div class="saveHint">
+            Saves the week, clears Entry, and adds it to Insights.
           </div>
 
-          <!-- Postcard -->
+        </section>
+      </section>
+
+      <!-- INSIGHTS VIEW (Predict + History together) -->
+      <section id="insightsView" class="view hidden">
+        <div class="card">
+          <h2 class="sectionTitle">Predictor</h2>
+
           <div class="postcard">
             <div class="postcardTop">
-              <div class="postcardLabel">This week’s bell postcard</div>
-
+              <div class="postcardTitle">This week’s bell postcard</div>
               <div class="postcardKey">
-                <div class="keyRow"><span class="keyIcon">🌞</span><span class="keyText">AM</span></div>
-                <div class="keyRow"><span class="keyIcon">🌙</span><span class="keyText">PM</span></div>
+                <div class="keyRow"><span class="keyIcon">🌞</span><span>AM</span></div>
+                <div class="keyRow"><span class="keyIcon">🌙</span><span>PM</span></div>
               </div>
             </div>
 
-            <div class="chartWrap">
-              <div class="chartBgTurnip" aria-hidden="true"></div>
-              <svg id="chartSvg" class="chartSvg" viewBox="0 0 320 140" preserveAspectRatio="none" aria-label="Turnip price postcard chart">
-                <rect x="0" y="0" width="320" height="140" rx="14" ry="14" class="chartFrame"></rect>
-
-                <!-- grid lines -->
-                <line x1="16" y1="28" x2="304" y2="28" class="chartGrid"></line>
-                <line x1="16" y1="56" x2="304" y2="56" class="chartGrid"></line>
-                <line x1="16" y1="84" x2="304" y2="84" class="chartGrid"></line>
-                <line x1="16" y1="112" x2="304" y2="112" class="chartGrid"></line>
-
-                <!-- path -->
-                <path id="chartPath" d="" class="chartPath"></path>
-
-                <!-- points group -->
-                <g id="chartPoints"></g>
-
-                <!-- x labels -->
-                <g class="chartLabels">
-                  <text x="26"  y="134">Mon</text>
-                  <text x="74"  y="134">Tue</text>
-                  <text x="122" y="134">Wed</text>
-                  <text x="170" y="134">Thu</text>
-                  <text x="218" y="134">Fri</text>
-                  <text x="266" y="134">Sat</text>
-                </g>
-              </svg>
+            <div class="chartShell">
+              <canvas id="chartCanvas" width="320" height="160"></canvas>
             </div>
 
             <div class="postcardNote">
@@ -201,79 +164,66 @@
             </div>
           </div>
 
-          <!-- Stats -->
-          <div class="statsCard">
-            <div class="statRow">
-              <div class="statLabel">Daisy Mae buy price</div>
-              <div class="statValue" id="statBuy">-</div>
-            </div>
-            <div class="statRow">
-              <div class="statLabel">Best price seen</div>
-              <div class="statValue" id="statBest">-</div>
-            </div>
-            <div class="statRow">
-              <div class="statLabel">Best time so far</div>
-              <div class="statValue" id="statBestTime">-</div>
-            </div>
-            <div class="statRow">
-              <div class="statLabel">Profit vs buy</div>
-              <div class="statValue" id="statProfit">-</div>
-            </div>
-            <div class="statRow">
-              <div class="statLabel">Likely pattern</div>
-              <div class="statValue" id="statPattern">Mixed</div>
-            </div>
+          <div class="statsList" id="statsList">
+            <!-- filled by JS -->
           </div>
-
-          <!-- History inside Predict -->
-          <div class="historyCard">
-            <div class="historyTop">
-              <div>
-                <div class="historyTitle">Past weeks</div>
-                <div class="historyHint">Tap Expand to peek, Load to edit an old week.</div>
-              </div>
-
-              <div class="historyActions">
-                <button id="exportBtn" class="chipBtn" type="button">Export</button>
-                <label class="chipBtn fileBtn">
-                  Import
-                  <input id="importFile" type="file" accept="application/json" />
-                </label>
-              </div>
-            </div>
-
-            <p class="historySmall" id="historyEmptyNote">
-              No saved weeks yet. Fill your week, then hit Save week.
-            </p>
-
-            <div id="historyList" class="historyList"></div>
-          </div>
-
         </div>
 
+        <div class="card">
+          <h2 class="sectionTitle">History</h2>
+          <p class="historyHint">Tap a week to expand. Use Load to edit an old week.</p>
+          <div id="historyList" class="historyList"></div>
+          <p class="historySmall" id="historyEmptyNote">
+            No saved weeks yet. Fill the week, then hit Save week.
+          </p>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="settingsView" class="view hidden">
+        <div class="card">
+          <h2 class="sectionTitle">Settings</h2>
+
+          <div class="settingsRow">
+            <button id="exportBtn" class="chipBtn">Export history</button>
+
+            <label class="chipBtn fileBtn">
+              Import history
+              <input id="importFile" type="file" accept="application/json" />
+            </label>
+          </div>
+
+          <div class="settingsRow">
+            <button id="resetDraftBtn" class="chipBtn dangerBtn">Clear Entry draft</button>
+          </div>
+
+          <p class="historySmall">
+            Export and Import lets you back up your weeks. Clear Entry draft only clears the current week you are typing.
+          </p>
+        </div>
       </section>
 
     </main>
   </div>
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottomNav" role="navigation" aria-label="Bottom navigation">
+  <!-- BOTTOM NAV (Option D) -->
+  <nav class="bottomNav">
     <button id="navEntry" class="navBtn active" type="button">
       <span class="navIcon">🧾</span>
-      <span class="navText">Entry</span>
+      <span class="navLabel">Entry</span>
     </button>
 
-    <button id="navPredict" class="navBtn" type="button">
+    <button id="navInsights" class="navBtn" type="button">
       <span class="navIcon">🔮</span>
-      <span class="navText">Predict</span>
+      <span class="navLabel">Insights</span>
     </button>
 
-    <button id="navHistory" class="navBtn" type="button">
-      <span class="navIcon">🕰️</span>
-      <span class="navText">History</span>
+    <button id="navSettings" class="navBtn" type="button">
+      <span class="navIcon">⚙️</span>
+      <span class="navLabel">Settings</span>
     </button>
   </nav>
 
-  <script src="app.js?v=40"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>

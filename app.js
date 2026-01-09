@@ -1,78 +1,67 @@
 document.addEventListener("DOMContentLoaded", () => {
   const KEYS = {
     weeks: "turnipTracker_weeks_v1",
-    current: "turnipTracker_current_v1"
+    current: "turnipTracker_current_v1",
+    buy: "turnipTracker_buy_v1"
   };
 
   // Views
-  const entryView = document.getElementById("predictView");   // Entry screen
-  const predictorView = document.getElementById("historyView"); // Predictor screen
+  const entryView = document.getElementById("entryView");
+  const predictView = document.getElementById("predictView");
 
-  // Bottom nav buttons (Entry + Predict)
-  const navEntry = document.getElementById("navPredict");
-  const navPredict = document.getElementById("navHistory");
+  // Nav
+  const navEntry = document.getElementById("navEntry");
+  const navPredict = document.getElementById("navPredict");
+  const navHistory = document.getElementById("navHistory"); // goes to predictView, scrolls history section
 
-  // Buttons
+  // Inputs
+  const buyInput = document.getElementById("buy-price");
+  const priceInputs = Array.from(document.querySelectorAll(".priceInput"));
+
+  // Save
   const saveWeekBtn = document.getElementById("saveWeekBtn");
-  const goHomeBtn = document.getElementById("goHomeBtn");
 
-  // Buy price
-  const buyPriceInput = document.getElementById("buy-price");
-  const buySubLabel = document.getElementById("buySubLabel");
+  // Predict UI
+  const chartPath = document.getElementById("chartPath");
+  const chartPoints = document.getElementById("chartPoints");
 
-  // Predictor UI
-  const canvas = document.getElementById("trendChart");
   const statBuy = document.getElementById("statBuy");
   const statBest = document.getElementById("statBest");
   const statBestTime = document.getElementById("statBestTime");
   const statProfit = document.getElementById("statProfit");
   const statPattern = document.getElementById("statPattern");
-  const statNote = document.getElementById("statNote");
 
-  // History UI
+  // History UI inside Predict
   const historyList = document.getElementById("historyList");
   const historyEmptyNote = document.getElementById("historyEmptyNote");
   const exportBtn = document.getElementById("exportBtn");
   const importFile = document.getElementById("importFile");
 
-  if (!entryView || !predictorView || !navEntry || !navPredict || !saveWeekBtn) {
-    console.log("Missing required elements. Check ids in index.html.");
+  // Buy sub label
+  const buySub = document.getElementById("buySub");
+
+  // Safety checks
+  if (!entryView || !predictView || !navEntry || !navPredict || !navHistory) {
+    console.log("Missing core view or nav elements.");
     return;
   }
 
-  // --- Cozy Sunday label that matches device locale, refreshes when opened ---
-  function getMostRecentSunday(date = new Date()) {
-    // Sunday = 0
-    const d = new Date(date);
-    const day = d.getDay();
-    d.setDate(d.getDate() - day);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }
-
-  function updateSundayLabel() {
-    if (!buySubLabel) return;
-    const sunday = getMostRecentSunday(new Date());
-    const fmt = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "short", day: "numeric" });
-    buySubLabel.textContent = `Daisy Mae, ${fmt.format(sunday)}`;
-  }
-
-  // --- View switching ---
+  // Helpers
   function setActiveTab(tab) {
     const isEntry = tab === "entry";
-
     entryView.classList.toggle("hidden", !isEntry);
-    predictorView.classList.toggle("hidden", isEntry);
+    predictView.classList.toggle("hidden", isEntry);
 
     navEntry.classList.toggle("active", isEntry);
     navPredict.classList.toggle("active", !isEntry);
+    navHistory.classList.toggle("active", false);
 
     if (!isEntry) {
-      renderPredictor();
-      renderHistory();
+      renderPredict();
     }
   }
 
+  // Nav handlers
   navEntry.addEventListener("click", (e) => {
     e.preventDefault();
     setActiveTab("entry");
@@ -80,29 +69,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
   navPredict.addEventListener("click", (e) => {
     e.preventDefault();
-    setActiveTab("predictor");
+    setActiveTab("predict");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  if (goHomeBtn) {
-    goHomeBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      setActiveTab("entry");
-    });
-  }
+  navHistory.addEventListener("click", (e) => {
+    e.preventDefault();
+    setActiveTab("predict");
+    // Scroll to history section inside predict view
+    setTimeout(() => {
+      const el = document.querySelector(".historyCard");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  });
 
-  // --- Storage helpers ---
+  // Local storage
   function getWeeks() {
-    try { return JSON.parse(localStorage.getItem(KEYS.weeks) || "[]"); }
-    catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem(KEYS.weeks) || "[]");
+    } catch {
+      return [];
+    }
   }
 
   function setWeeks(weeks) {
     localStorage.setItem(KEYS.weeks, JSON.stringify(weeks));
   }
 
+  function getBuyPrice() {
+    try {
+      const raw = localStorage.getItem(KEYS.buy);
+      return raw ? (JSON.parse(raw).value ?? "") : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function setBuyPrice(value) {
+    localStorage.setItem(KEYS.buy, JSON.stringify({ value: String(value || "").trim() }));
+  }
+
   function getCurrentWeekData() {
     const ids = [
-      "buy-price",
       "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
       "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
     ];
@@ -112,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const el = document.getElementById(id);
       data[id] = ((el && el.value) || "").trim();
     });
+
     return data;
   }
 
@@ -123,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function clearWeek() {
-    document.querySelectorAll(".priceInput").forEach((i) => (i.value = ""));
+    priceInputs.forEach((i) => (i.value = ""));
     localStorage.removeItem(KEYS.current);
   }
 
@@ -140,34 +149,42 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Auto save draft on input
-  document.querySelectorAll(".priceInput").forEach((inp) => {
-    inp.addEventListener("input", saveCurrentDraft);
-  });
+  priceInputs.forEach((inp) => inp.addEventListener("input", saveCurrentDraft));
+
+  if (buyInput) {
+    buyInput.addEventListener("input", () => {
+      setBuyPrice(buyInput.value);
+      renderPredict();
+    });
+  }
 
   // Save week
-  saveWeekBtn.addEventListener("click", (e) => {
-    e.preventDefault();
+  if (saveWeekBtn) {
+    saveWeekBtn.addEventListener("click", (e) => {
+      e.preventDefault();
 
-    const week = {
-      id: cryptoRandomId(),
-      savedAt: new Date().toISOString(),
-      data: getCurrentWeekData()
-    };
+      const week = {
+        id: cryptoRandomId(),
+        savedAt: new Date().toISOString(),
+        buy: getBuyPrice().trim(),
+        data: getCurrentWeekData()
+      };
 
-    const weeks = getWeeks();
-    weeks.unshift(week);
-    setWeeks(weeks);
+      const weeks = getWeeks();
+      weeks.unshift(week);
+      setWeeks(weeks);
 
-    clearWeek();
-    setActiveTab("predictor");
-  });
+      clearWeek();
+      setActiveTab("predict");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
 
-  // --- History rendering ---
+  // History rendering
   function renderHistory() {
     const weeks = getWeeks();
-    if (!historyList || !historyEmptyNote) return;
-
     historyList.innerHTML = "";
+
     historyEmptyNote.style.display = weeks.length ? "none" : "block";
 
     weeks.forEach((w) => {
@@ -186,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const toggleBtn = document.createElement("button");
       toggleBtn.className = "smallBtn";
+      toggleBtn.type = "button";
       toggleBtn.textContent = "Expand";
       toggleBtn.addEventListener("click", () => {
         const expanded = row.classList.toggle("expanded");
@@ -194,15 +212,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const loadBtn = document.createElement("button");
       loadBtn.className = "smallBtn";
+      loadBtn.type = "button";
       loadBtn.textContent = "Load";
       loadBtn.addEventListener("click", () => {
         loadWeekData(w.data);
         saveCurrentDraft();
+        if (buyInput) {
+          buyInput.value = (w.buy ?? "").toString();
+          setBuyPrice(buyInput.value);
+        }
         setActiveTab("entry");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       });
 
       const delBtn = document.createElement("button");
       delBtn.className = "smallBtn";
+      delBtn.type = "button";
       delBtn.textContent = "Delete";
       delBtn.addEventListener("click", () => {
         const next = getWeeks().filter((x) => x.id !== w.id);
@@ -219,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const details = document.createElement("div");
       details.className = "weekDetails";
-      details.textContent = summarizeWeek(w.data);
+      details.textContent = summarizeWeek(w.data, w.buy);
 
       row.appendChild(top);
       row.appendChild(details);
@@ -227,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Export / Import ---
+  // Export, Import
   if (exportBtn) {
     exportBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -283,156 +308,147 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Predictor ---
-  function parseNumber(v) {
-    const n = Number(String(v || "").replace(/[^\d.]/g, ""));
-    return Number.isFinite(n) ? n : null;
+  // Predict rendering
+  function renderPredict() {
+    // Update stats
+    const buy = parseNum(getBuyPrice());
+    const series = buildSeriesFromInputs();
+    const best = Math.max(...series.map((x) => (x.value ?? -Infinity)).filter((v) => isFinite(v)), -Infinity);
+
+    const bestPoint = series.reduce((acc, cur) => {
+      if (!isFinite(cur.value)) return acc;
+      if (!acc) return cur;
+      return cur.value > acc.value ? cur : acc;
+    }, null);
+
+    statBuy.textContent = isFinite(buy) ? String(buy) : "-";
+    statBest.textContent = isFinite(best) && best !== -Infinity ? String(best) : "-";
+    statBestTime.textContent = bestPoint ? bestPoint.label : "-";
+
+    if (isFinite(buy) && bestPoint && isFinite(bestPoint.value)) {
+      const diff = bestPoint.value - buy;
+      statProfit.textContent = diff >= 0 ? `+${diff}` : `${diff}`;
+    } else {
+      statProfit.textContent = "-";
+    }
+
+    // Pattern: simple cozy placeholder for now
+    statPattern.textContent = "Mixed";
+
+    // Draw chart
+    drawChart(series);
+
+    // History
+    renderHistory();
   }
 
-  function getSlotsFromCurrent() {
+  function drawChart(series) {
+    if (!chartPath || !chartPoints) return;
+
+    // SVG chart inner area
+    const left = 16;
+    const right = 304;
+    const top = 16;
+    const bottom = 112;
+
+    // x positions (12 points)
+    const xs = Array.from({ length: 12 }, (_, i) => left + (i * (right - left)) / 11);
+
+    // y scaling
+    const values = series.map((p) => p.value).filter((v) => isFinite(v));
+    const minV = values.length ? Math.min(...values) : 0;
+    const maxV = values.length ? Math.max(...values) : 100;
+
+    const pad = 8;
+    const lo = minV - pad;
+    const hi = maxV + pad;
+
+    function yFor(v) {
+      if (!isFinite(v)) return bottom;
+      if (hi === lo) return (top + bottom) / 2;
+      const t = (v - lo) / (hi - lo);
+      return bottom - t * (bottom - top);
+    }
+
+    // Path only connects known points, but keeps spacing
+    let d = "";
+    series.forEach((p, i) => {
+      const x = xs[i];
+      const y = yFor(p.value);
+      if (i === 0) d += `M ${x} ${y}`;
+      else d += ` L ${x} ${y}`;
+    });
+
+    chartPath.setAttribute("d", d);
+
+    // Points
+    chartPoints.innerHTML = "";
+    series.forEach((p, i) => {
+      const x = xs[i];
+      const y = yFor(p.value);
+
+      // Bell dot marker
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", x);
+      c.setAttribute("cy", y);
+      c.setAttribute("r", "3.6");
+      c.setAttribute("fill", "rgba(0,0,0,0.75)");
+      chartPoints.appendChild(c);
+
+      // Subtle outer glow
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      g.setAttribute("cx", x);
+      g.setAttribute("cy", y);
+      g.setAttribute("r", "7");
+      g.setAttribute("fill", "rgba(0,0,0,0.05)");
+      chartPoints.appendChild(g);
+    });
+  }
+
+  function buildSeriesFromInputs() {
+    // 12 slots, labels match cozy postcard idea
     const order = [
-      "mon-am","mon-pm","tue-am","tue-pm","wed-am","wed-pm",
-      "thu-am","thu-pm","fri-am","fri-pm","sat-am","sat-pm"
+      { id: "mon-am", label: "Mon AM" }, { id: "mon-pm", label: "Mon PM" },
+      { id: "tue-am", label: "Tue AM" }, { id: "tue-pm", label: "Tue PM" },
+      { id: "wed-am", label: "Wed AM" }, { id: "wed-pm", label: "Wed PM" },
+      { id: "thu-am", label: "Thu AM" }, { id: "thu-pm", label: "Thu PM" },
+      { id: "fri-am", label: "Fri AM" }, { id: "fri-pm", label: "Fri PM" },
+      { id: "sat-am", label: "Sat AM" }, { id: "sat-pm", label: "Sat PM" }
     ];
-    const data = getCurrentWeekData();
-    return order.map((id) => parseNumber(data[id]));
-  }
 
-  function drawPostcardChart(values) {
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const W = canvas.width;
-    const H = canvas.height;
-
-    ctx.clearRect(0, 0, W, H);
-
-    // Background grid (light)
-    ctx.globalAlpha = 0.12;
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 6; i++) {
-      const y = 24 + i * 34;
-      ctx.beginPath();
-      ctx.moveTo(18, y);
-      ctx.lineTo(W - 18, y);
-      ctx.strokeStyle = "#000";
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-
-    // Find min/max
-    const nums = values.filter(v => typeof v === "number");
-    const min = nums.length ? Math.min(...nums) : 0;
-    const max = nums.length ? Math.max(...nums) : 120;
-
-    const padX = 26;
-    const padY = 34;
-    const plotW = W - padX * 2;
-    const plotH = H - padY * 2;
-
-    function xAt(i) {
-      return padX + (plotW * (i / 11));
-    }
-    function yAt(v) {
-      if (!nums.length) return padY + plotH * 0.70;
-      const t = (v - min) / (max - min || 1);
-      return padY + plotH * (1 - t);
-    }
-
-    // Line
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = "#2d2d2d";
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-
-    let started = false;
-    ctx.beginPath();
-    values.forEach((v, i) => {
-      if (typeof v !== "number") return;
-      const x = xAt(i);
-      const y = yAt(v);
-      if (!started) {
-        ctx.moveTo(x, y);
-        started = true;
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-    if (started) ctx.stroke();
-
-    // Dots: AM = sun, PM = moon
-    values.forEach((v, i) => {
-      const x = xAt(i);
-      const y = typeof v === "number" ? yAt(v) : yAt(min);
-
-      ctx.beginPath();
-      ctx.arc(x, y, 7, 0, Math.PI * 2);
-      ctx.fillStyle = "#1f1f1f";
-      ctx.fill();
-
-      // emoji overlay
-      ctx.font = "18px system-ui";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      const isAM = i % 2 === 0;
-      ctx.fillText(isAM ? "🌞" : "🌙", x, y - 18);
-    });
-
-    // Day labels along bottom (Mon..Sat)
-    const dayXs = [0,2,4,6,8,10].map(i => xAt(i));
-    const days = ["Mon","Tue","Wed","Thu","Fri","Sat"];
-    ctx.font = "16px system-ui";
-    ctx.fillStyle = "rgba(18,18,18,.55)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    dayXs.forEach((x, idx) => {
-      ctx.fillText(days[idx], x, H - 10);
+    return order.map((o) => {
+      const el = document.getElementById(o.id);
+      const v = el ? parseNum(el.value) : NaN;
+      return { id: o.id, label: o.label, value: v };
     });
   }
 
-  function renderPredictor() {
-    const data = getCurrentWeekData();
-    const buy = parseNumber(data["buy-price"]);
-
-    const slots = getSlotsFromCurrent();
-    drawPostcardChart(slots);
-
-    const seen = slots.filter(v => typeof v === "number");
-    const best = seen.length ? Math.max(...seen) : null;
-    const bestIdx = best == null ? -1 : slots.findIndex(v => v === best);
-
-    const labelAt = (idx) => {
-      const map = [
-        "Mon AM","Mon PM","Tue AM","Tue PM","Wed AM","Wed PM",
-        "Thu AM","Thu PM","Fri AM","Fri PM","Sat AM","Sat PM"
-      ];
-      return map[idx] || "-";
-    };
-
-    if (statBuy) statBuy.textContent = buy == null ? "-" : String(buy);
-    if (statBest) statBest.textContent = best == null ? "-" : String(best);
-    if (statBestTime) statBestTime.textContent = bestIdx < 0 ? "-" : labelAt(bestIdx);
-
-    if (statProfit) {
-      if (buy == null || best == null) statProfit.textContent = "-";
-      else {
-        const diff = best - buy;
-        statProfit.textContent = diff >= 0 ? `+${diff}` : String(diff);
-      }
-    }
-
-    // Simple placeholder “pattern” until you expand it later
-    if (statPattern) statPattern.textContent = seen.length >= 4 ? "Mixed" : "-";
-    if (statNote) {
-      statNote.textContent = seen.length >= 4
-        ? "Keep logging, patterns get clearer as the week fills in."
-        : "Add a few more prices and the postcard starts to feel smarter.";
-    }
+  // Sunday label under buy section
+  function updateBuySubLabel() {
+    if (!buySub) return;
+    const sunday = getMostRecentSunday(new Date());
+    const month = sunday.toLocaleDateString(undefined, { month: "short" });
+    const day = sunday.getDate();
+    buySub.textContent = `Daisy Mae, Sunday ${month} ${day}`;
   }
 
-  function summarizeWeek(data) {
+  function getMostRecentSunday(d) {
+    const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dow = copy.getDay(); // 0 Sunday
+    copy.setDate(copy.getDate() - dow);
+    return copy;
+  }
+
+  function parseNum(s) {
+    const n = parseInt(String(s || "").replace(/[^\d]/g, ""), 10);
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function summarizeWeek(data, buy) {
     const get = (k) => (data && data[k] ? data[k] : "-");
+    const buyTxt = buy ? `Buy ${buy}` : "Buy -";
     return [
-      `Buy ${get("buy-price")}`,
+      buyTxt,
       `Mon AM ${get("mon-am")}, Mon PM ${get("mon-pm")}`,
       `Tue AM ${get("tue-am")}, Tue PM ${get("tue-pm")}`,
       `Wed AM ${get("wed-am")}, Wed PM ${get("wed-pm")}`,
@@ -457,7 +473,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Boot
-  updateSundayLabel();
+  updateBuySubLabel();
+
+  // Load buy price
+  if (buyInput) buyInput.value = getBuyPrice();
+
+  // Load draft
   loadCurrentDraft();
+
+  // Default to Entry
   setActiveTab("entry");
+
+  // Also refresh the buy label when the tab becomes visible again
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) updateBuySubLabel();
+  });
 });
